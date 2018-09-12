@@ -29,8 +29,9 @@ namespace simulated_device
             var data = Encoding.UTF8.GetString(methodRequest.Data);
 
             // Check the payload is a single integer value
-            if (Int32.TryParse(data, out s_telemetryInterval))
+            if (Int32.TryParse(data, out int telemetryInterval))
             {
+                s_telemetryInterval = telemetryInterval;
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("Telemetry interval set to {0} seconds", data);
                 Console.ResetColor();
