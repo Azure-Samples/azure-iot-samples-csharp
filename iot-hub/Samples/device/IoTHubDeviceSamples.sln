@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MethodSample", "MethodSampl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TwinSample", "TwinSample\TwinSample.csproj", "{AE5A05F3-A0B7-4D56-ACE1-FC8B9D223FA5}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EdgeDownstreamDevice", "EdgeDownstreamDevice\EdgeDownstreamDevice.csproj", "{0293E600-1B81-43D0-A0ED-10B8529A364D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{AE5A05F3-A0B7-4D56-ACE1-FC8B9D223FA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE5A05F3-A0B7-4D56-ACE1-FC8B9D223FA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE5A05F3-A0B7-4D56-ACE1-FC8B9D223FA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0293E600-1B81-43D0-A0ED-10B8529A364D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0293E600-1B81-43D0-A0ED-10B8529A364D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0293E600-1B81-43D0-A0ED-10B8529A364D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0293E600-1B81-43D0-A0ED-10B8529A364D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
