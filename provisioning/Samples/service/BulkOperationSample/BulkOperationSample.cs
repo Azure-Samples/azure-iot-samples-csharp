@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Azure.Devices.Provisioning.Service.Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -19,6 +21,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
             "dln4XpM03zLpoHFao8zOwt8l/uP3qUIxmCYv9A7m69Ms+5/pCkTu/rK4mRDsfhZ0QLfbzVI6zQFOKF/rwsfBtFe" +
             "WlWtcuJMKlXdD8TXWElTzgh7JS4qhFzreL0c1mI0GCj+Aws0usZh7dLIVPnlgZcBhgy1SSDQMQ==";
 
+		private const string IotHubHostName = "my-iothub-hostname";
         // Maximum number of elements per query.
         private const int QueryPageSize = 2;
 
@@ -27,6 +30,11 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
             { SampleRegistrationId1, SampleTpmEndorsementKey },
             { SampleRegistrationId2, SampleTpmEndorsementKey }
         };
+
+        private readonly string TpmAttestationType = "tpm";
+        private readonly string BulkOperationCreate = "create";
+        private readonly string BulkOperationUpdate = "update";
+        private readonly string BulkOperationDelete = "delete";
         
         public BulkOperationSample(ProvisioningServiceClient provisioningServiceClient)
         {
@@ -35,11 +43,9 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
 
         public async Task RunSampleAsync()
         {
-            await QueryIndividualEnrollmentsAsync().ConfigureAwait(false);
-
             List<IndividualEnrollment> enrollments = await CreateBulkIndividualEnrollmentsAsync().ConfigureAwait(false);
-            await GetIndividualEnrollmentInfoAsync(enrollments).ConfigureAwait(false);
-            await DeleteIndividualEnrollmentsAsync(enrollments).ConfigureAwait(false);
+            await UpdateBulkIndividualEnrollmentAsync(enrollments).ConfigureAwait(false);
+            await DeleteBulkIndividualEnrollmentsAsync(enrollments).ConfigureAwait(false);
         }
 
         public async Task<List<IndividualEnrollment>> CreateBulkIndividualEnrollmentsAsync()
@@ -48,52 +54,49 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
             List<IndividualEnrollment> individualEnrollments = new List<IndividualEnrollment>();
             foreach (var item in _registrationIds)
             {
-                Attestation attestation = new TpmAttestation(item.Value);
-                individualEnrollments.Add(new IndividualEnrollment(item.Key, attestation));
-            }
+                TpmAttestation attestation = new TpmAttestation(item.Value);
+                AttestationMechanism attestationMechanism = new AttestationMechanism(TpmAttestationType, attestation);
 
+                IndividualEnrollment individualEnrollment = new IndividualEnrollment(item.Key, attestationMechanism, iotHubHostName: IotHubHostName);   // "iotHubHostName" is mandatory if the DPS Allocation Policy is "Static"
+                individualEnrollments.Add(individualEnrollment);
+            }
+            BulkEnrollmentOperation bulkEnrollmentOperation = new BulkEnrollmentOperation(individualEnrollments, BulkOperationCreate);
             Console.WriteLine("\nRunning the bulk operation to create the individualEnrollments...");
             BulkEnrollmentOperationResult bulkEnrollmentOperationResult =
-                await _provisioningServiceClient.RunBulkEnrollmentOperationAsync(BulkOperationMode.Create, individualEnrollments).ConfigureAwait(false);
+                await _provisioningServiceClient.RunBulkEnrollmentOperationAsync(bulkEnrollmentOperation).ConfigureAwait(false);
             Console.WriteLine("\nResult of the Create bulk enrollment.");
-            Console.WriteLine(bulkEnrollmentOperationResult);
+            Console.WriteLine(JsonConvert.SerializeObject(bulkEnrollmentOperationResult, Formatting.Indented));
 
             return individualEnrollments;
         }
 
-        public async Task GetIndividualEnrollmentInfoAsync(List<IndividualEnrollment> individualEnrollments)
+        public async Task UpdateBulkIndividualEnrollmentAsync(List<IndividualEnrollment> individualEnrollments)
         {
+            List<IndividualEnrollment> updatedEnrollments = new List<IndividualEnrollment>();
             foreach (IndividualEnrollment individualEnrollment in individualEnrollments)
             {
                 String registrationId = individualEnrollment.RegistrationId;
                 Console.WriteLine($"\nGetting the {nameof(individualEnrollment)} information for {registrationId}...");
-                IndividualEnrollment getResult =
+                IndividualEnrollment enrollment =
                     await _provisioningServiceClient.GetIndividualEnrollmentAsync(registrationId).ConfigureAwait(false);
-                Console.WriteLine(getResult);
+                enrollment.DeviceId = "updated_the_device_id";
+                updatedEnrollments.Add(enrollment);
             }
-        }
-        
-        public async Task DeleteIndividualEnrollmentsAsync(List<IndividualEnrollment> individualEnrollments)
-        {
-            Console.WriteLine("\nDeleting the set of individualEnrollments...");
+            BulkEnrollmentOperation bulkEnrollmentOperation = new BulkEnrollmentOperation(updatedEnrollments, BulkOperationUpdate);
+            Console.WriteLine("\nRunning the bulk operation to update the individualEnrollments...");
             BulkEnrollmentOperationResult bulkEnrollmentOperationResult =
-                await _provisioningServiceClient.RunBulkEnrollmentOperationAsync(BulkOperationMode.Delete, individualEnrollments).ConfigureAwait(false);
-            Console.WriteLine(bulkEnrollmentOperationResult);
+                await _provisioningServiceClient.RunBulkEnrollmentOperationAsync(bulkEnrollmentOperation).ConfigureAwait(false);
+            Console.WriteLine("\nResult of the Update bulk enrollment.");
+            Console.WriteLine(JsonConvert.SerializeObject(bulkEnrollmentOperationResult, Formatting.Indented));
         }
 
-        public async Task QueryIndividualEnrollmentsAsync()
+        public async Task DeleteBulkIndividualEnrollmentsAsync(List<IndividualEnrollment> individualEnrollments)
         {
-            Console.WriteLine("\nCreating a query for enrollments...");
-            QuerySpecification querySpecification = new QuerySpecification("SELECT * FROM enrollments");
-            using (Query query = _provisioningServiceClient.CreateIndividualEnrollmentQuery(querySpecification, QueryPageSize))
-            {
-                while (query.HasNext())
-                {
-                    Console.WriteLine("\nQuerying the next enrollments...");
-                    QueryResult queryResult = await query.NextAsync().ConfigureAwait(false);
-                    Console.WriteLine(queryResult);
-                }
-            }
+            BulkEnrollmentOperation bulkEnrollmentOperation = new BulkEnrollmentOperation(individualEnrollments, BulkOperationDelete);
+            Console.WriteLine("\nDeleting the set of IndividualEnrollments...");
+            BulkEnrollmentOperationResult bulkEnrollmentOperationResult =
+                await _provisioningServiceClient.RunBulkEnrollmentOperationAsync(bulkEnrollmentOperation).ConfigureAwait(false);
+            Console.WriteLine(bulkEnrollmentOperationResult.IsSuccessful);
         }
     }
 }
