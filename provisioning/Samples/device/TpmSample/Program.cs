@@ -1,11 +1,21 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// Comment this define to switch access to real TPM
+#define _USE_TPMSIMULATOR
+
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
+#if _USE_TPMSIMULATOR
 using Microsoft.Azure.Devices.Provisioning.Security.Samples;
+#else
+using Microsoft.Azure.Devices.Provisioning.Security;
+#endif
 using Microsoft.Azure.Devices.Shared;
 using System;
+using System.Globalization;
+using System.Linq;
+using System.Net;
 
 namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
 {
@@ -18,8 +28,6 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
         // - set the DPS_IDSCOPE environment variable 
         // - create a launchSettings.json (see launchSettings.json.template) containing the variable
         private static string s_idScope = Environment.GetEnvironmentVariable("DPS_IDSCOPE");
-
-        private const string RegistrationId = "testtpmregistration1";
         private const string GlobalDeviceEndpoint = "global.azure-devices-provisioning.net";
         
         public static int Main(string[] args)
@@ -35,12 +43,23 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
                 return 1;
             }
 
+            // DPS registration Id should be unique among enrollments. 
+            // Such registration Id could be from TPM or any other unique identity, such as device serial number
+            // As an example, we use hostname in this sample as the unique registration Id
+            // A valid DPS registration Id contains only lower case alphanumeric letters and hyphens
+            var culture = new CultureInfo("en-US", false);
+            string RegistrationId = Dns.GetHostName().ToLower(culture).Select(i => (Char.IsLetterOrDigit(i) || (i == '-'))? i.ToString(culture): "-").ToArray().Aggregate((a,b) => a + b);
+
+#if _USE_TPMSIMULATOR
             // Remove if a real TPM is being used.
             Console.WriteLine("Starting TPM simulator.");
             SecurityProviderTpmSimulator.StartSimulatorProcess();
 
             // Replace the following type with SecurityProviderTpmHsm() to use a real TPM2.0 device.
             using (var security = new SecurityProviderTpmSimulator(RegistrationId))
+#else
+            using(var security = new SecurityProviderTpmHsm(RegistrationId))
+#endif
 
             // Select one of the available transports:
             // To optimize for size, reference only the protocols used by your application.
@@ -59,7 +78,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
                 Console.WriteLine("\tMechanism: TPM");
                 Console.WriteLine($"\tRegistration ID: {RegistrationId}");
                 Console.WriteLine($"\tEndorsement key: {base64EK}");
-                Console.WriteLine("\tDevice ID: iothubtpmdevice1 (or any other valid DeviceID)");
+                Console.WriteLine($"\tDevice ID: {RegistrationId} (or any other valid DeviceID)");
                 Console.WriteLine();
                 Console.WriteLine("Press ENTER when ready.");
                 Console.ReadLine();
