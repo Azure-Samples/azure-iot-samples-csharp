@@ -15,7 +15,6 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         // - set the PROVISIONING_CONNECTION_STRING environment variable 
         // - create a launchSettings.json (see launchSettings.json.template) containing the variable
         private static string s_connectionString = Environment.GetEnvironmentVariable("PROVISIONING_CONNECTION_STRING");
-		private static string s_dpsUri = Environment.GetEnvironmentVariable("PROVISIONING_SERVICE_HOST");
 
         public static int Main(string[] args)
         {
@@ -24,10 +23,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
                 s_connectionString = args[0];
             }
 
-            var credentials = ProvisioningServiceClient.CreateCredentialsFromConnectionString(s_connectionString);
-            var uri = new Uri(s_dpsUri);
-
-            using (var provisioningServiceClient = new ProvisioningServiceClient(uri, credentials))
+            using (var provisioningServiceClient = ProvisioningServiceClientFactory.CreateFromConnectionString(s_connectionString))
             {
                 var sample = new BulkOperationSample(provisioningServiceClient);
                 sample.RunSampleAsync().GetAwaiter().GetResult();

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Azure.Devices.Common.Service.Auth;
+using Microsoft.Rest;
 using System;
 
 namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
@@ -23,7 +24,20 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
                 s_connectionString = args[0];
             }
 
-            using (var provisioningServiceClient = ProvisioningServiceClientFactory.CreateFromConnectionString(s_connectionString))
+            ServiceConnectionString serviceConnectionString = ServiceConnectionString.Parse(s_connectionString);
+            var dpsUri = serviceConnectionString.HttpsEndpoint;
+            ServiceClientCredentials credentials;
+
+            if (serviceConnectionString.SharedAccessSignature != null)
+            {
+                credentials = new SharedAccessSignatureCredentials(serviceConnectionString.SharedAccessSignature);
+            }
+            else
+            {
+                credentials = new SharedAccessKeyCredentials(serviceConnectionString);
+            }
+
+            using (var provisioningServiceClient = new ProvisioningServiceClient(dpsUri, credentials))
             {
                 var sample = new EnrollmentSample(provisioningServiceClient);
                 sample.RunSampleAsync().GetAwaiter().GetResult();
