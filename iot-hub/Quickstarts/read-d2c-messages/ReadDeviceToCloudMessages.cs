@@ -3,7 +3,7 @@
 
 // This application uses the Microsoft Azure Event Hubs Client for .NET
 // For samples see: https://github.com/Azure/azure-event-hubs/tree/master/samples/DotNet
-// For documenation see: https://docs.microsoft.com/azure/event-hubs/
+// For documentation see: https://docs.microsoft.com/azure/event-hubs/
 using System;
 using Microsoft.Azure.EventHubs;
 using System.Threading.Tasks;
@@ -22,7 +22,7 @@ namespace read_d2c_messages
         // Event Hub-compatible name
         // az iot hub show --query properties.eventHubEndpoints.events.path --name {your IoT Hub name}
         private readonly static string s_eventHubsCompatiblePath = "{your Event Hubs compatible name}";
-        
+
         // az iot hub policy show --name iothubowner --query primaryKey --hub-name {your IoT Hub name}
         private readonly static string s_iotHubSasKey = "{your iothubowner primary key}";
         private readonly static string s_iotHubSasKeyName = "iothubowner";
@@ -47,21 +47,21 @@ namespace read_d2c_messages
                 // If there is data in the batch, process it.
                 if (events == null) continue;
 
-                foreach(EventData eventData in events)
-                { 
-                  string data = Encoding.UTF8.GetString(eventData.Body.Array);
-                  Console.WriteLine("Message received on partition {0}:", partition);
-                  Console.WriteLine("  {0}:", data);
-                  Console.WriteLine("Application properties (set by device):");
-                  foreach (var prop in eventData.Properties)
-                  {
-                    Console.WriteLine("  {0}: {1}", prop.Key, prop.Value);
-                  }
-                  Console.WriteLine("System properties (set by IoT Hub):");
-                  foreach (var prop in eventData.SystemProperties)
-                  {
-                    Console.WriteLine("  {0}: {1}", prop.Key, prop.Value);
-                  }
+                foreach (EventData eventData in events)
+                {
+                    string data = Encoding.UTF8.GetString(eventData.Body.Array);
+                    Console.WriteLine("Message received on partition {0}:", partition);
+                    Console.WriteLine("  {0}:", data);
+                    Console.WriteLine("Application properties (set by device):");
+                    foreach (var prop in eventData.Properties)
+                    {
+                        Console.WriteLine("  {0}: {1}", prop.Key, prop.Value);
+                    }
+                    Console.WriteLine("System properties (set by IoT Hub):");
+                    foreach (var prop in eventData.SystemProperties)
+                    {
+                        Console.WriteLine("  {0}: {1}", prop.Key, prop.Value);
+                    }
                 }
             }
         }
@@ -75,7 +75,7 @@ namespace read_d2c_messages
             var connectionString = new EventHubsConnectionStringBuilder(new Uri(s_eventHubsCompatibleEndpoint), s_eventHubsCompatiblePath, s_iotHubSasKeyName, s_iotHubSasKey);
             s_eventHubClient = EventHubClient.CreateFromConnectionString(connectionString.ToString());
 
-            // Create a PartitionReciever for each partition on the hub.
+            // Create a PartitionReceiver for each partition on the hub.
             var runtimeInfo = await s_eventHubClient.GetRuntimeInformationAsync();
             var d2cPartitions = runtimeInfo.PartitionIds;
 
@@ -94,7 +94,7 @@ namespace read_d2c_messages
                 tasks.Add(ReceiveMessagesFromDeviceAsync(partition, cts.Token));
             }
 
-            // Wait for all the PartitionReceivers to finsih.
+            // Wait for all the PartitionReceivers to finish.
             Task.WaitAll(tasks.ToArray());
         }
     }
