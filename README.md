@@ -2,6 +2,13 @@
 services: iot-hub 
 platforms: csharp, dotnet
 author: azure-iot-sdks
+topic: sample
+languages:
+ - csharp
+products:
+ - azure-iot-hub
+ - azure-iot-edge
+urlFragment: azure-iot-samples-csharp
 ---
 
 # Azure IoT Samples for Csharp (.NET)
