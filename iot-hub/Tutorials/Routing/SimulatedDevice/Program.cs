@@ -74,9 +74,11 @@ namespace SimulatedDevice
                 var telemetryDataString = JsonConvert.SerializeObject(telemetryDataPoint);
 
                 //set the body of the message to the serialized value of the telemetry data
-                var message = new Message(Encoding.ASCII.GetBytes(telemetryDataString));
+                var message = new Message(Encoding.UTF8.GetBytes(telemetryDataString));
                 message.Properties.Add("level", levelValue);
-
+                message.ContentEncoding = "utf-8";
+                message.ContentType = "application/json";
+                
                 await s_deviceClient.SendEventAsync(message);
                 Console.WriteLine("{0} > Sent message: {1}", DateTime.Now, telemetryDataString);
 
