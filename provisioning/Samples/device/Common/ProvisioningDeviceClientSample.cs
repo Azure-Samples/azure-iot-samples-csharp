@@ -48,7 +48,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
             }
             else if (_security is SecurityProviderSymmetricKey)
             {
-                Console.WriteLine("Creating Symmetric Key DeviceClient authenication");
+                Console.WriteLine("Creating Symmetric Key DeviceClient authentication");
                 auth = new DeviceAuthenticationWithRegistrySymmetricKey(result.DeviceId, (_security as SecurityProviderSymmetricKey).GetPrimaryKey());
             }
             else
