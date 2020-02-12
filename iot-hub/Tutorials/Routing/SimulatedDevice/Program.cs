@@ -18,10 +18,13 @@ namespace SimulatedDevice
     {
         private static DeviceClient s_deviceClient;
         private readonly static string s_myDeviceId = "Contoso-Test-Device";
-        private readonly static string s_iotHubUri = "{your hub name}.azure-devices.net";
+        //private readonly static string s_iotHubUri = "{your hub name}.azure-devices.net";
+
+        private readonly static string s_iotHubUri = "ContosoTestHubMsgEn3583.azure-devices.net";
         // This is the primary key for the device. This is in the portal. 
         // Find your IoT hub in the portal > IoT devices > select your device > copy the key. 
-        private readonly static string s_deviceKey = "{your device key}";
+        //private readonly static string s_deviceKey = "{your device key}";
+        private readonly static string s_deviceKey = "feQ8hrH4MrKgSSNNMCYTMZ1ry6pQdJNXX8jtb7ODY4U=";
 
         private static void Main(string[] args)
         {
@@ -74,17 +77,17 @@ namespace SimulatedDevice
                 var telemetryDataString = JsonConvert.SerializeObject(telemetryDataPoint);
 
                 //set the body of the message to the serialized value of the telemetry data
-                ////var message = new Message(Encoding.ASCII.GetBytes(telemetryDataString));
-                var bytes = Encoding.ASCII.GetBytes(telemetryDataString);
+                var message = new Message(Encoding.ASCII.GetBytes(telemetryDataString));
+                ////var bytes = Encoding.ASCII.GetBytes(telemetryDataString);
 
-                //======
+                //====== NEW
 
                 // if you need a differenct encoding for downstream proccess see below
 
-                bytes = System.Text.Encoding.Convert(Encoding.ASCII, Encoding.UTF32, bytes); //This has the UTF 32 bytes now
+                ////bytes = System.Text.Encoding.Convert(Encoding.ASCII, Encoding.UTF32, bytes); //This has the UTF 32 bytes now
 
                 //set the body of the message to the serialized value of the telemetry data
-                var message = new Message(bytes);
+                ////var message = new Message(bytes);
 
 //========
 
