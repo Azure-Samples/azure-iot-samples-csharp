@@ -48,24 +48,24 @@ namespace SimulatedDevice
                 string infoString;
                 string levelValue;
 
-                if (rand.NextDouble() > 0.7)
-                {
-                    if (rand.NextDouble() > 0.5)
-                    {
-                        levelValue = "critical";
-                        infoString = "This is a critical message.";
-                    }
-                    else
-                    {
+//                if (rand.NextDouble() > 0.7)
+//                {
+//                    if (rand.NextDouble() > 0.5)
+//                    {
+//                        levelValue = "critical";
+//                        infoString = "This is a critical message.";
+//                    }
+//                    else
+//                    {
                         levelValue = "storage";
-                        infoString = "This is a storage message.";
-                    }
-                }
-                else
-                {
-                    levelValue = "normal";
-                    infoString = "This is a normal message.";
-                }
+                        infoString = "This is a storage message. ENCODED UTF-8";
+                //                    }
+                //                }
+                //                else
+                //                {
+                //                    levelValue = "normal";
+                //                    infoString = "This is a normal message.";
+                //                }
 
                 var telemetryDataPoint = new
                 {
@@ -77,17 +77,17 @@ namespace SimulatedDevice
                 var telemetryDataString = JsonConvert.SerializeObject(telemetryDataPoint);
 
                 //set the body of the message to the serialized value of the telemetry data
-                var message = new Message(Encoding.ASCII.GetBytes(telemetryDataString));
-                ////var bytes = Encoding.ASCII.GetBytes(telemetryDataString);
+                ////OLD var message = new Message(Encoding.ASCII.GetBytes(telemetryDataString));
+                var bytes = Encoding.ASCII.GetBytes(telemetryDataString);
 
                 //====== NEW
 
                 // if you need a differenct encoding for downstream proccess see below
 
-                ////bytes = System.Text.Encoding.Convert(Encoding.ASCII, Encoding.UTF32, bytes); //This has the UTF 32 bytes now
+                bytes = System.Text.Encoding.Convert(Encoding.ASCII, Encoding.UTF8, bytes); //This has the UTF 32 bytes now
 
                 //set the body of the message to the serialized value of the telemetry data
-                ////var message = new Message(bytes);
+                var message = new Message(bytes);
 
 //========
 
