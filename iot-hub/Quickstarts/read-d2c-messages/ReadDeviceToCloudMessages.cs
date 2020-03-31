@@ -3,7 +3,7 @@
 
 // This application uses the Microsoft Azure Event Hubs Client for .NET
 // For samples see: https://github.com/Azure/azure-event-hubs/tree/master/samples/DotNet
-// For documenation see: https://docs.microsoft.com/azure/event-hubs/
+// For documentation see: https://docs.microsoft.com/azure/event-hubs/
 using System;
 using Microsoft.Azure.EventHubs;
 using System.Threading.Tasks;
@@ -75,7 +75,7 @@ namespace read_d2c_messages
             var connectionString = new EventHubsConnectionStringBuilder(new Uri(s_eventHubsCompatibleEndpoint), s_eventHubsCompatiblePath, s_iotHubSasKeyName, s_iotHubSasKey);
             s_eventHubClient = EventHubClient.CreateFromConnectionString(connectionString.ToString());
 
-            // Create a PartitionReciever for each partition on the hub.
+            // Create a PartitionReceiver for each partition on the hub.
             var runtimeInfo = await s_eventHubClient.GetRuntimeInformationAsync();
             var d2cPartitions = runtimeInfo.PartitionIds;
 
@@ -94,7 +94,7 @@ namespace read_d2c_messages
                 tasks.Add(ReceiveMessagesFromDeviceAsync(partition, cts.Token));
             }
 
-            // Wait for all the PartitionReceivers to finsih.
+            // Wait for all the PartitionReceivers to finish.
             Task.WaitAll(tasks.ToArray());
         }
     }
