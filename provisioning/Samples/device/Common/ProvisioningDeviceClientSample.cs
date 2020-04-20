@@ -69,10 +69,10 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
 
         private void VerifyRegistrationIdFormat(string v)
         {
-            var r = new Regex("^[a-z0-9-]*$");
+            var r = new Regex(@"^[A-Za-z0-9:\._-]*$");
             if (!r.IsMatch(v))
             {
-                throw new FormatException("Invalid registrationId: The registration ID is alphanumeric, lowercase, and may contain hyphens");
+                throw new FormatException("Invalid registrationId: The registration ID is alphanumeric, case insensitive, and may contain special characters including colon, period, underscore and hyphen.");
             }
         }
     }
