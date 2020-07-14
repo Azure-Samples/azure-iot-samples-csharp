@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace arm_read_write
 {
-    class Program
+    public class Program
     {
         //
         //    This is how this tutorial will work. 
