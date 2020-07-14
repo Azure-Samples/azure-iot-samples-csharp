@@ -43,11 +43,11 @@ namespace arm_read_write
         private static string _envIOT_HUB_URI = Environment.GetEnvironmentVariable("IOT_HUB_URI");
         private static string _envIOT_DEVICE_KEY = Environment.GetEnvironmentVariable("IOT_DEVICE_KEY");
 
-        private static void Main()
+        public static async Task Main()
         {
             //for testing, just hardcode these
-            _envIOT_HUB_URI = "IOT-HUB-NAME-GOES-HERE.azure-devices-net";
-            _envIOT_DEVICE_KEY = "IOT-DEVICE-KEY-GOES-HERE";
+            _envIOT_HUB_URI = "ContosoTestHubdlxlud5h.azure-devices-net";
+            _envIOT_DEVICE_KEY = "RClD0LGxZCYavagk8tS2M7L1MI5bcKcyR+tJHzj+gDk=";
             _envIOT_DEVICE_ID = "Contoso-Test-Device";
             Console.WriteLine("iot hub uri = <{0}>", _envIOT_HUB_URI);
             Console.WriteLine("iot device id = <{0}>", _envIOT_DEVICE_ID);
@@ -57,7 +57,7 @@ namespace arm_read_write
             s_deviceClient = DeviceClient.Create(_envIOT_HUB_URI, 
                 new DeviceAuthenticationWithRegistrySymmetricKey(_envIOT_DEVICE_ID, _envIOT_DEVICE_KEY), 
                 TransportType.Mqtt);
-            SendDeviceToCloudMessagesAsync();
+            await SendDeviceToCloudMessagesAsync();
 
             Console.WriteLine("Press the Enter key to stop.");
 
@@ -69,7 +69,7 @@ namespace arm_read_write
         /// <summary>
         /// Send message to the Iot hub. This generates the object to be sent to the hub in the message.
         /// </summary>
-        private static async void SendDeviceToCloudMessagesAsync()
+        private static async Task SendDeviceToCloudMessagesAsync()
         {
             double minTemperature = 20;
             double minHumidity = 60;
