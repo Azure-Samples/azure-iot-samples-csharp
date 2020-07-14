@@ -46,8 +46,8 @@ namespace arm_read_write
         public static async Task Main()
         {
             //for testing, just hardcode these
-            _envIOT_HUB_URI = "ContosoTestHubdlxlud5h.azure-devices-net";
-            _envIOT_DEVICE_KEY = "RClD0LGxZCYavagk8tS2M7L1MI5bcKcyR+tJHzj+gDk=";
+            _envIOT_HUB_URI = "HUB-NAME-GOES-HERE.azure-devices-net";
+            _envIOT_DEVICE_KEY = "DEVICE-KEY-GOES-HERE";
             _envIOT_DEVICE_ID = "Contoso-Test-Device";
             Console.WriteLine("iot hub uri = <{0}>", _envIOT_HUB_URI);
             Console.WriteLine("iot device id = <{0}>", _envIOT_DEVICE_ID);
