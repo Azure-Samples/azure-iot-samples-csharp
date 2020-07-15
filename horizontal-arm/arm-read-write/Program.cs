@@ -39,10 +39,10 @@ namespace arm_read_write
 
         private static DeviceClient s_deviceClient;
         private readonly static string s_myDeviceId = "Contoso-Test-Device";
-        private readonly static string s_iotHubUri = "ContosoTestHubdlxlud5h.azure-devices.net";
+        private readonly static string s_iotHubUri = "<hub-name-goes-here>.azure-devices.net";
         // This is the primary key for the device. This is in the portal. 
         // Find your IoT hub in the portal > IoT devic1es > select your device > copy the key. 
-        private readonly static string s_deviceKey = "RClD0LGxZCYavagk8tS2M7L1MI5bcKcyR+tJHzj+gDk=";
+        private readonly static string s_deviceKey = "<device-key-goes-here>";
 
         private static async Task Main()
         {
