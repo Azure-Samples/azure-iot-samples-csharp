@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+	<PackageReference Include="Azure.Storage.Blobs" Version="12.*" />
 	<PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.*" />
   </ItemGroup>
 
