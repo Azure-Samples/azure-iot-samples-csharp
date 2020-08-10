@@ -62,6 +62,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 })
                 .AddColorConsoleLogger(c =>
                 {
+                    c.LogLevel = LogLevel.Error;
+                    c.Color = ConsoleColor.Red;
+                })
+                .AddColorConsoleLogger(c =>
+                {
                     c.LogLevel = LogLevel.Critical;
                     c.Color = ConsoleColor.DarkRed;
                 });
@@ -74,11 +79,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 s_deviceConnectionString = args[0];
             }
 
-            using (var deviceClient = DeviceClient.CreateFromConnectionString(s_deviceConnectionString, s_transportType))
-            {
-                var sample = new DeviceReconnectionSample(deviceClient, logger);
-                await sample.RunSampleAsync();
-            }
+            var sample = new DeviceReconnectionSample(s_deviceConnectionString, s_transportType, logger);
+            await sample.RunSampleAsync();
 
             logger.LogInformation("Done, exiting...");
             return 0;
