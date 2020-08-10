@@ -22,8 +22,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
         private readonly object _lock = new object();
 
         private static DeviceClient s_deviceClient;
-        private static ConnectionStatus connectionStatus;
-        private static bool wasConnected;
+        private static ConnectionStatus s_connectionStatus;
+        private static bool s_wasConnected;
 
         public DeviceReconnectionSample(string deviceConnectionString, TransportType transportType, ILogger logger)
         {
@@ -38,13 +38,13 @@ namespace Microsoft.Azure.Devices.Client.Samples
         {
             _logger.LogDebug($"Connection status changed: status={status}, reason={reason}");
 
-            connectionStatus = status;
-            switch (connectionStatus)
+            s_connectionStatus = status;
+            switch (s_connectionStatus)
             {
                 case ConnectionStatus.Connected:
                     _logger.LogDebug("### The DeviceClient is CONNECTED; all operations will be carried out as normal.");
 
-                    wasConnected = true;
+                    s_wasConnected = true;
                     break;
 
                 case ConnectionStatus.Disconnected_Retrying:
@@ -60,31 +60,43 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                 case ConnectionStatus.Disconnected:
                     {
-                        if (reason == ConnectionStatusChangeReason.Bad_Credential)
+                        switch (reason)
                         {
-                            _logger.LogWarning("### The supplied credentials were invalid." +
-                                "\nFix the input and then create a new device client instance.");
-                        }
-                        else if (reason == ConnectionStatusChangeReason.Device_Disabled)
-                        {
-                            _logger.LogWarning("### The device has been deleted or marked as disabled (on your hub instance)." +
-                                "\nFix the device status in Azure and then create a new device client instance.");
-                        }
-                        else if (reason == ConnectionStatusChangeReason.Retry_Expired)
-                        {
-                            _logger.LogWarning("### The DeviceClient has been disconnected because the retry policy expired." +
-                                "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
+                            case ConnectionStatusChangeReason.Bad_Credential:
+                                _logger.LogWarning("### The supplied credentials were invalid." +
+                                    "\nFix the input and then create a new device client instance.");
+                                break;
 
-                            InitializeClient();
-                        }
-                        else if (reason == ConnectionStatusChangeReason.Communication_Error)
-                        {
-                            _logger.LogWarning("### The DeviceClient has been disconnected due to a non-retry-able exception. Inspect the exception for details." +
-                                "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
+                            case ConnectionStatusChangeReason.Device_Disabled:
+                                _logger.LogWarning("### The device has been deleted or marked as disabled (on your hub instance)." +
+                                    "\nFix the device status in Azure and then create a new device client instance.");
+                                break;
 
-                            InitializeClient();
+                            case ConnectionStatusChangeReason.Retry_Expired:
+                                _logger.LogWarning("### The DeviceClient has been disconnected because the retry policy expired." +
+                                    "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
+
+                                InitializeClient();
+                                break;
+
+                            case ConnectionStatusChangeReason.Communication_Error:
+                                _logger.LogWarning("### The DeviceClient has been disconnected due to a non-retry-able exception. Inspect the exception for details." +
+                                    "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
+
+                                InitializeClient();
+                                break;
+
+                            default:
+                                _logger.LogError("### This combination of ConnectionStatus and ConnectionStatusChangeReason is not expected, contact the client library team with logs.");
+                                    break;
+
                         }
                     }
+
+                    break;
+
+                default:
+                    _logger.LogError("### This combination of ConnectionStatus and ConnectionStatusChangeReason is not expected, contact the client library team with logs.");
                     break;
             }
         }
@@ -97,24 +109,24 @@ namespace Microsoft.Azure.Devices.Client.Samples
         private void InitializeClient()
         {
             // If the client reports Connected status, it is already in operational state.
-            if (connectionStatus != ConnectionStatus.Connected)
+            if (s_connectionStatus != ConnectionStatus.Connected)
             {
                 lock (_lock)
                 {
-                    _logger.LogDebug($"Attempting to reinitialize the client instance, current status={connectionStatus}");
+                    _logger.LogDebug($"Attempting to initialize the client instance, current status={s_connectionStatus}");
 
                     // If the device client instance has been previously initialized, then dispose it.
                     // The wasConnected variable is required to store if the client ever reported Connected status.
-                    if (wasConnected && connectionStatus == ConnectionStatus.Disconnected)
+                    if (s_wasConnected && s_connectionStatus == ConnectionStatus.Disconnected)
                     {
                         s_deviceClient?.Dispose();
-                        wasConnected = false;
+                        s_wasConnected = false;
                     }
 
                     s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, _transportType);
                     s_deviceClient.SetConnectionStatusChangesHandler(ConnectionStatusChangeHandler);
                     s_deviceClient.OperationTimeoutInMilliseconds = (uint)s_operationTimeout.TotalMilliseconds;
-                    _logger.LogDebug($"Reinitialized the client instance.");
+                    _logger.LogDebug($"Initialized the client instance.");
                 }
             }
         }
@@ -136,19 +148,12 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     // Inspect the exception to figure out if operation should be retried, or if user-input is required.
                     _logger.LogError($"An IotHubException was caught, but will try to recover and retry explicitly: {ex}");
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
                 {
-                    if (ExceptionHelper.IsNetworkExceptionChain(ex))
-                    {
-                        _logger.LogError($"A network related exception was caught, but will try to recover and retry explicitly: {ex}");
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    _logger.LogError($"A network related exception was caught, but will try to recover and retry explicitly: {ex}");
                 }
 
-                await Task.Delay((int)s_sleepDuration.TotalMilliseconds);
+                await Task.Delay(s_sleepDuration);
             }
         }
 
@@ -172,16 +177,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     // Inspect the exception to figure out if operation should be retried, or if user-input is required.
                     _logger.LogError($"An IotHubException was caught, but will try to recover and retry explicitly: {ex}");
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
                 {
-                    if (ExceptionHelper.IsNetworkExceptionChain(ex))
-                    {
-                        _logger.LogError($"A network related exception was caught, but will try to recover and retry explicitly: {ex}");
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    _logger.LogError($"A network related exception was caught, but will try to recover and retry explicitly: {ex}");
                 }
             }
         }
@@ -194,7 +192,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
             using var eventMessage = new Message(Encoding.UTF8.GetBytes(dataBuffer))
             {
-                MessageId = count.ToString()
+                MessageId = count.ToString(),
+                ContentEncoding = Encoding.UTF8.ToString(),
+                ContentType = "application/json",
             };
             eventMessage.Properties.Add("temperatureAlert", (_temperature > TemperatureThreshold) ? "true" : "false");
 

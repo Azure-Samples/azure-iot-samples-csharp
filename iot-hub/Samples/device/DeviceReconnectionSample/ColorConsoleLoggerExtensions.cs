@@ -13,11 +13,13 @@ namespace Microsoft.Azure.Devices.Client.Samples
             loggerFactory.AddProvider(new ColorConsoleLoggerProvider(config));
             return loggerFactory;
         }
+
         public static ILoggerFactory AddColorConsoleLogger(this ILoggerFactory loggerFactory)
         {
             var config = new ColorConsoleLoggerConfiguration();
             return loggerFactory.AddColorConsoleLogger(config);
         }
+
         public static ILoggerFactory AddColorConsoleLogger(this ILoggerFactory loggerFactory, Action<ColorConsoleLoggerConfiguration> configure)
         {
             var config = new ColorConsoleLoggerConfiguration();
