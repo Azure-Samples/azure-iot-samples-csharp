@@ -23,7 +23,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private static DeviceClient s_deviceClient;
         private static ConnectionStatus s_connectionStatus;
-        private static bool s_wasConnected;
+        private static bool s_wasEverConnected;
 
         public DeviceReconnectionSample(string deviceConnectionString, TransportType transportType, ILogger logger)
         {
@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 case ConnectionStatus.Connected:
                     _logger.LogDebug("### The DeviceClient is CONNECTED; all operations will be carried out as normal.");
 
-                    s_wasConnected = true;
+                    s_wasEverConnected = true;
                     break;
 
                 case ConnectionStatus.Disconnected_Retrying:
@@ -117,10 +117,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                     // If the device client instance has been previously initialized, then dispose it.
                     // The wasConnected variable is required to store if the client ever reported Connected status.
-                    if (s_wasConnected && s_connectionStatus == ConnectionStatus.Disconnected)
+                    if (s_wasEverConnected && s_connectionStatus == ConnectionStatus.Disconnected)
                     {
                         s_deviceClient?.Dispose();
-                        s_wasConnected = false;
+                        s_wasEverConnected = false;
                     }
 
                     s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionString, _transportType);
