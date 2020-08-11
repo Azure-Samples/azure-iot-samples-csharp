@@ -5,6 +5,7 @@ using Microsoft.Azure.Devices.Client.Exceptions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Devices.Client.Samples
@@ -57,38 +58,36 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     break;
 
                 case ConnectionStatus.Disconnected:
+                    switch (reason)
                     {
-                        switch (reason)
-                        {
-                            case ConnectionStatusChangeReason.Bad_Credential:
-                                _logger.LogWarning("### The supplied credentials were invalid." +
-                                    "\nFix the input and then create a new device client instance.");
-                                break;
+                        case ConnectionStatusChangeReason.Bad_Credential:
+                            _logger.LogWarning("### The supplied credentials were invalid." +
+                                "\nFix the input and then create a new device client instance.");
+                            break;
 
-                            case ConnectionStatusChangeReason.Device_Disabled:
-                                _logger.LogWarning("### The device has been deleted or marked as disabled (on your hub instance)." +
-                                    "\nFix the device status in Azure and then create a new device client instance.");
-                                break;
+                        case ConnectionStatusChangeReason.Device_Disabled:
+                            _logger.LogWarning("### The device has been deleted or marked as disabled (on your hub instance)." +
+                                "\nFix the device status in Azure and then create a new device client instance.");
+                            break;
 
-                            case ConnectionStatusChangeReason.Retry_Expired:
-                                _logger.LogWarning("### The DeviceClient has been disconnected because the retry policy expired." +
-                                    "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
+                        case ConnectionStatusChangeReason.Retry_Expired:
+                            _logger.LogWarning("### The DeviceClient has been disconnected because the retry policy expired." +
+                                "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
 
-                                InitializeClient();
-                                break;
+                            InitializeClient();
+                            break;
 
-                            case ConnectionStatusChangeReason.Communication_Error:
-                                _logger.LogWarning("### The DeviceClient has been disconnected due to a non-retry-able exception. Inspect the exception for details." +
-                                    "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
+                        case ConnectionStatusChangeReason.Communication_Error:
+                            _logger.LogWarning("### The DeviceClient has been disconnected due to a non-retry-able exception. Inspect the exception for details." +
+                                "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
 
-                                InitializeClient();
-                                break;
+                            InitializeClient();
+                            break;
 
-                            default:
-                                _logger.LogError("### This combination of ConnectionStatus and ConnectionStatusChangeReason is not expected, contact the client library team with logs.");
-                                    break;
+                        default:
+                            _logger.LogError("### This combination of ConnectionStatus and ConnectionStatusChangeReason is not expected, contact the client library team with logs.");
+                            break;
 
-                        }
                     }
 
                     break;
@@ -101,7 +100,16 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         public async Task RunSampleAsync()
         {
-            await Task.WhenAll(SendMessagesAsync(), ReceiveMessagesAsync());
+            using var cts = new CancellationTokenSource();
+
+            Console.CancelKeyPress += (sender, eventArgs) =>
+            {
+                eventArgs.Cancel = true;
+                cts.Cancel();
+                _logger.LogInformation("Sample execution cancellation requested, will exit.");
+            };
+
+            await Task.WhenAll(SendMessagesAsync(cts.Token), ReceiveMessagesAsync(cts.Token));
         }
 
         private void InitializeClient()
@@ -129,10 +137,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
-        private async Task SendMessagesAsync()
+        private async Task SendMessagesAsync(CancellationToken cancellationToken)
         {
             int count = 0;
-            while (true)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 count++;
                 _logger.LogInformation($"Device sending message {count} to IoTHub...");
@@ -155,9 +163,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
-        private async Task ReceiveMessagesAsync()
+        private async Task ReceiveMessagesAsync(CancellationToken cancellationToken)
         {
-            while (true)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 _logger.LogInformation($"Device waiting for C2D messages from the hub - for {s_sleepDuration}...");
                 _logger.LogInformation("Use the IoT Hub Azure Portal or Azure IoT Explorer to send a message to this device.");
@@ -202,7 +210,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private async Task ReceiveMessageAndCompleteAsync()
         {
-            using Message receivedMessage = await s_deviceClient.ReceiveAsync(s_sleepDuration).ConfigureAwait(false);
+            using Message receivedMessage = await s_deviceClient.ReceiveAsync(s_sleepDuration);
             if (receivedMessage != null)
             {
                 string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
@@ -214,7 +222,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     _logger.LogInformation($"Property[{propCount++}> Key={prop.Key} : Value={prop.Value}");
                 }
 
-                await s_deviceClient.CompleteAsync(receivedMessage).ConfigureAwait(false);
+                await s_deviceClient.CompleteAsync(receivedMessage);
             }
             else
             {

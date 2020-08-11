@@ -35,7 +35,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             ILoggerFactory loggerFactory = new LoggerFactory();
 
             loggerFactory.AddColorConsoleLogger(
-                new ColorConsoleLoggerConfiguration()
+                new ColorConsoleLoggerConfiguration
                 {
                     MinLogLevel = LogLevel.Debug,
                 });

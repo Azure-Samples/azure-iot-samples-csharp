@@ -1,6 +1,6 @@
 # Device Reconnection Sample
 
-This sample code demonstrates the various connection status changes and connection status change reasons the Device Client can return, and how to handle them.
+This sample code demonstrates the various connection status changes and connection status change reasons the device client can return, and how to handle them.
 
 The device client exhibits the following connection status changes with reason:
 
