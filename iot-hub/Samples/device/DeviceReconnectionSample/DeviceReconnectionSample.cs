@@ -54,8 +54,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 case ConnectionStatus.Disabled:
                     _logger.LogDebug("### The DeviceClient has been closed gracefully." +
                         "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
-
-                    InitializeClient();
                     break;
 
                 case ConnectionStatus.Disconnected:
