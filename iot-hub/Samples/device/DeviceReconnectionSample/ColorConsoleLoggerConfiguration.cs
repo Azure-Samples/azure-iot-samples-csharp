@@ -31,18 +31,16 @@ namespace Microsoft.Azure.Devices.Client.Samples
         }
 
         public ColorConsoleLoggerConfiguration(IDictionary<LogLevel, ConsoleColor> customConsoleColorMapping)
+            : this ()
         {
-            var customMap = s_defaultColorMapping;
-
             // If a custom color mapping is provided, use it to override the default color mapping.
             foreach (KeyValuePair<LogLevel, ConsoleColor> entry in customConsoleColorMapping)
             {
-                if (customMap.ContainsKey(entry.Key))
+                if (LogLevelToColorMapping.ContainsKey(entry.Key))
                 {
-                    customMap[entry.Key] = entry.Value;
+                    LogLevelToColorMapping[entry.Key] = entry.Value;
                 }
             }
-            LogLevelToColorMapping = customMap;
         }
 
         public IDictionary<LogLevel, ConsoleColor> LogLevelToColorMapping { get; }
