@@ -32,46 +32,14 @@ namespace Microsoft.Azure.Devices.Client.Samples
         {
             // Create a console logger, that logs all events that are categorized at Debug level or higher.
             // For additional details, see https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging.ilogger?view=dotnet-plat-ext-3.1.
-            ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
-            {
-                builder
-                .AddFilter(level => level >= LogLevel.Debug);
-            });
+            ILoggerFactory loggerFactory = new LoggerFactory();
 
-            loggerFactory
-                .AddColorConsoleLogger(c =>
+            loggerFactory.AddColorConsoleLogger(
+                new ColorConsoleLoggerConfiguration()
                 {
-                    c.LogLevel = LogLevel.Trace;
-                    c.Color = ConsoleColor.Blue;
-                })
-                .AddColorConsoleLogger(c =>
-                {
-                    c.LogLevel = LogLevel.Debug;
-                    c.Color = ConsoleColor.DarkYellow;
-
-                })
-                .AddColorConsoleLogger(c =>
-                {
-                    c.LogLevel = LogLevel.Information;
-                    c.Color = ConsoleColor.Cyan;
-                })
-                .AddColorConsoleLogger(c =>
-                {
-                    c.LogLevel = LogLevel.Warning;
-                    c.Color = ConsoleColor.DarkMagenta;
-                })
-                .AddColorConsoleLogger(c =>
-                {
-                    c.LogLevel = LogLevel.Error;
-                    c.Color = ConsoleColor.Red;
-                })
-                .AddColorConsoleLogger(c =>
-                {
-                    c.LogLevel = LogLevel.Critical;
-                    c.Color = ConsoleColor.DarkRed;
+                    MinLogLevel = LogLevel.Debug,
                 });
             var logger = loggerFactory.CreateLogger<Program>();
-
             var sdkEventListener = new ConsoleEventListener(SdkEventProviderPrefix, logger);
 
             if (string.IsNullOrEmpty(s_deviceConnectionString) && args.Length > 0)

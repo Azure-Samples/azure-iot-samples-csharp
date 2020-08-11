@@ -4,6 +4,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Globalization;
+using System.Linq;
 
 namespace Microsoft.Azure.Devices.Client.Samples
 {
@@ -25,26 +26,27 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         public bool IsEnabled(LogLevel logLevel)
         {
-            return logLevel == _config.LogLevel;
+            return logLevel >= _config.MinLogLevel;
         }
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
+            var colorToBeUsed = _config.LogLevelToColorMapping[logLevel];
+
             if (!IsEnabled(logLevel))
             {
                 return;
             }
 
-            if (_config.EventId == 0 || _config.EventId == eventId.Id)
+            if (_config.EventIds.Contains(0) || _config.EventIds.Contains(eventId.Id))
             {
                 var color = Console.ForegroundColor;
 
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write($"{DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", CultureInfo.InvariantCulture)}>>");
+                Console.Write($"{DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", CultureInfo.InvariantCulture)}>> ");
 
-                Console.ForegroundColor = _config.Color;
+                Console.ForegroundColor = colorToBeUsed;
                 Console.WriteLine($"{logLevel} - {formatter(state, exception)}");
-
                 Console.ForegroundColor = color;
             }
         }

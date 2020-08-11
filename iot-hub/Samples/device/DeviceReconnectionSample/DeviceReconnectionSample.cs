@@ -116,7 +116,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     _logger.LogDebug($"Attempting to initialize the client instance, current status={s_connectionStatus}");
 
                     // If the device client instance has been previously initialized, then dispose it.
-                    // The wasConnected variable is required to store if the client ever reported Connected status.
+                    // The s_wasEverConnected variable is required to store if the client ever reported Connected status.
                     if (s_wasEverConnected && s_connectionStatus == ConnectionStatus.Disconnected)
                     {
                         s_deviceClient?.Dispose();
