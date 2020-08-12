@@ -109,7 +109,14 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 _logger.LogInformation("Sample execution cancellation requested, will exit.");
             };
 
-            await Task.WhenAll(SendMessagesAsync(cts.Token), ReceiveMessagesAsync(cts.Token));
+            try
+            {
+                await Task.WhenAll(SendMessagesAsync(cts.Token), ReceiveMessagesAsync(cts.Token));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Unrecoverable exception caught, user action is required, so exiting...: \n{ex}");
+            }
         }
 
         private void InitializeClient()
@@ -204,8 +211,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
             };
             eventMessage.Properties.Add("temperatureAlert", (_temperature > TemperatureThreshold) ? "true" : "false");
 
-            _logger.LogInformation($"Sending message: {count}, Data: [{dataBuffer}]");
             await s_deviceClient.SendEventAsync(eventMessage);
+            _logger.LogInformation($"Sent message: {count}, Data: [{dataBuffer}]");
         }
 
         private async Task ReceiveMessageAndCompleteAsync()
@@ -223,6 +230,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 }
 
                 await s_deviceClient.CompleteAsync(receivedMessage);
+                _logger.LogInformation($"Marked message [{messageData}] as \"Complete\".");
             }
             else
             {
