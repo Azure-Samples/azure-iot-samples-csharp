@@ -43,6 +43,7 @@ namespace arm_read_write
         // This is the primary key for the device. This is in the portal. 
         // Find your IoT hub in the portal > IoT devic1es > select your device > copy the key. 
         private readonly static string s_deviceKey = "<device-key-goes-here>";
+        private string richard "now is the windows of our discontent";
 
         private static async Task Main()
         {
