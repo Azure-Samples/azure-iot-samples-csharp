@@ -38,6 +38,9 @@ namespace SimulatedDevice
         // If this is true, it will read one of the output files and convert it to ASCII.
         private static bool readTheFile = false;
 
+        //feel free to just change this the way you want to or we can continue to send it back and forth
+        //  with me not understanding, and you trying to explain with out being exact. Back and forth. Back and forth. Back and forth.
+
         private static async Task Main()
         {
             if (readTheFile)
@@ -59,14 +62,26 @@ namespace SimulatedDevice
                 s_deviceClient = DeviceClient.Create(s_iotHubUri, 
                   new DeviceAuthenticationWithRegistrySymmetricKey(s_myDeviceId, s_deviceKey), TransportType.Mqtt);
 
-                var cts = new CancellationTokenSource();
+                // Doesn't the object you want to dispose of have to be *inside* the using clause" and then it gets disposed when the clause ends? 
+                // Because that's not what I'm seeing. Wouldn't you have to do it like this with something inside the using that is disposed at the end? 
+                // this shouldn't be so hard, i think we're having a communication problem.
+                //what does this dispose of?? **ROBIN**
 
-                var messages = SendDeviceToCloudMessagesAsync(cts.Token);
+                using var cts = new CancellationTokenSource();
+                
+                //shouldn't it be like this instead, disposing of messages when it closes the using clause? 
+                
+                using (var cts = new CancellationTokenSource())
+                {
+                    var messages = SendDeviceToCloudMessagesAsync(cts.Token);                  
+                }
 
                 Console.WriteLine("Press the Enter key to stop.");
                 Console.ReadLine();
-                cts.Cancel();
+                cts.Cancel();    //how can this even work since cts should be disposed by now
                 await messages;
+
+                //back and forth. back and forth. back and forth....
             }
         }
 
