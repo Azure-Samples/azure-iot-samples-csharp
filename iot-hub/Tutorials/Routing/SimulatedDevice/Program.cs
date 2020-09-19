@@ -29,10 +29,10 @@ namespace SimulatedDevice
     {
         private static DeviceClient s_deviceClient;
         private readonly static string s_myDeviceId = "Contoso-Test-Device";
-        private readonly static string s_iotHubUri = "<put hub name here>.azure-devices.net";
+        private readonly static string s_iotHubUri = "<iot-hub-name-goes-here>.azure-devices.net";
         // This is the primary key for the device. This is in the portal. 
         // Find your IoT hub in the portal > IoT devices > select your device > copy the key. 
-        private readonly static string s_deviceKey = "<put device key here>";
+        private readonly static string s_deviceKey = "device-id-goes-here";
 
         // If this is false, it will submit messages to the iot hub. 
         // If this is true, it will read one of the output files and convert it to ASCII.
@@ -61,31 +61,21 @@ namespace SimulatedDevice
                 Console.WriteLine("Routing Tutorial: Simulated device\n");
                 s_deviceClient = DeviceClient.Create(s_iotHubUri, 
                   new DeviceAuthenticationWithRegistrySymmetricKey(s_myDeviceId, s_deviceKey), TransportType.Mqtt);
-
-                // Doesn't the object you want to dispose of have to be *inside* the using clause" and then it gets disposed when the clause ends? 
-                // Because that's not what I'm seeing. Wouldn't you have to do it like this with something inside the using that is disposed at the end? 
-                // this shouldn't be so hard, i think we're having a communication problem.
-                //what does this dispose of?? **ROBIN**
-
-                using var cts = new CancellationTokenSource();
-                
-                //shouldn't it be like this instead, disposing of messages when it closes the using clause? 
-                
+               
                 using (var cts = new CancellationTokenSource())
                 {
-                    var messages = SendDeviceToCloudMessagesAsync(cts.Token);                  
-                }
+                    var messages = SendDeviceToCloudMessagesAsync(cts.Token);
+                    Console.WriteLine("Press the Enter key to stop.");
+                    Console.ReadLine();
+                    cts.Cancel();    //how can this even work since cts should be disposed by now
+                    await messages;                
+                
+                } 
 
-                Console.WriteLine("Press the Enter key to stop.");
-                Console.ReadLine();
-                cts.Cancel();    //how can this even work since cts should be disposed by now
-                await messages;
-
-                //back and forth. back and forth. back and forth....
             }
         }
 
-        /// <summary>
+        /// <summary> 
         /// Send message to the Iot hub. This generates the object to be sent to the hub in the message.
         /// </summary>
         private static async Task SendDeviceToCloudMessagesAsync(CancellationToken token)
