@@ -38,9 +38,6 @@ namespace SimulatedDevice
         // If this is true, it will read one of the output files and convert it to ASCII.
         private static bool readTheFile = false;
 
-        //feel free to just change this the way you want to or we can continue to send it back and forth
-        //  with me not understanding, and you trying to explain with out being exact. Back and forth. Back and forth. Back and forth.
-
         private static async Task Main()
         {
             if (readTheFile)
@@ -67,9 +64,8 @@ namespace SimulatedDevice
                     var messages = SendDeviceToCloudMessagesAsync(cts.Token);
                     Console.WriteLine("Press the Enter key to stop.");
                     Console.ReadLine();
-                    cts.Cancel();    //how can this even work since cts should be disposed by now
-                    await messages;                
-                
+                    cts.Cancel();   
+                    await messages;                                
                 } 
 
             }
