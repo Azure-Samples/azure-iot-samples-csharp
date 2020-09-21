@@ -56,17 +56,15 @@ namespace SimulatedDevice
                 //  http://docs.microsoft.com/azure/iot-hub/tutorial-routing
 
                 Console.WriteLine("Routing Tutorial: Simulated device\n");
-                s_deviceClient = DeviceClient.Create(s_iotHubUri, 
+                s_deviceClient = DeviceClient.Create(s_iotHubUri,
                   new DeviceAuthenticationWithRegistrySymmetricKey(s_myDeviceId, s_deviceKey), TransportType.Mqtt);
-               
-                using (var cts = new CancellationTokenSource())
-                {
-                    var messages = SendDeviceToCloudMessagesAsync(cts.Token);
-                    Console.WriteLine("Press the Enter key to stop.");
-                    Console.ReadLine();
-                    cts.Cancel();   
-                    await messages;                                
-                } 
+
+                using var cts = new CancellationTokenSource();
+                var messages = SendDeviceToCloudMessagesAsync(cts.Token);
+                Console.WriteLine("Press the Enter key to stop.");
+                Console.ReadLine();
+                cts.Cancel();
+                await messages;
 
             }
         }
@@ -126,8 +124,7 @@ namespace SimulatedDevice
 
                 // Take the string (telemetryDataString) and turn it into a byte array 
                 //   that is encoded as UTF-32.
-                var message = new Message(Encoding.UTF32.GetBytes(telemetryDataString));
-
+                using var message = new Message(Encoding.UTF32.GetBytes(telemetryDataString));
                 //Add one property to the message.
                 message.Properties.Add("level", levelValue);
 
@@ -174,5 +171,5 @@ namespace SimulatedDevice
 
             System.IO.File.WriteAllText(outputFilePathAndName, outputResult);
         }
-    } 
+    }
 }
