@@ -20,7 +20,7 @@ namespace Microsoft.Azure.Devices.Samples
         /// </param>
         /// <remarks>
         /// This sample performs operations on a plug and play compatible device on the root level. For a sample on how to perform
-        /// operations on a component level on a plug an dplay compatible device, please check out <see href="https://www.bing.com/">TODO FILL THIS IN</see>.
+        /// operations on a component level on a plug an dplay compatible device, please check out <see href="https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/master/iot-hub/Samples/device">PnpDeviceSample</see>.
         /// </remarks> 
         public static async Task Main(string[] args)
         {
