@@ -91,7 +91,7 @@ namespace Microsoft.Azure.Devices.Samples
                 getMaxMinReportCommandName, 
                 JsonConvert.SerializeObject(since));
 
-            _logger.LogDebug($"Command {getMaxMinReportCommandName} was invoked: {invokeCommandResponse.Body.Payload}");
+            _logger.LogDebug($"Command {getMaxMinReportCommandName} was invoked. Report: {invokeCommandResponse.Body.Payload}");
         }
     }
 }
