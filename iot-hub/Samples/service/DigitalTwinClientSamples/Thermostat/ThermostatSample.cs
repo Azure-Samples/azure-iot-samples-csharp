@@ -52,11 +52,11 @@ namespace Microsoft.Azure.Devices.Samples
 
         private async Task UpdateTargetTemperatureProperty()
         {
+            const string targetTemperaturePropertyName = "targetTemperature";
+            var updateOperation = new UpdateOperationsUtility();
+
             // Choose a random value to assign to the targetTemperature property
             int desiredTargetTemperature = Random.Next(0, 100);
-
-            var targetTemperaturePropertyName = "targetTemperature";
-            var updateOperation = new UpdateOperationsUtility();
 
             // First let's take a look at when the property was updated and what was it set to.
             var getDigitalTwinResponse = await _digitalTwinClient.GetDigitalTwinAsync<ThermostatTwin>(_digitalTwinId);
@@ -89,7 +89,7 @@ namespace Microsoft.Azure.Devices.Samples
             // Choose a random value to assign to the currentTemperature property
             int currentTemperature = Random.Next(0, 100);
 
-            var currentTemperaturePropertyName = "currentTemperature";
+            const string currentTemperaturePropertyName = "currentTemperature";
             var updateOperation = new UpdateOperationsUtility();
 
             // First, add the property to the digital twin
@@ -121,7 +121,7 @@ namespace Microsoft.Azure.Devices.Samples
         private async Task InvokeGetMaxMinReportCommand()
         {
             DateTimeOffset since = DateTimeOffset.Now.Subtract(TimeSpan.FromMinutes(2));
-            var getMaxMinReportCommandName = "getMaxMinReport";
+            const string getMaxMinReportCommandName = "getMaxMinReport";
 
             _logger.LogDebug($"Invoke the {getMaxMinReportCommandName} command on {_digitalTwinId} digital twin.");
 
