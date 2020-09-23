@@ -37,12 +37,16 @@ namespace Microsoft.Azure.Devices.Samples
                 });
 
             s_logger = InitializeConsoleDebugLogger();
+            if (!parameters.Validate())
+            {
+                throw new ArgumentException("Required parameters are not set. Please recheck required variables by using \"--help\"");
+            }
 
             s_logger.LogDebug("Set up the digital twin client.");
             using DigitalTwinClient digitalTwinClient = DigitalTwinClient.CreateFromConnectionString(parameters.HubConnectionString);
 
             s_logger.LogDebug("Set up and start the Thermostat sample.");
-            var thermostatSample = new ThermostatSample(digitalTwinClient, parameters.DigitalTwinId, s_logger);
+            var thermostatSample = new ThermostatSample(digitalTwinClient, parameters.DeviceId, s_logger);
             await thermostatSample.RunSampleAsync().ConfigureAwait(false);
         }
 
