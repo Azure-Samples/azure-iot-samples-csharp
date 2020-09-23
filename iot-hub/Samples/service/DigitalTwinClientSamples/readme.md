@@ -36,7 +36,7 @@ You need to clone the repository or download the sample (the one you want to try
     dotnet run
     ```
 
-[lnk-thermostat-sample]: (https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/barustum/digitalTwinClientSamples/iot-hub/Samples/service/DigitalTwinClientSamples/Thermostat/)
+[lnk-thermostat-sample]: https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/barustum/digitalTwinClientSamples/iot-hub/Samples/service/DigitalTwinClientSamples/Thermostat/
 
 [lnk-temperatureController-sample]: https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/barustum/digitalTwinClientSamples/iot-hub/Samples/service/DigitalTwinClientSamples/TemperatureController/
 
