@@ -30,7 +30,10 @@ namespace Microsoft.Azure.Devices.Samples
             await GetAndPrintDigitalTwin<ThermostatTwin>();
 
             // Update the targetTemperature property of the digital twin
-            await UpdateDigitalTwin();
+            await UpdateTargetTemperatureProperty();
+
+            // Add, replace then remove currentTemperature property on the digital twin
+            await UpdateCurrentTemperatureProperty();
 
             // Invoke the getMaxMinReport command on the root level of the digital twin
             await InvokeGetMaxMinReportCommand();
@@ -47,7 +50,7 @@ namespace Microsoft.Azure.Devices.Samples
             return thermostatTwin;
         }
 
-        private async Task UpdateDigitalTwin()
+        private async Task UpdateTargetTemperatureProperty()
         {
             // Choose a random value to assign to the targetTemperature property
             int desiredTargetTemperature = Random.Next(0, 100);
@@ -64,12 +67,14 @@ namespace Microsoft.Azure.Devices.Samples
                 _logger.LogDebug($"The property {targetTemperaturePropertyName} was last updated on {targetTemperatureDesiredLastUpdateTime.ToLocalTime()} `" +
                     $" with a value of {getDigitalTwinResponse.Body.Metadata.TargetTemperature.DesiredValue}.");
 
+                // The property path to be replaced should be prepended with a '/'
                 updateOperation.AppendReplaceOp($"/{targetTemperaturePropertyName}", desiredTargetTemperature);
             }
             else
             {
                 _logger.LogDebug($"The property {targetTemperaturePropertyName} was never set on the ${_digitalTwinId} digital twin.");
 
+                // The property path to be added should be prepended with a '/'
                 updateOperation.AppendAddOp($"/{targetTemperaturePropertyName}", desiredTargetTemperature);
             }
 
@@ -77,6 +82,40 @@ namespace Microsoft.Azure.Devices.Samples
             HttpOperationHeaderResponse<DigitalTwinUpdateHeaders> updateDigitalTwinResponse = await _digitalTwinClient.UpdateDigitalTwinAsync(_digitalTwinId, updateOperation.Serialize());
 
             _logger.LogDebug($"Update {_digitalTwinId} digital twin response: {updateDigitalTwinResponse.Response.StatusCode}.");
+        }
+
+        private async Task UpdateCurrentTemperatureProperty()
+        {
+            // Choose a random value to assign to the currentTemperature property
+            int currentTemperature = Random.Next(0, 100);
+
+            var currentTemperaturePropertyName = "currentTemperature";
+            var updateOperation = new UpdateOperationsUtility();
+
+            // First, add the property to the digital twin
+            updateOperation.AppendAddOp($"/{currentTemperaturePropertyName}", currentTemperature);
+            _logger.LogDebug($"Add the {currentTemperaturePropertyName} property on the {_digitalTwinId} digital twin with a value of {currentTemperature}.");
+            HttpOperationHeaderResponse<DigitalTwinUpdateHeaders> addPropertyToDigitalTwinResponse = await _digitalTwinClient.UpdateDigitalTwinAsync(_digitalTwinId, updateOperation.Serialize());
+            _logger.LogDebug($"Update {_digitalTwinId} digital twin response: {addPropertyToDigitalTwinResponse.Response.StatusCode}.");
+            // Print the Thermostat digital twin
+            await GetAndPrintDigitalTwin<ThermostatTwin>();
+
+            // Second, update the property to a different value
+            int newCurrentTemperature = Random.Next(0, 100);
+            updateOperation.AppendAddOp($"/{currentTemperaturePropertyName}", newCurrentTemperature);
+            _logger.LogDebug($"Replace the {currentTemperaturePropertyName} property on the {_digitalTwinId} digital twin with a value of {newCurrentTemperature}.");
+            HttpOperationHeaderResponse<DigitalTwinUpdateHeaders> replacePropertyInDigitalTwinResponse = await _digitalTwinClient.UpdateDigitalTwinAsync(_digitalTwinId, updateOperation.Serialize());
+            _logger.LogDebug($"Update {_digitalTwinId} digital twin response: {replacePropertyInDigitalTwinResponse.Response.StatusCode}.");
+            // Print the Thermostat digital twin
+            await GetAndPrintDigitalTwin<ThermostatTwin>();
+
+            // Third, remote the currentTemperature property
+            updateOperation.AppendRemoveOp($"/{currentTemperaturePropertyName}");
+            _logger.LogDebug($"Remove the {currentTemperaturePropertyName} property on the {_digitalTwinId} digital twin.");
+            HttpOperationHeaderResponse<DigitalTwinUpdateHeaders> removePropertyInDigitalTwinResponse = await _digitalTwinClient.UpdateDigitalTwinAsync(_digitalTwinId, updateOperation.Serialize());
+            _logger.LogDebug($"Update {_digitalTwinId} digital twin response: {removePropertyInDigitalTwinResponse.Response.StatusCode}.");
+            // Print the Thermostat digital twin
+            await GetAndPrintDigitalTwin<ThermostatTwin>();
         }
 
         private async Task InvokeGetMaxMinReportCommand()
