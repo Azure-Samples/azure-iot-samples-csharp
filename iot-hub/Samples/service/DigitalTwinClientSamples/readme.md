@@ -2,8 +2,8 @@
 This folder contains samples to illustrate how to use the DigitalTwinClient to perform server-side operations on plug-and-play compatible devices.
 
 ## List of Samples
-* [Thermostat Sample](lnk-thermostat-sample): Illustrates how to perform root level service-side operations on a plug and play compatible device.
-* [Temperature Controller Sample](lnk-temperatureController-sample): Illustrates how to perform component level service-side operations on a plug and play compatible device.
+* [Thermostat Sample][lnk-thermostat-sample]: Illustrates how to perform root level service-side operations on a plug and play compatible device.
+* [Temperature Controller Sample][lnk-temperatureController-sample]: Illustrates how to perform component level service-side operations on a plug and play compatible device.
 
 ## Prerequisites
 In order to run the device samples on Linux or Windows, you will first need the following prerequisites:
@@ -21,7 +21,7 @@ You need to clone the repository or download the sample (the one you want to try
 
 ## Build and run the samples
 
-> Please note that the service side samples here require that the device side samples associated with the service side samples to be running in parrallel. For instance, you need to run the [Thermostat][lnk-thermostat-device-sample] device sample before your run the [Thermostat](lnk-thermostat-sample) service side sample. And the same goes for the TempreatureController sample; you need to run the [TemperatureController][lnk-temperaturecontroller-device-sample] device sample before you run the [TemperatureController](lnk-temperatureController-sample) service side sample.
+> Please note that the service side samples here require that the device side samples associated with the service side samples to be running in parrallel. For instance, you need to run the [Thermostat][lnk-thermostat-device-sample] device sample before your run the [Thermostat][lnk-thermostat-sample] service side sample. And the same goes for the TempreatureController sample; you need to run the [TemperatureController][lnk-temperaturecontroller-device-sample] device sample before you run the [TemperatureController][lnk-temperatureController-sample] service side sample.
 
 1. Set the following environment variables on the terminal from which you want to run the application.
     * IOTHUB_CONNECTION_STRING
@@ -36,7 +36,7 @@ You need to clone the repository or download the sample (the one you want to try
     dotnet run
     ```
 
-[lnk-thermostat-sample]: https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/barustum/digitalTwinClientSamples/iot-hub/Samples/service/DigitalTwinClientSamples/Thermostat/
+[lnk-thermostat-sample]: (https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/barustum/digitalTwinClientSamples/iot-hub/Samples/service/DigitalTwinClientSamples/Thermostat/)
 
 [lnk-temperatureController-sample]: https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/barustum/digitalTwinClientSamples/iot-hub/Samples/service/DigitalTwinClientSamples/TemperatureController/
 
