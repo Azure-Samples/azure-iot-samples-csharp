@@ -2,8 +2,8 @@
 This folder contains samples to illustrate how to use the DigitalTwinClient to perform server-side operations on plug-and-play compatible devices.
 
 ## List of Samples
-* [Thermostat Sample][lnk-thermostat-sample]: Illustrates how to perform root level service-side operations on a plug and play compatible device.
-* [Temperature Controller Sample][lnk-temperatureController-sample]: Illustrates how to perform component level service-side operations on a plug and play compatible device.
+* [Thermostat Sample][lnk-thermostat-sample]: Perform root-level operations on a plug and play compatible device.
+* [Temperature Controller Sample][lnk-temperatureController-sample]: Perform component-level operations on a plug and play compatible device.
 
 ## Prerequisites
 In order to run the device samples on Linux or Windows, you will first need the following prerequisites:

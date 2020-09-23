@@ -32,10 +32,11 @@ namespace Microsoft.Azure.Devices.Samples
             // Update the targetTemperature property of the digital twin
             await UpdateTargetTemperatureProperty();
 
-            // Add, replace then remove currentTemperature property on the digital twin
+            // Add, replace then remove currentTemperature property on the digital twin. Note that the currentTemperature property does not exist on the
+            // model that the device is registered with.
             await UpdateCurrentTemperatureProperty();
 
-            // Invoke the getMaxMinReport command on the root level of the digital twin
+            // Invoke the root-level command getMaxMinReport command on the digital twin
             await InvokeGetMaxMinReportCommand();
         }
 

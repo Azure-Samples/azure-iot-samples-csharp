@@ -6,10 +6,10 @@ using Newtonsoft.Json;
 
 namespace Microsoft.Azure.Devices.Samples
 {
-    public class TemperatureControllerTwin : BasicDigitalTwin
+    internal class TemperatureControllerTwin
     {
         [JsonProperty("$metadata")]
-        public new TemperatureControllerMetadata Metadata { get; set; }
+        public TemperatureControllerMetadata Metadata { get; set; }
 
         [JsonProperty("serialNumber")]
         public string SerialNumber { get; set; }
@@ -21,8 +21,11 @@ namespace Microsoft.Azure.Devices.Samples
         public ThermostatTwin Thermostat2 { get; set; }
     }
 
-    public class TemperatureControllerMetadata : DigitalTwinMetadata
+    internal class TemperatureControllerMetadata
     {
+        [JsonProperty("$model")]
+        public string ModelId { get; set; }
+
         [JsonProperty("serialNumber")]
         public ReportedPropertyMetadata SerialNumber { get; set; }
     }
