@@ -32,7 +32,7 @@ namespace Microsoft.Azure.Devices.Samples
             // Update the targetTemperature property on the thermostat1 component
             await UpdateDigitalTwinComponentProperty();
 
-            // Invoke the getMaxMinReport command on the thermostat1 component of the TemperatureController digital twin
+            // Invoke the component-level command getMaxMinReport on the thermostat1 component of the TemperatureController digital twin
             await InvokeGetMaxMinReportCommand();
         }
 

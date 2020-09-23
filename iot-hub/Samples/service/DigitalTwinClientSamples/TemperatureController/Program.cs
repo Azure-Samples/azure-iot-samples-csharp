@@ -13,15 +13,11 @@ namespace Microsoft.Azure.Devices.Samples
         private static ILogger s_logger;
 
         /// <summary>
-        /// A sample to illustrate how to perform component level service-side operations on a plug and play compatible device.
+        /// This sample performs component-level operations on a plug and play compatible device.
         /// </summary>
         /// <param name="args">
         /// Run with `--help` to see a list of required and optional parameters.
         /// </param>
-        /// <remarks>
-        /// This sample performs operations on a plug and play compatible device on the root level. For a sample on how to perform
-        /// operations on a component level on a plug and play compatible device, please check out <see href="https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/master/iot-hub/Samples/device">PnpDeviceSample</see>.
-        /// </remarks> 
         public static async Task Main(string[] args)
         {
             // Parse application parameters
@@ -45,7 +41,7 @@ namespace Microsoft.Azure.Devices.Samples
             s_logger.LogDebug("Set up the digital twin client.");
             using DigitalTwinClient digitalTwinClient = DigitalTwinClient.CreateFromConnectionString(parameters.HubConnectionString);
 
-            s_logger.LogDebug("Set up and start the TemperatureController sample.");
+            s_logger.LogDebug("Set up and start the TemperatureController service sample.");
             var temperatureControllerSample = new TemperatureControllerSample(digitalTwinClient, parameters.DeviceId, s_logger);
             await temperatureControllerSample.RunSampleAsync().ConfigureAwait(false);
         }
