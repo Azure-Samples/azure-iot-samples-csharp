@@ -8,6 +8,7 @@ using Microsoft.Rest;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Devices.Samples
@@ -113,13 +114,24 @@ namespace Microsoft.Azure.Devices.Samples
             _logger.LogDebug($"Invoke the {rebootCommandName} command on the {_digitalTwinId} digital twin." +
                 $"\nThis will set the \"targetTemperature\" on \"Thermostat\" component to 0.");
 
-            HttpOperationResponse<DigitalTwinCommandResponse, DigitalTwinInvokeCommandHeaders> invokeCommandResponse = await _digitalTwinClient.InvokeCommandAsync(
-                _digitalTwinId,
-                rebootCommandName,
-                JsonConvert.SerializeObject(delay));
+            try
+            {
+                HttpOperationResponse<DigitalTwinCommandResponse, DigitalTwinInvokeCommandHeaders> invokeCommandResponse = await _digitalTwinClient.InvokeCommandAsync(
+                    _digitalTwinId,
+                    rebootCommandName,
+                    JsonConvert.SerializeObject(delay));
 
-            _logger.LogDebug($"Command {rebootCommandName} was invoked on the {_digitalTwinId} digital twin." +
-                $"\nDevice returned status: {invokeCommandResponse.Body.Status}. \nReport: {invokeCommandResponse.Body.Payload}");
+                _logger.LogDebug($"Command {rebootCommandName} was invoked on the {_digitalTwinId} digital twin." +
+                    $"\nDevice returned status: {invokeCommandResponse.Body.Status}. \nReport: {invokeCommandResponse.Body.Payload}");
+            }
+            catch (HttpOperationException e)
+            {
+                if (e.Response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _logger.LogDebug($"Unable to execute command {rebootCommandName} on {_digitalTwinId}." +
+                        $"\nMake sure that the device sample TemperatureController is also running.");
+                }
+            }
         }
 
         private async Task InvokeGetMaxMinReportCommandAsync()
@@ -130,14 +142,25 @@ namespace Microsoft.Azure.Devices.Samples
 
             _logger.LogDebug($"Invoke the {getMaxMinReportCommandName} command on component {componentName} in the {_digitalTwinId} digital twin.");
 
-            HttpOperationResponse<DigitalTwinCommandResponse, DigitalTwinInvokeCommandHeaders> invokeCommandResponse = await _digitalTwinClient.InvokeComponentCommandAsync(
-                _digitalTwinId, 
-                componentName, 
-                getMaxMinReportCommandName, 
-                JsonConvert.SerializeObject(since));
+            try
+            {
+                HttpOperationResponse<DigitalTwinCommandResponse, DigitalTwinInvokeCommandHeaders> invokeCommandResponse = await _digitalTwinClient.InvokeComponentCommandAsync(
+                    _digitalTwinId,
+                    componentName,
+                    getMaxMinReportCommandName,
+                    JsonConvert.SerializeObject(since));
 
-            _logger.LogDebug($"Command {getMaxMinReportCommandName} was invoked on component {componentName}." +
-                $"\nDevice returned status: {invokeCommandResponse.Body.Status}. \nReport: {invokeCommandResponse.Body.Payload}");
+                _logger.LogDebug($"Command {getMaxMinReportCommandName} was invoked on component {componentName}." +
+                    $"\nDevice returned status: {invokeCommandResponse.Body.Status}. \nReport: {invokeCommandResponse.Body.Payload}");
+            }
+            catch (HttpOperationException e)
+            {
+                if (e.Response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _logger.LogDebug($"Unable to execute command {getMaxMinReportCommandName} on component {componentName}." +
+                        $"\nMake sure that the device sample TemperatureController is also running.");
+                }
+            }
         }
     }
 }

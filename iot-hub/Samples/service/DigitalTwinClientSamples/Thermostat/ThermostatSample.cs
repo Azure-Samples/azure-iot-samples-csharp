@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Rest;
 using Newtonsoft.Json;
 using System;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Devices.Samples
@@ -130,13 +131,24 @@ namespace Microsoft.Azure.Devices.Samples
 
             _logger.LogDebug($"Invoke the {getMaxMinReportCommandName} command on {_digitalTwinId} digital twin.");
 
-            HttpOperationResponse<DigitalTwinCommandResponse, DigitalTwinInvokeCommandHeaders> invokeCommandResponse = await _digitalTwinClient.InvokeCommandAsync(
+            try
+            {
+                HttpOperationResponse<DigitalTwinCommandResponse, DigitalTwinInvokeCommandHeaders> invokeCommandResponse = await _digitalTwinClient.InvokeCommandAsync(
                 _digitalTwinId,
                 getMaxMinReportCommandName,
                 JsonConvert.SerializeObject(since));
 
-            _logger.LogDebug($"Command {getMaxMinReportCommandName} was invoked. \nDevice returned status: {invokeCommandResponse.Body.Status}." +
-                $"\nReport: {invokeCommandResponse.Body.Payload}");
+                _logger.LogDebug($"Command {getMaxMinReportCommandName} was invoked. \nDevice returned status: {invokeCommandResponse.Body.Status}." +
+                    $"\nReport: {invokeCommandResponse.Body.Payload}");
+            }
+            catch (HttpOperationException e)
+            {
+                if (e.Response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _logger.LogDebug($"Unable to execute command {getMaxMinReportCommandName} on {_digitalTwinId}." +
+                        $"\nMake sure that the device sample Thermostat is also running.");
+                }
+            }
         }
     }
 }
