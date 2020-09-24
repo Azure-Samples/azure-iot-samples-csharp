@@ -7,23 +7,20 @@ using System;
 
 namespace Microsoft.Azure.Devices.Samples
 {
-    internal class ThermostatTwin
+    internal class ThermostatTwin : BasicDigitalTwin
     {
         [JsonProperty("$metadata")]
-        public ThermostatMetadata Metadata { get; set; }
+        public new ThermostatMetadata Metadata { get; set; }
 
         [JsonProperty("maxTempSinceLastReboot")]
-        public double MaxTempSinceLastReboot { get; set; }
+        public double? MaxTempSinceLastReboot { get; set; }
 
         [JsonProperty("targetTemperature")]
-        public double TargetTemperature { get; set; }
+        public double? TargetTemperature { get; set; }
     }
 
-    internal class ThermostatMetadata
+    internal class ThermostatMetadata : DigitalTwinMetadata
     {
-        [JsonProperty("$model")]
-        public string ModelId { get; set; }
-
         [JsonProperty("maxTempSinceLastReboot")]
         public ReportedPropertyMetadata MaxTempSinceLastReboot { get; set; }
 
