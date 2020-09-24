@@ -106,7 +106,7 @@ namespace Thermostat
             }
             else
             {
-                _logger.LogDebug($"Property: Received an unrecognized property update from service.");
+                _logger.LogDebug($"Property: Received an unrecognized property update from service:\n{desiredProperties.ToJson()}");
             }
         }
 
