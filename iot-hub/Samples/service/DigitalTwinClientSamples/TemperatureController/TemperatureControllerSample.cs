@@ -129,7 +129,7 @@ namespace Microsoft.Azure.Devices.Samples
                 if (e.Response.StatusCode == HttpStatusCode.NotFound)
                 {
                     _logger.LogDebug($"Unable to execute command {rebootCommandName} on {_digitalTwinId}." +
-                        $"\nMake sure that the device sample TemperatureController is also running.");
+                        $"\nMake sure that the device sample TemperatureController located in https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/feature/digitaltwin/iot-hub/Samples/device/PnpDeviceSamples/TemperatureController is also running.");
                 }
             }
         }
@@ -158,7 +158,7 @@ namespace Microsoft.Azure.Devices.Samples
                 if (e.Response.StatusCode == HttpStatusCode.NotFound)
                 {
                     _logger.LogDebug($"Unable to execute command {getMaxMinReportCommandName} on component {componentName}." +
-                        $"\nMake sure that the device sample TemperatureController is also running.");
+                        $"\nMake sure that the device sample TemperatureController located in https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/feature/digitaltwin/iot-hub/Samples/device/PnpDeviceSamples/TemperatureController is also running.");
                 }
             }
         }

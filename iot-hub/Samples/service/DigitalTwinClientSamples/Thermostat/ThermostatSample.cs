@@ -146,7 +146,7 @@ namespace Microsoft.Azure.Devices.Samples
                 if (e.Response.StatusCode == HttpStatusCode.NotFound)
                 {
                     _logger.LogDebug($"Unable to execute command {getMaxMinReportCommandName} on {_digitalTwinId}." +
-                        $"\nMake sure that the device sample Thermostat is also running.");
+                        $"\nMake sure that the device sample Thermostat located in https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/feature/digitaltwin/iot-hub/Samples/device/PnpDeviceSamples/Thermostat is also running.");
                 }
             }
         }
