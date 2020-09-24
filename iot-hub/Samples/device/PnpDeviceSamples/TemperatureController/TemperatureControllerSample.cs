@@ -248,7 +248,7 @@ namespace TemperatureController
             }
             else
             {
-                _logger.LogDebug($"Property: Update - component=\"{componentName}\", received an update which is not associated with a valid property.");
+                _logger.LogDebug($"Property: Update - component=\"{componentName}\", received an update which is not associated with a valid property.\n{desiredProperties.ToJson()}");
             }
         }
 
