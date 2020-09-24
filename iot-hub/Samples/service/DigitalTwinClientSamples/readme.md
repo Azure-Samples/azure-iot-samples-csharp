@@ -36,15 +36,15 @@ You need to clone the repository or download the sample (the one you want to try
     dotnet run
     ```
 
-[lnk-thermostat-sample]: https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/barustum/digitalTwinClientSamples/iot-hub/Samples/service/DigitalTwinClientSamples/Thermostat/
+[lnk-thermostat-sample]: /iot-hub/Samples/service/DigitalTwinClientSamples/Thermostat/
 
-[lnk-temperatureController-sample]: https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/barustum/digitalTwinClientSamples/iot-hub/Samples/service/DigitalTwinClientSamples/TemperatureController/
+[lnk-temperatureController-sample]: /iot-hub/Samples/service/DigitalTwinClientSamples/TemperatureController/
 
 [lnk-setup-iot-hub]: https://aka.ms/howtocreateazureiothub
 
 [lnk-manage-iot-device]: https://github.com/Azure/azure-iot-device-ecosystem/blob/master/setup_iothub.md#create-new-device-in-the-iot-hub-device-identity-registry
 
-[lnk-thermostat-device-sample]: https://github.com/Azure/azure-iot-sdk-csharp/tree/master/iothub/device/samples/DigitalTwinDeviceSamples/Thermostat
+[lnk-thermostat-device-sample]: /iot-hub/Samples/device/PnpDeviceSamples/Thermostat
 
-[lnk-temperaturecontroller-device-sample]: https://github.com/Azure/azure-iot-sdk-csharp/tree/master/iothub/device/samples/DigitalTwinDeviceSamples/TemperatureController
+[lnk-temperaturecontroller-device-sample]: /iot-hub/Samples/device/PnpDeviceSamples/TemperatureController
 
