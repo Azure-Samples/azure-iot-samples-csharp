@@ -30,7 +30,8 @@ namespace Microsoft.Azure.Devices.Samples
         public async Task RunSampleAsync()
         {
             // Get and print the digital twin
-            await GetAndPrintDigitalTwinAsync<TemperatureControllerTwin>();
+            TemperatureControllerTwin digitalTwin = await GetAndPrintDigitalTwinAsync<TemperatureControllerTwin>();
+            _logger.LogDebug($"The {_digitalTwinId} digital twin has a model with ID {digitalTwin.Metadata.ModelId}.");
 
             // Update the targetTemperature property on the thermostat1 component
             await UpdateDigitalTwinComponentPropertyAsync();

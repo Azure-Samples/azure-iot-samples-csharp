@@ -29,7 +29,8 @@ namespace Microsoft.Azure.Devices.Samples
         {
             // Get and print the digital twin.
             // If you do not know the exact structure of your digital twin, you can use the BasicDgitalTwin type to deserialize it to a basic type.
-            await GetAndPrintDigitalTwinAsync<BasicDigitalTwin>();
+            BasicDigitalTwin digitalTwin = await GetAndPrintDigitalTwinAsync<BasicDigitalTwin>();
+            _logger.LogDebug($"The {_digitalTwinId} digital twin has a model with ID {digitalTwin.Metadata.ModelId}.");
 
             // Update the targetTemperature property of the digital twin
             await UpdateTargetTemperaturePropertyAsync();
