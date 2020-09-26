@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Azure.Devices.Common.Exceptions;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -83,14 +84,20 @@ namespace Microsoft.Azure.Devices.Samples
             commandInvocation.SetPayloadJson(componentCommandPayload);
 
             _logger.LogDebug($"Invoke the {getMaxMinReportCommandName} command on {_digitalTwinId} digital twin.");
-            CloudToDeviceMethodResult result = await _serviceClient.InvokeDeviceMethodAsync(_digitalTwinId, commandInvocation);
-            if (result == null)
+            try
             {
-                throw new Exception($"Command {getMaxMinReportCommandName} invocation returned null");
-            }
+                CloudToDeviceMethodResult result = await _serviceClient.InvokeDeviceMethodAsync(_digitalTwinId, commandInvocation);
 
-            _logger.LogDebug($"Command {getMaxMinReportCommandName} was invoked on digital twin {_digitalTwinId}." +
-                $"\nDevice returned status: {result.Status}. \nReport: {result.GetPayloadAsJson()}");
+                _logger.LogDebug($"Command {getMaxMinReportCommandName} was invoked on digital twin {_digitalTwinId}." +
+                    $"\nDevice returned status: {result.Status}. \nReport: {result.GetPayloadAsJson()}");
+            }
+            catch (DeviceNotFoundException)
+            {
+                _logger.LogWarning($"Unable to execute command {getMaxMinReportCommandName} on {_digitalTwinId}." +
+                    $"\nMake sure that the device sample Thermostat located in " +
+                    $"https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/feature/digitaltwin/iot-hub/Samples/device/PnpDeviceSamples/Thermostat " +
+                    $"is also running.");
+            }
         }
     }
 }

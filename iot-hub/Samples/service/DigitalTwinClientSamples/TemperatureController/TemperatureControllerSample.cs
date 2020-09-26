@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Azure.Devices.PlugAndPlay;
 using Microsoft.Azure.Devices.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Rest;
@@ -16,6 +15,9 @@ namespace Microsoft.Azure.Devices.Samples
     public class TemperatureControllerSample
     {
         private const string Thermostat1Component = "thermostat1";
+
+        private static readonly Uri DeviceTemperatureControllerSampleUri = 
+            new Uri("https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/feature/digitaltwin/iot-hub/Samples/device/PnpDeviceSamples/TemperatureController");
 
         private static readonly Random Random = new Random();
         private readonly DigitalTwinClient _digitalTwinClient;
@@ -81,7 +83,7 @@ namespace Microsoft.Azure.Devices.Samples
                         $" with a value of {getDigitalTwinResponse.Body.Thermostat1.Metadata.TargetTemperature.DesiredValue}.");
 
                     // The property path to be replaced should be prepended with a '/'
-                    updateOperation.AppendReplaceOp($"/{Thermostat1Component}/{targetTemperaturePropertyName}", desiredTargetTemperature);
+                    updateOperation.AppendReplacePropertyOp($"/{Thermostat1Component}/{targetTemperaturePropertyName}", desiredTargetTemperature);
                 }
                 else
                 {
@@ -89,18 +91,17 @@ namespace Microsoft.Azure.Devices.Samples
                         $"was never set on the {_digitalTwinId} digital twin.");
 
                     // The property path to be added should be prepended with a '/'
-                    updateOperation.AppendAddOp($"/{Thermostat1Component}/{targetTemperaturePropertyName}", desiredTargetTemperature);
+                    updateOperation.AppendAddPropertyOp($"/{Thermostat1Component}/{targetTemperaturePropertyName}", desiredTargetTemperature);
                 }
             }
             else
             {
                 // Thermostat1 is not present in the TemperatureController twin. We will add the component
-                var componentProperty = new Dictionary<string, object> { { targetTemperaturePropertyName, desiredTargetTemperature } };
-                Dictionary<string, object> componentValuePatch = PnpHelper.CreatePatchValueForComponentUpdate(componentProperty);
+                var componentProperty = new Dictionary<string, object> { { targetTemperaturePropertyName, desiredTargetTemperature }, { "$metadata", new object() } };
                 _logger.LogDebug($"The component {Thermostat1Component} does not exist on the {_digitalTwinId} digital twin.");
 
                 // The property path to be replaced should be prepended with a '/'
-                updateOperation.AppendAddOp($"/{Thermostat1Component}", componentValuePatch);
+                updateOperation.AppendAddComponentOp($"/{Thermostat1Component}", componentProperty);
             }
 
             _logger.LogDebug($"Update the {targetTemperaturePropertyName} property under component {Thermostat1Component} on the {_digitalTwinId} `" +
@@ -135,9 +136,7 @@ namespace Microsoft.Azure.Devices.Samples
                 if (e.Response.StatusCode == HttpStatusCode.NotFound)
                 {
                     _logger.LogWarning($"Unable to execute command {rebootCommandName} on {_digitalTwinId}." +
-                        $"\nMake sure that the device sample TemperatureController located in `" +
-                        $"https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/feature/digitaltwin/iot-hub/Samples/device/PnpDeviceSamples/TemperatureController `" +
-                        $"is also running.");
+                        $"\nMake sure that the device sample TemperatureController located in {DeviceTemperatureControllerSampleUri.AbsoluteUri} is also running.");
                 }
             }
         }
@@ -162,9 +161,7 @@ namespace Microsoft.Azure.Devices.Samples
                 if (e.Response.StatusCode == HttpStatusCode.NotFound)
                 {
                     _logger.LogWarning($"Unable to execute command {getMaxMinReportCommandName} on component {Thermostat1Component}." +
-                        $"\nMake sure that the device sample TemperatureController located in `" +
-                        $"https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/feature/digitaltwin/iot-hub/Samples/device/PnpDeviceSamples/TemperatureController `" +
-                        $" is also running.");
+                        $"\nMake sure that the device sample TemperatureController located in {DeviceTemperatureControllerSampleUri.AbsoluteUri} is also running.");
                 }
             }
         }

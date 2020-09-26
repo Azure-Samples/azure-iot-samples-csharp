@@ -1,18 +1,17 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Azure.Devices.Shared;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.Devices.Client;
-using Microsoft.Azure.Devices.Shared;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
-namespace Thermostat
+namespace Microsoft.Azure.Devices.Client.Samples
 {
     internal enum StatusCode
     {
@@ -79,14 +78,15 @@ namespace Thermostat
         // and updates the current temperature value over telemetry and reported property update.
         private async Task TargetTemperatureUpdateCallbackAsync(TwinCollection desiredProperties, object userContext)
         {
-            string propertyName = "targetTemperature";
+            const string propertyName = "targetTemperature";
 
             (bool targetTempUpdateReceived, double targetTemperature) = GetPropertyFromTwin<double>(desiredProperties, propertyName);
             if (targetTempUpdateReceived)
             {
                 _logger.LogDebug($"Property: Received - {{ \"{propertyName}\": {targetTemperature}°C }}.");
 
-                string jsonPropertyPending = $"{{ \"{propertyName}\": {{ \"value\": {_temperature}, \"ac\": {(int)StatusCode.InProgress}, \"av\": {desiredProperties.Version} }} }}";
+                string jsonPropertyPending = $"{{ \"{propertyName}\": {{ \"value\": {_temperature}, \"ac\": {(int)StatusCode.InProgress}, " +
+                    $"\"av\": {desiredProperties.Version} }} }}";
                 var reportedPropertyPending = new TwinCollection(jsonPropertyPending);
                 await _deviceClient.UpdateReportedPropertiesAsync(reportedPropertyPending);
                 _logger.LogDebug($"Property: Update - {{\"{propertyName}\": {targetTemperature}°C }} is {StatusCode.InProgress}.");
@@ -99,7 +99,8 @@ namespace Thermostat
                     await Task.Delay(6 * 1000);
                 }
 
-                string jsonProperty = $"{{ \"{propertyName}\": {{ \"value\": {_temperature}, \"ac\": {(int)StatusCode.Completed}, \"av\": {desiredProperties.Version}, \"ad\": \"Successfully updated target temperature\" }} }}";
+                string jsonProperty = $"{{ \"{propertyName}\": {{ \"value\": {_temperature}, \"ac\": {(int)StatusCode.Completed}, " +
+                    $"\"av\": {desiredProperties.Version}, \"ad\": \"Successfully updated target temperature\" }} }}";
                 var reportedProperty = new TwinCollection(jsonProperty);
                 await _deviceClient.UpdateReportedPropertiesAsync(reportedProperty);
                 _logger.LogDebug($"Property: Update - {{\"{propertyName}\": {_temperature}°C }} is {StatusCode.Completed}.");
@@ -115,16 +116,20 @@ namespace Thermostat
             return collection.Contains(propertyName) ? (true, (T)collection[propertyName]) : (false, default);
         }
 
-        // The callback to handle "getMaxMinReport" command. This method will returns the max, min and average temperature from the specified time to the current time.
+        // The callback to handle "getMaxMinReport" command. This method will returns the max, min and average temperature
+        // from the specified time to the current time.
         private async Task<MethodResponse> HandleMaxMinReportCommandAsync(MethodRequest request, object userContext)
         {
             try
             {
                 DateTime sinceInUtc = JsonConvert.DeserializeObject<DateTime>(request.DataAsJson);
                 var sinceInDateTimeOffset = new DateTimeOffset(sinceInUtc);
-                _logger.LogDebug($"Command: Received - Generating max, min and avg temperature report since {sinceInDateTimeOffset.LocalDateTime}.");
+                _logger.LogDebug($"Command: Received - Generating max, min and avg temperature report since " +
+                    $"{sinceInDateTimeOffset.LocalDateTime}.");
 
-                var filteredReadings = _temperatureReadingsDateTimeOffset.Where(i => i.Key > sinceInDateTimeOffset).ToDictionary(i => i.Key, i => i.Value);
+                Dictionary<DateTimeOffset, double> filteredReadings = _temperatureReadingsDateTimeOffset
+                    .Where(i => i.Key > sinceInDateTimeOffset)
+                    .ToDictionary(i => i.Key, i => i.Value);
 
                 if (filteredReadings != null && filteredReadings.Any())
                 {
@@ -138,7 +143,8 @@ namespace Thermostat
                     };
 
                     _logger.LogDebug($"Command: MaxMinReport since {sinceInDateTimeOffset.LocalDateTime}:" +
-                        $" maxTemp={report.maxTemp}, minTemp={report.minTemp}, avgTemp={report.avgTemp}, startTime={report.startTime.LocalDateTime}, endTime={report.endTime.LocalDateTime}");
+                        $" maxTemp={report.maxTemp}, minTemp={report.minTemp}, avgTemp={report.avgTemp}, " +
+                        $"startTime={report.startTime.LocalDateTime}, endTime={report.endTime.LocalDateTime}");
 
                     byte[] responsePayload = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(report));
                     return await Task.FromResult(new MethodResponse(responsePayload, (int)StatusCode.Completed));
@@ -170,7 +176,7 @@ namespace Thermostat
         // Send temperature update over telemetry.
         private async Task SendTemperatureTelemetryAsync()
         {
-            string telemetryName = "temperature";
+            const string telemetryName = "temperature";
 
             string telemetryPayload = $"{{ \"{telemetryName}\": {_temperature} }}";
             using var message = new Message(Encoding.UTF8.GetBytes(telemetryPayload))
@@ -188,7 +194,7 @@ namespace Thermostat
         // Send temperature over reported property update.
         private async Task UpdateMaxTemperatureSinceLastRebootAsync()
         {
-            string propertyName = "maxTempSinceLastReboot";
+            const string propertyName = "maxTempSinceLastReboot";
 
             var reportedProperties = new TwinCollection();
             reportedProperties[propertyName] = _maxTemp;
