@@ -75,14 +75,14 @@ namespace Microsoft.Azure.Devices.Samples
                     $" with a value of {getDigitalTwinResponse.Body.Metadata.TargetTemperature.DesiredValue}.");
 
                 // The property path to be replaced should be prepended with a '/'
-                updateOperation.AppendReplaceOp($"/{targetTemperaturePropertyName}", desiredTargetTemperature);
+                updateOperation.AppendReplacePropertyOp($"/{targetTemperaturePropertyName}", desiredTargetTemperature);
             }
             else
             {
                 _logger.LogDebug($"The property {targetTemperaturePropertyName} was never set on the ${_digitalTwinId} digital twin.");
 
                 // The property path to be added should be prepended with a '/'
-                updateOperation.AppendAddOp($"/{targetTemperaturePropertyName}", desiredTargetTemperature);
+                updateOperation.AppendAddPropertyOp($"/{targetTemperaturePropertyName}", desiredTargetTemperature);
             }
 
             _logger.LogDebug($"Update the {targetTemperaturePropertyName} property on the " +
@@ -105,7 +105,7 @@ namespace Microsoft.Azure.Devices.Samples
             var updateOperation = new UpdateOperationsUtility();
 
             // First, add the property to the digital twin
-            updateOperation.AppendAddOp($"/{currentTemperaturePropertyName}", currentTemperature);
+            updateOperation.AppendAddPropertyOp($"/{currentTemperaturePropertyName}", currentTemperature);
             _logger.LogDebug($"Add the {currentTemperaturePropertyName} property on the {_digitalTwinId} digital twin " +
                 $"with a value of {currentTemperature}.");
             HttpOperationHeaderResponse<DigitalTwinUpdateHeaders> addPropertyToDigitalTwinResponse = await _digitalTwinClient
@@ -118,7 +118,7 @@ namespace Microsoft.Azure.Devices.Samples
             // Second, replace the property to a different value
             int newCurrentTemperature = Random.Next(0, 100);
 
-            updateOperation.AppendReplaceOp($"/{currentTemperaturePropertyName}", newCurrentTemperature);
+            updateOperation.AppendReplacePropertyOp($"/{currentTemperaturePropertyName}", newCurrentTemperature);
             _logger.LogDebug($"Replace the {currentTemperaturePropertyName} property on the {_digitalTwinId} digital twin " +
                 $"with a value of {newCurrentTemperature}.");
             HttpOperationHeaderResponse<DigitalTwinUpdateHeaders> replacePropertyInDigitalTwinResponse = await _digitalTwinClient

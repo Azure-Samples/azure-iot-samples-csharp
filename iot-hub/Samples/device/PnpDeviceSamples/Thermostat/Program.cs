@@ -1,17 +1,16 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using CommandLine;
-using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace Thermostat
+namespace Microsoft.Azure.Devices.Client.Samples
 {
     public class Program
     {
@@ -91,6 +90,7 @@ namespace Thermostat
                     throw new ArgumentException($"Unrecognized value for device provisioning received: {parameters.DeviceSecurityType}." +
                         $" It should be either \"dps\" or \"connectionString\" (case-insensitive).");
             }
+
             return deviceClient;
         }
 
@@ -99,7 +99,8 @@ namespace Thermostat
         {
             SecurityProvider symmetricKeyProvider = new SecurityProviderSymmetricKey(parameters.DeviceId, parameters.DeviceSymmetricKey, null);
             ProvisioningTransportHandler mqttTransportHandler = new ProvisioningTransportHandlerMqtt();
-            var pdc = ProvisioningDeviceClient.Create(parameters.DpsEndpoint, parameters.DpsIdScope, symmetricKeyProvider, mqttTransportHandler);
+            ProvisioningDeviceClient pdc = ProvisioningDeviceClient.Create(parameters.DpsEndpoint, parameters.DpsIdScope, 
+                symmetricKeyProvider, mqttTransportHandler);
 
             var pnpPayload = new ProvisioningRegistrationAdditionalData
             {
@@ -108,7 +109,8 @@ namespace Thermostat
             return await pdc.RegisterAsync(pnpPayload, cancellationToken);
         }
 
-        // Initialize the device client instance using connection string based authentication, over Mqtt protocol (TCP, with fallback over Websocket) and setting the ModelId into ClientOptions.
+        // Initialize the device client instance using connection string based authentication, over Mqtt protocol (TCP, with fallback over Websocket)
+        // and setting the ModelId into ClientOptions.
         // This method also sets a connection status change callback, that will get triggered any time the device's connection status changes.
         private static DeviceClient InitializeDeviceClient(string deviceConnectionString)
         {
@@ -117,7 +119,7 @@ namespace Thermostat
                 ModelId = ModelId,
             };
 
-            var deviceClient = DeviceClient.CreateFromConnectionString(deviceConnectionString, TransportType.Mqtt, options);
+            DeviceClient deviceClient = DeviceClient.CreateFromConnectionString(deviceConnectionString, TransportType.Mqtt, options);
             deviceClient.SetConnectionStatusChangesHandler((status, reason) =>
             {
                 s_logger.LogDebug($"Connection status change registered - status={status}, reason={reason}.");
@@ -135,7 +137,7 @@ namespace Thermostat
                 ModelId = ModelId,
             };
 
-            var deviceClient = DeviceClient.Create(hostname, authenticationMethod, TransportType.Mqtt, options);
+            DeviceClient deviceClient = DeviceClient.Create(hostname, authenticationMethod, TransportType.Mqtt, options);
             deviceClient.SetConnectionStatusChangesHandler((status, reason) =>
             {
                 s_logger.LogDebug($"Connection status change registered - status={status}, reason={reason}.");

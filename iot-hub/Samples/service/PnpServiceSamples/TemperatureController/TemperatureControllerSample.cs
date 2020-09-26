@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Azure.Devices.Common.Exceptions;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -14,6 +15,8 @@ namespace Microsoft.Azure.Devices.Samples
         private const string Thermostat1Component = "thermostat1";
 
         private static readonly Random Random = new Random();
+        private static readonly Uri DeviceTemperatureControllerSampleUri =
+            new Uri("https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/feature/digitaltwin/iot-hub/Samples/device/PnpDeviceSamples/TemperatureController");
 
         private readonly ServiceClient _serviceClient;
         private readonly RegistryManager _registryManager;
@@ -69,14 +72,18 @@ namespace Microsoft.Azure.Devices.Samples
 
             _logger.LogDebug($"Invoke the {getMaxMinReportCommandName} command on component {Thermostat1Component} " +
                 $"in the {_digitalTwinId} digital twin.");
-            CloudToDeviceMethodResult result = await _serviceClient.InvokeDeviceMethodAsync(_digitalTwinId, commandInvocation);
-            if (result == null)
-            {
-                throw new Exception($"Command {getMaxMinReportCommandName} invocation returned null");
-            }
 
-            _logger.LogDebug($"Command {getMaxMinReportCommandName} was invoked on component {Thermostat1Component}." +
-                $"\nDevice returned status: {result.Status}. \nReport: {result.GetPayloadAsJson()}");
+            try
+            {
+                CloudToDeviceMethodResult result = await _serviceClient.InvokeDeviceMethodAsync(_digitalTwinId, commandInvocation);
+                _logger.LogDebug($"Command {getMaxMinReportCommandName} was invoked on component {Thermostat1Component}." +
+                    $"\nDevice returned status: {result.Status}. \nReport: {result.GetPayloadAsJson()}");
+            }
+            catch (DeviceNotFoundException)
+            {
+                _logger.LogWarning($"Unable to execute command {getMaxMinReportCommandName} on component {Thermostat1Component}." +
+                    $"\nMake sure that the device sample TemperatureController located in {DeviceTemperatureControllerSampleUri.AbsoluteUri} is also running.");
+            }
         }
 
         private async Task InvokeRebootCommandAsync()
@@ -92,14 +99,17 @@ namespace Microsoft.Azure.Devices.Samples
             _logger.LogDebug($"Invoke the {commandToInvoke} command on the {_digitalTwinId} digital twin." +
                 $"\nThis will set the \"targetTemperature\" on \"Thermostat\" component to 0.");
 
-            CloudToDeviceMethodResult result = await _serviceClient.InvokeDeviceMethodAsync(_digitalTwinId, commandInvocation);
-            if (result == null)
+            try
             {
-                throw new Exception($"Command {commandToInvoke} invocation returned null");
-            }
-
-            _logger.LogDebug($"Command {commandToInvoke} was invoked on the {_digitalTwinId} digital twin." +
+                CloudToDeviceMethodResult result = await _serviceClient.InvokeDeviceMethodAsync(_digitalTwinId, commandInvocation);
+                _logger.LogDebug($"Command {commandToInvoke} was invoked on the {_digitalTwinId} digital twin." +
                     $"\nDevice returned status: {result.Status}. \nReport: {result.GetPayloadAsJson()}");
+            }
+            catch (DeviceNotFoundException)
+            {
+                _logger.LogWarning($"Unable to execute command {commandToInvoke} on component {Thermostat1Component}." +
+                    $"\nMake sure that the device sample TemperatureController located in {DeviceTemperatureControllerSampleUri.AbsoluteUri} is also running.");
+            }
         }
 
         private async Task UpdateDigitalTwinComponentPropertyAsync()
