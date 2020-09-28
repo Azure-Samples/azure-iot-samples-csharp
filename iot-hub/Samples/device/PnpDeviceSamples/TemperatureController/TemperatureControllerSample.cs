@@ -90,25 +90,21 @@ namespace Microsoft.Azure.Devices.Client.Samples
             _maxTemp[Thermostat1] = 0d;
             _maxTemp[Thermostat2] = 0d;
 
-            await Task.Run(async () =>
+            while (!cancellationToken.IsCancellationRequested)
             {
-                while (!cancellationToken.IsCancellationRequested)
+                if (temperatureReset)
                 {
-                    if (temperatureReset)
-                    {
-                        // Generate a random value between 5.0°C and 45.0°C for the current temperature reading for each "Thermostat" component.
-                        _temperature[Thermostat1] = Math.Round(_random.NextDouble() * 40.0 + 5.0, 1);
-                        _temperature[Thermostat2] = Math.Round(_random.NextDouble() * 40.0 + 5.0, 1);
-                    }
-
-                    await SendTemperatureAsync(Thermostat1, cancellationToken);
-                    await SendTemperatureAsync(Thermostat2, cancellationToken);
-
-                    temperatureReset = _temperature[Thermostat1] == 0 && _temperature[Thermostat2] == 0;
-                    await Task.Delay(5 * 1000);
+                    // Generate a random value between 5.0°C and 45.0°C for the current temperature reading for each "Thermostat" component.
+                    _temperature[Thermostat1] = Math.Round(_random.NextDouble() * 40.0 + 5.0, 1);
+                    _temperature[Thermostat2] = Math.Round(_random.NextDouble() * 40.0 + 5.0, 1);
                 }
-            });
 
+                await SendTemperatureAsync(Thermostat1, cancellationToken);
+                await SendTemperatureAsync(Thermostat2, cancellationToken);
+
+                temperatureReset = _temperature[Thermostat1] == 0 && _temperature[Thermostat2] == 0;
+                await Task.Delay(5 * 1000);
+            }
         }
 
         // The callback to handle "reboot" command. This method will send a temperature update (of 0°C) over telemetry for both associated components.
@@ -129,7 +125,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             catch (JsonReaderException ex)
             {
                 _logger.LogDebug($"Command input is invalid: {ex.Message}.");
-                return await Task.FromResult(new MethodResponse((int)StatusCode.BadRequest));
+                return new MethodResponse((int)StatusCode.BadRequest);
             }
 
             return new MethodResponse((int)StatusCode.Completed);
@@ -137,7 +133,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         // The callback to handle "getMaxMinReport" command. This method will returns the max, min and average temperature from the
         // specified time to the current time.
-        private async Task<MethodResponse> HandleMaxMinReportCommandAsync(MethodRequest request, object userContext)
+        private Task<MethodResponse> HandleMaxMinReportCommand(MethodRequest request, object userContext)
         {
             try
             {
@@ -170,25 +166,25 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             $"endTime={report.endTime.LocalDateTime}");
 
                         byte[] responsePayload = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(report));
-                        return await Task.FromResult(new MethodResponse(responsePayload, (int)StatusCode.Completed));
+                        return Task.FromResult(new MethodResponse(responsePayload, (int)StatusCode.Completed));
                     }
 
                     _logger.LogDebug($"Command: component=\"{componentName}\", no relevant readings found since {sinceInDateTimeOffset.LocalDateTime}, " +
                         $"cannot generate any report.");
-                    return await Task.FromResult(new MethodResponse((int)StatusCode.NotFound));
+                    return Task.FromResult(new MethodResponse((int)StatusCode.NotFound));
                 }
 
                 _logger.LogDebug($"Command: component=\"{componentName}\", no temperature readings sent yet, cannot generate any report.");
-                return await Task.FromResult(new MethodResponse((int)StatusCode.NotFound));
+                return Task.FromResult(new MethodResponse((int)StatusCode.NotFound));
             }
             catch (JsonReaderException ex)
             {
                 _logger.LogDebug($"Command input is invalid: {ex.Message}.");
-                return await Task.FromResult(new MethodResponse((int)StatusCode.BadRequest));
+                return Task.FromResult(new MethodResponse((int)StatusCode.BadRequest));
             }
         }
 
-        private async Task SetDesiredPropertyUpdateCallbackAsync(TwinCollection desiredProperties, object userContext)
+        private Task SetDesiredPropertyUpdateCallback(TwinCollection desiredProperties, object userContext)
         {
             bool callbackNotInvoked = true;
 
@@ -207,7 +203,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 _logger.LogDebug($"Property: Received a property update that is not implemented by any associated component.");
             }
 
-            await Task.CompletedTask;
+            return Task.CompletedTask;
         }
 
         // The desired property update callback, which receives the target temperature as a desired property update,
@@ -217,10 +213,12 @@ namespace Microsoft.Azure.Devices.Client.Samples
             const string propertyName = "targetTemperature";
             string componentName = (string)userContext;
 
-            bool targetTempUpdateReceived = PnpHelper.TryGetPropertyFromTwin(desiredProperties,
-                                                                             propertyName,
-                                                                             out double targetTemperature,
-                                                                             componentName);
+            bool targetTempUpdateReceived = PnpHelper.TryGetPropertyFromTwin(
+                desiredProperties,
+                propertyName,
+                out double targetTemperature,
+                componentName);
+
             if (targetTempUpdateReceived)
             {
                 _logger.LogDebug($"Property: Received - component=\"{componentName}\", {{ \"{propertyName}\": {targetTemperature}°C }}.");
@@ -301,7 +299,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
             const string processorArchitecture = "processorArchitecture";
             const string processorArchitectureValue = "64-bit";
-            string processorArchitecturePatch = PnpHelper.CreatePropertyPatch(processorArchitecture, 
+            string processorArchitecturePatch = PnpHelper.CreatePropertyPatch(processorArchitecture,
                 JsonConvert.SerializeObject(processorArchitectureValue), componentName);
             var processorArchitectureProperty = new TwinCollection(processorArchitecturePatch);
             await _deviceClient.UpdateReportedPropertiesAsync(processorArchitectureProperty, cancellationToken);
@@ -379,11 +377,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
             else
             {
-                _temperatureReadingsDateTimeOffset.TryAdd(componentName, new Dictionary<DateTimeOffset, double>() 
-                { 
-                    { 
-                        DateTimeOffset.Now, currentTemperature 
-                    } 
+                _temperatureReadingsDateTimeOffset.TryAdd(componentName, new Dictionary<DateTimeOffset, double>()
+                {
+                    {
+                        DateTimeOffset.Now, currentTemperature
+                    }
                 });
             }
         }
