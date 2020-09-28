@@ -28,8 +28,7 @@ namespace Microsoft.Azure.Devices.Samples
 
         public async Task RunSampleAsync()
         {
-            // Get and print the digital twin. If you do not know the exact structure of your digital twin, you can 
-            // use the BasicDgitalTwin type to deserialize it to a basic type
+            // Get and print the digital twin
             Twin digitalTwin = await GetAndPrintDigitalTwinAsync();
             _logger.LogDebug($"The {_digitalTwinId} digital twin has a model with ID {digitalTwin.ModelId}.");
 
@@ -66,11 +65,6 @@ namespace Microsoft.Azure.Devices.Samples
                 $"{_digitalTwinId} digital twin to {desiredTargetTemperature}.");
 
             await _registryManager.UpdateTwinAsync(_digitalTwinId, twinPatch, twin.ETag);
-
-            // Amount of seconds to wait after updating targetTemperature property in order to allow the device to simulate temperature change
-            const int delay = 15;
-            _logger.LogDebug($"Sleeping for {delay} seconds to allow the device to simulate changing the thermostat temperature");
-            await Task.Delay(delay * 1000);
 
             // Print the Thermostat digital twin
             await GetAndPrintDigitalTwinAsync();

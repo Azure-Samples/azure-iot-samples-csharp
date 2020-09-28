@@ -16,8 +16,8 @@ namespace Microsoft.Azure.Devices.Samples
     {
         private const string Thermostat1Component = "thermostat1";
 
-        private static readonly Uri DeviceTemperatureControllerSampleUri = 
-            new Uri("https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/feature/digitaltwin/iot-hub/Samples/device/PnpDeviceSamples/TemperatureController");
+        private static readonly string DeviceSampleLink = 
+            "https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/feature/digitaltwin/iot-hub/Samples/device/PnpDeviceSamples/TemperatureController";
 
         private static readonly Random Random = new Random();
         private readonly DigitalTwinClient _digitalTwinClient;
@@ -111,11 +111,6 @@ namespace Microsoft.Azure.Devices.Samples
 
             _logger.LogDebug($"Update {_digitalTwinId} digital twin response: {updateDigitalTwinResponse.Response.StatusCode}.");
 
-            // Amount of seconds to wait after updating targetTemperature property in order to allow the device to simulate temperature change
-            const int delay = 15;
-            _logger.LogDebug($"Sleeping for {delay} seconds to allow the device to simulate changing the thermostat temperature");
-            await Task.Delay(delay * 1000);
-
             // Print the TemperatureController digital twin
             await GetAndPrintDigitalTwinAsync<TemperatureControllerTwin>();
         }
@@ -141,7 +136,7 @@ namespace Microsoft.Azure.Devices.Samples
                 if (e.Response.StatusCode == HttpStatusCode.NotFound)
                 {
                     _logger.LogWarning($"Unable to execute command {rebootCommandName} on {_digitalTwinId}." +
-                        $"\nMake sure that the device sample TemperatureController located in {DeviceTemperatureControllerSampleUri.AbsoluteUri} is also running.");
+                        $"\nMake sure that the device sample TemperatureController located in {DeviceSampleLink} is also running.");
                 }
             }
         }
@@ -166,7 +161,7 @@ namespace Microsoft.Azure.Devices.Samples
                 if (e.Response.StatusCode == HttpStatusCode.NotFound)
                 {
                     _logger.LogWarning($"Unable to execute command {getMaxMinReportCommandName} on component {Thermostat1Component}." +
-                        $"\nMake sure that the device sample TemperatureController located in {DeviceTemperatureControllerSampleUri.AbsoluteUri} is also running.");
+                        $"\nMake sure that the device sample TemperatureController located in {DeviceSampleLink} is also running.");
                 }
             }
         }
