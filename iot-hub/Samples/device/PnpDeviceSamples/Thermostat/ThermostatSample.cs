@@ -54,24 +54,21 @@ namespace Microsoft.Azure.Devices.Client.Samples
             await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(TargetTemperatureUpdateCallbackAsync, _deviceClient, cancellationToken);
 
             _logger.LogDebug($"Set handler for \"getMaxMinReport\" command.");
-            await _deviceClient.SetMethodHandlerAsync("getMaxMinReport", HandleMaxMinReportCommandAsync, _deviceClient, cancellationToken);
+            await _deviceClient.SetMethodHandlerAsync("getMaxMinReport", HandleMaxMinReportCommand, _deviceClient, cancellationToken);
 
             bool temperatureReset = true;
-            await Task.Run(async () =>
+            while (!cancellationToken.IsCancellationRequested)
             {
-                while (!cancellationToken.IsCancellationRequested)
+                if (temperatureReset)
                 {
-                    if (temperatureReset)
-                    {
-                        // Generate a random value between 5.0°C and 45.0°C for the current temperature reading.
-                        _temperature = Math.Round(_random.NextDouble() * 40.0 + 5.0, 1);
-                        temperatureReset = false;
-                    }
-
-                    await SendTemperatureAsync();
-                    await Task.Delay(5 * 1000);
+                    // Generate a random value between 5.0°C and 45.0°C for the current temperature reading.
+                    _temperature = Math.Round(_random.NextDouble() * 40.0 + 5.0, 1);
+                    temperatureReset = false;
                 }
-            });
+
+                await SendTemperatureAsync();
+                await Task.Delay(5 * 1000);
+            }
         }
 
         // The desired property update callback, which receives the target temperature as a desired property update,
@@ -118,7 +115,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         // The callback to handle "getMaxMinReport" command. This method will returns the max, min and average temperature
         // from the specified time to the current time.
-        private async Task<MethodResponse> HandleMaxMinReportCommandAsync(MethodRequest request, object userContext)
+        private Task<MethodResponse> HandleMaxMinReportCommand(MethodRequest request, object userContext)
         {
             try
             {
@@ -147,16 +144,16 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         $"startTime={report.startTime.LocalDateTime}, endTime={report.endTime.LocalDateTime}");
 
                     byte[] responsePayload = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(report));
-                    return await Task.FromResult(new MethodResponse(responsePayload, (int)StatusCode.Completed));
+                    return Task.FromResult(new MethodResponse(responsePayload, (int)StatusCode.Completed));
                 }
 
                 _logger.LogDebug($"Command: No relevant readings found since {sinceInDateTimeOffset.LocalDateTime}, cannot generate any report.");
-                return await Task.FromResult(new MethodResponse((int)StatusCode.NotFound));
+                return Task.FromResult(new MethodResponse((int)StatusCode.NotFound));
             }
             catch (JsonReaderException ex)
             {
                 _logger.LogDebug($"Command input is invalid: {ex.Message}.");
-                return await Task.FromResult(new MethodResponse((int)StatusCode.BadRequest));
+                return Task.FromResult(new MethodResponse((int)StatusCode.BadRequest));
             }
         }
 
