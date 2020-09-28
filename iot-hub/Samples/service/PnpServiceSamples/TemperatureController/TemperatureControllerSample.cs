@@ -103,7 +103,7 @@ namespace Microsoft.Azure.Devices.Samples
             {
                 CloudToDeviceMethodResult result = await _serviceClient.InvokeDeviceMethodAsync(_digitalTwinId, commandInvocation);
                 _logger.LogDebug($"Command {commandToInvoke} was invoked on the {_digitalTwinId} digital twin." +
-                    $"\nDevice returned status: {result.Status}. \nReport: {result.GetPayloadAsJson()}");
+                    $"\nDevice returned status: {result.Status}.");
             }
             catch (DeviceNotFoundException)
             {
@@ -128,6 +128,11 @@ namespace Microsoft.Azure.Devices.Samples
             _logger.LogDebug($"Update the {targetTemperaturePropertyName} property under component {Thermostat1Component} on the {_digitalTwinId} " +
                 $"digital twin to {desiredTargetTemperature}.");
             await _registryManager.UpdateTwinAsync(_digitalTwinId, twinPatch, twin.ETag);
+
+            // Amount of seconds to wait after updating targetTemperature property in order to allow the device to simulate temperature change
+            const int delay = 15;
+            _logger.LogDebug($"Sleeping for {delay} seconds to allow the device to simulate changing the thermostat temperature");
+            await Task.Delay(delay * 1000);
 
             // Print the TemperatureController digital twin
             await GetAndPrintDigitalTwinAsync();

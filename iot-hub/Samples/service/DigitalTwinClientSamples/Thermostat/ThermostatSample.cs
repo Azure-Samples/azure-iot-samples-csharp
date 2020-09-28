@@ -59,7 +59,7 @@ namespace Microsoft.Azure.Devices.Samples
         {
             const string targetTemperaturePropertyName = "targetTemperature";
             var updateOperation = new UpdateOperationsUtility();
-
+            
             // Choose a random value to assign to the targetTemperature property
             int desiredTargetTemperature = Random.Next(0, 100);
 
@@ -91,6 +91,11 @@ namespace Microsoft.Azure.Devices.Samples
                 .UpdateDigitalTwinAsync(_digitalTwinId, updateOperation.Serialize());
 
             _logger.LogDebug($"Update {_digitalTwinId} digital twin response: {updateDigitalTwinResponse.Response.StatusCode}.");
+
+            // Amount of seconds to wait after updating targetTemperature property in order to allow the device to simulate temperature change
+            const int delay = 15;
+            _logger.LogDebug($"Sleeping for {delay} seconds to allow the device to simulate changing the thermostat temperature");
+            await Task.Delay(delay * 1000);
 
             // Print the Thermostat digital twin
             await GetAndPrintDigitalTwinAsync<ThermostatTwin>();
@@ -134,6 +139,11 @@ namespace Microsoft.Azure.Devices.Samples
             HttpOperationHeaderResponse<DigitalTwinUpdateHeaders> removePropertyInDigitalTwinResponse = await _digitalTwinClient
                 .UpdateDigitalTwinAsync(_digitalTwinId, updateOperation.Serialize());
             _logger.LogDebug($"Update {_digitalTwinId} digital twin response: {removePropertyInDigitalTwinResponse.Response.StatusCode}.");
+
+            // Amount of seconds to wait after updating targetTemperature property in order to allow the device to simulate temperature change
+            const int delay = 15;
+            _logger.LogDebug($"Sleeping for {delay} seconds to allow the device to simulate changing the thermostat temperature");
+            await Task.Delay(delay * 1000);
 
             // Print the Thermostat digital twin
             await GetAndPrintDigitalTwinAsync<ThermostatTwin>();
