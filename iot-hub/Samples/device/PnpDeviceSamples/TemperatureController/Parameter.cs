@@ -1,11 +1,11 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using CommandLine;
 using Microsoft.Extensions.Logging;
+using System;
 
-namespace TemperatureController
+namespace Microsoft.Azure.Devices.Client.Samples
 {
     /// <summary>
     /// Parameters for the application supplied via command line arguments.

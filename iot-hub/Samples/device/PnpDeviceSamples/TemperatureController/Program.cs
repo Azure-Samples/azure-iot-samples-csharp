@@ -1,18 +1,17 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using CommandLine;
-using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.PlugAndPlay;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace TemperatureController
+namespace Microsoft.Azure.Devices.Client.Samples
 {
     public class Program
     {
@@ -100,7 +99,7 @@ namespace TemperatureController
         {
             SecurityProvider symmetricKeyProvider = new SecurityProviderSymmetricKey(parameters.DeviceId, parameters.DeviceSymmetricKey, null);
             ProvisioningTransportHandler mqttTransportHandler = new ProvisioningTransportHandlerMqtt();
-            var pdc = ProvisioningDeviceClient.Create(parameters.DpsEndpoint, parameters.DpsIdScope, symmetricKeyProvider, mqttTransportHandler);
+            ProvisioningDeviceClient pdc = ProvisioningDeviceClient.Create(parameters.DpsEndpoint, parameters.DpsIdScope, symmetricKeyProvider, mqttTransportHandler);
 
             var pnpPayload = new ProvisioningRegistrationAdditionalData
             {
@@ -109,8 +108,9 @@ namespace TemperatureController
             return await pdc.RegisterAsync(pnpPayload, cancellationToken);
         }
 
-        // Initialize the device client instance using connection string based authentication, over Mqtt protocol (TCP, with fallback over Websocket) and setting the ModelId into ClientOptions.
-        // This method also sets a connection status change callback, that will get triggered any time the device's connection status changes.
+        // Initialize the device client instance using connection string based authentication, over Mqtt protocol (TCP, with fallback over Websocket) and
+        // setting the ModelId into ClientOptions.This method also sets a connection status change callback, that will get triggered any time the device's
+        // connection status changes.
         private static DeviceClient InitializeDeviceClient(string deviceConnectionString)
         {
             var options = new ClientOptions
@@ -118,7 +118,7 @@ namespace TemperatureController
                 ModelId = ModelId,
             };
 
-            var deviceClient = DeviceClient.CreateFromConnectionString(deviceConnectionString, TransportType.Mqtt, options);
+            DeviceClient deviceClient = DeviceClient.CreateFromConnectionString(deviceConnectionString, TransportType.Mqtt, options);
             deviceClient.SetConnectionStatusChangesHandler((status, reason) =>
             {
                 s_logger.LogDebug($"Connection status change registered - status={status}, reason={reason}.");
@@ -127,8 +127,8 @@ namespace TemperatureController
             return deviceClient;
         }
 
-        // Initialize the device client instance using symmetric key based authentication, over Mqtt protocol (TCP, with fallback over Websocket) and setting the ModelId into ClientOptions.
-        // This method also sets a connection status change callback, that will get triggered any time the device's connection status changes.
+        // Initialize the device client instance using symmetric key based authentication, over Mqtt protocol (TCP, with fallback over Websocket)
+        // and setting the ModelId into ClientOptions. This method also sets a connection status change callback, that will get triggered any time the device's connection status changes.
         private static DeviceClient InitializeDeviceClient(string hostname, IAuthenticationMethod authenticationMethod)
         {
             var options = new ClientOptions
@@ -136,7 +136,7 @@ namespace TemperatureController
                 ModelId = ModelId,
             };
 
-            var deviceClient = DeviceClient.Create(hostname, authenticationMethod, TransportType.Mqtt, options);
+            DeviceClient deviceClient = DeviceClient.Create(hostname, authenticationMethod, TransportType.Mqtt, options);
             deviceClient.SetConnectionStatusChangesHandler((status, reason) =>
             {
                 s_logger.LogDebug($"Connection status change registered - status={status}, reason={reason}.");
