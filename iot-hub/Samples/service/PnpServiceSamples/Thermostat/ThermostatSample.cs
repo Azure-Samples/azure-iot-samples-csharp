@@ -60,12 +60,17 @@ namespace Microsoft.Azure.Devices.Samples
 
             // Update the twin
             var twinPatch = new Twin();
-            twinPatch.Properties.Desired[targetTemperaturePropertyName] = 60;
+            twinPatch.Properties.Desired[targetTemperaturePropertyName] = desiredTargetTemperature;
 
             _logger.LogDebug($"Update the {targetTemperaturePropertyName} property on the " +
                 $"{_digitalTwinId} digital twin to {desiredTargetTemperature}.");
 
             await _registryManager.UpdateTwinAsync(_digitalTwinId, twinPatch, twin.ETag);
+
+            // Amount of seconds to wait after updating targetTemperature property in order to allow the device to simulate temperature change
+            const int delay = 15;
+            _logger.LogDebug($"Sleeping for {delay} seconds to allow the device to simulate changing the thermostat temperature");
+            await Task.Delay(delay * 1000);
 
             // Print the Thermostat digital twin
             await GetAndPrintDigitalTwinAsync();
