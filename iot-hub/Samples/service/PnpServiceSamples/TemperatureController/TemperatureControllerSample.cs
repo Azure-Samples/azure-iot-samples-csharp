@@ -15,8 +15,8 @@ namespace Microsoft.Azure.Devices.Samples
         private const string Thermostat1Component = "thermostat1";
 
         private static readonly Random Random = new Random();
-        private static readonly Uri DeviceTemperatureControllerSampleUri =
-            new Uri("https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/feature/digitaltwin/iot-hub/Samples/device/PnpDeviceSamples/TemperatureController");
+        private static readonly string DeviceSampleLink =
+            "https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/feature/digitaltwin/iot-hub/Samples/device/PnpDeviceSamples/TemperatureController";
 
         private readonly ServiceClient _serviceClient;
         private readonly RegistryManager _registryManager;
@@ -61,7 +61,7 @@ namespace Microsoft.Azure.Devices.Samples
         {
             const string getMaxMinReportCommandName = "getMaxMinReport";
 
-            // Create command name to invoke for component
+            // Create command name to invoke for component. The command is formatted as <component name>*<command name>
             string commandToInvoke = $"{Thermostat1Component}*{getMaxMinReportCommandName}";
             var commandInvocation = new CloudToDeviceMethod(commandToInvoke) { ResponseTimeout = TimeSpan.FromSeconds(30) };
 
@@ -82,7 +82,7 @@ namespace Microsoft.Azure.Devices.Samples
             catch (DeviceNotFoundException)
             {
                 _logger.LogWarning($"Unable to execute command {getMaxMinReportCommandName} on component {Thermostat1Component}." +
-                    $"\nMake sure that the device sample TemperatureController located in {DeviceTemperatureControllerSampleUri.AbsoluteUri} is also running.");
+                    $"\nMake sure that the device sample TemperatureController located in {DeviceSampleLink} is also running.");
             }
         }
 
@@ -108,7 +108,7 @@ namespace Microsoft.Azure.Devices.Samples
             catch (DeviceNotFoundException)
             {
                 _logger.LogWarning($"Unable to execute command {commandToInvoke} on component {Thermostat1Component}." +
-                    $"\nMake sure that the device sample TemperatureController located in {DeviceTemperatureControllerSampleUri.AbsoluteUri} is also running.");
+                    $"\nMake sure that the device sample TemperatureController located in {DeviceSampleLink} is also running.");
             }
         }
 
@@ -121,18 +121,14 @@ namespace Microsoft.Azure.Devices.Samples
             string propertyUpdate = CreatePropertyPatch(targetTemperaturePropertyName,
                 JsonConvert.SerializeObject(desiredTargetTemperature),
                 Thermostat1Component);
-            string twinPatch = $"{{ \"properties\": {{\"desired\": {propertyUpdate} }} }}";
+            var twinPatch = new Twin();
+            twinPatch.Properties.Desired[targetTemperaturePropertyName] = desiredTargetTemperature;
 
             Twin twin = await _registryManager.GetTwinAsync(_digitalTwinId);
 
             _logger.LogDebug($"Update the {targetTemperaturePropertyName} property under component {Thermostat1Component} on the {_digitalTwinId} " +
                 $"digital twin to {desiredTargetTemperature}.");
             await _registryManager.UpdateTwinAsync(_digitalTwinId, twinPatch, twin.ETag);
-
-            // Amount of seconds to wait after updating targetTemperature property in order to allow the device to simulate temperature change
-            const int delay = 15;
-            _logger.LogDebug($"Sleeping for {delay} seconds to allow the device to simulate changing the thermostat temperature");
-            await Task.Delay(delay * 1000);
 
             // Print the TemperatureController digital twin
             await GetAndPrintDigitalTwinAsync();
