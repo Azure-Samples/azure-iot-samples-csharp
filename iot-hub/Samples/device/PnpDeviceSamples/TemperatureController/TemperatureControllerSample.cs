@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Azure.Devices.Client.PlugAndPlay;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using PnpHelpers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -29,7 +29,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         private const string Thermostat2 = "thermostat2";
         private const string SerialNumber = "SR-123456";
 
-        private readonly Random _random = new Random();
+        private static readonly Random s_random = new Random();
 
         private readonly DeviceClient _deviceClient;
         private readonly ILogger _logger;
@@ -69,7 +69,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             // -> Periodically send "temperature" over telemetry - on "Thermostat" components.
             // -> Send "maxTempSinceLastReboot" over property update, when a new max temperature is set - on "Thermostat" components.
 
-            _logger.LogDebug($"Set handler for \"reboot\" command.");
+            _logger.LogDebug("Set handler for 'reboot' command.");
             await _deviceClient.SetMethodHandlerAsync("reboot", HandleRebootCommandAsync, _deviceClient, cancellationToken);
 
             // For a component-level command, the command name is in the format "<component-name>*<command-name>".
@@ -77,7 +77,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             await _deviceClient.SetMethodHandlerAsync("thermostat1*getMaxMinReport", HandleMaxMinReportCommand, Thermostat1, cancellationToken);
             await _deviceClient.SetMethodHandlerAsync("thermostat2*getMaxMinReport", HandleMaxMinReportCommand, Thermostat2, cancellationToken);
 
-            _logger.LogDebug($"Set handler to receive \"targetTemperature\" updates.");
+            _logger.LogDebug("Set handler to receive 'targetTemperature' updates.");
             await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(SetDesiredPropertyUpdateCallback, null, cancellationToken);
             _desiredPropertyUpdateCallbacks.Add(Thermostat1, TargetTemperatureUpdateCallbackAsync);
             _desiredPropertyUpdateCallbacks.Add(Thermostat2, TargetTemperatureUpdateCallbackAsync);
@@ -95,8 +95,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 if (temperatureReset)
                 {
                     // Generate a random value between 5.0°C and 45.0°C for the current temperature reading for each "Thermostat" component.
-                    _temperature[Thermostat1] = Math.Round(_random.NextDouble() * 40.0 + 5.0, 1);
-                    _temperature[Thermostat2] = Math.Round(_random.NextDouble() * 40.0 + 5.0, 1);
+                    _temperature[Thermostat1] = Math.Round(s_random.NextDouble() * 40.0 + 5.0, 1);
+                    _temperature[Thermostat2] = Math.Round(s_random.NextDouble() * 40.0 + 5.0, 1);
                 }
 
                 await SendTemperatureAsync(Thermostat1, cancellationToken);
@@ -213,141 +213,105 @@ namespace Microsoft.Azure.Devices.Client.Samples
             const string propertyName = "targetTemperature";
             string componentName = (string)userContext;
 
-            bool targetTempUpdateReceived = PnpHelper.TryGetPropertyFromTwin(
+            bool targetTempUpdateReceived = PnpConvention.TryGetPropertyFromTwin(
                 desiredProperties,
                 propertyName,
                 out double targetTemperature,
                 componentName);
-
-            if (targetTempUpdateReceived)
-            {
-                _logger.LogDebug($"Property: Received - component=\"{componentName}\", {{ \"{propertyName}\": {targetTemperature}°C }}.");
-
-                string pendingPropertyPatch = PnpHelper.CreatePropertyEmbeddedValuePatch(
-                    propertyName,
-                    JsonConvert.SerializeObject(targetTemperature),
-                    ackCode: (int)StatusCode.InProgress,
-                    ackVersion: desiredProperties.Version,
-                    componentName: componentName);
-
-                var pendingReportedProperty = new TwinCollection(pendingPropertyPatch);
-                await _deviceClient.UpdateReportedPropertiesAsync(pendingReportedProperty);
-                _logger.LogDebug($"Property: Update - component=\"{componentName}\", " +
-                    $"{{\"{propertyName}\": {targetTemperature}°C }} is {StatusCode.InProgress}");
-
-                // Update Temperature in 2 steps
-                double step = (targetTemperature - _temperature[componentName]) / 2d;
-                for (int i = 1; i <= 2; i++)
-                {
-                    _temperature[componentName] = Math.Round(_temperature[componentName] + step, 1);
-                    await Task.Delay(6 * 1000);
-                }
-
-                string completedPropertyPatch = PnpHelper.CreatePropertyEmbeddedValuePatch(
-                    propertyName,
-                    JsonConvert.SerializeObject(_temperature[componentName]),
-                    ackCode: (int)StatusCode.Completed,
-                    ackVersion: desiredProperties.Version,
-                    serializedAckDescription: JsonConvert.SerializeObject("Successfully updated target temperature"),
-                    componentName: componentName);
-
-                var completedReportedProperty = new TwinCollection(completedPropertyPatch);
-                await _deviceClient.UpdateReportedPropertiesAsync(completedReportedProperty);
-                _logger.LogDebug($"Property: Update - component=\"{componentName}\", " +
-                    $"{{\"{propertyName}\": {_temperature[componentName]}°C }} is {StatusCode.Completed}");
-            }
-            else
+            if (!targetTempUpdateReceived)
             {
                 _logger.LogDebug($"Property: Update - component=\"{componentName}\", " +
                     $"received an update which is not associated with a valid property.\n{desiredProperties.ToJson()}");
+                return;
             }
+
+            _logger.LogDebug($"Property: Received - component=\"{componentName}\", {{ \"{propertyName}\": {targetTemperature}°C }}.");
+
+            string pendingPropertyPatch = PnpConvention.CreatePropertyEmbeddedValuePatch(
+                propertyName,
+                JsonConvert.SerializeObject(targetTemperature),
+                ackCode: (int)StatusCode.InProgress,
+                ackVersion: desiredProperties.Version,
+                componentName: componentName);
+
+            var pendingReportedProperty = new TwinCollection(pendingPropertyPatch);
+            await _deviceClient.UpdateReportedPropertiesAsync(pendingReportedProperty);
+            _logger.LogDebug($"Property: Update - component=\"{componentName}\", " +
+                $"{{\"{propertyName}\": {targetTemperature} }} in °C is {StatusCode.InProgress}.");
+
+            // Update Temperature in 2 steps
+            double step = (targetTemperature - _temperature[componentName]) / 2d;
+            for (int i = 1; i <= 2; i++)
+            {
+                _temperature[componentName] = Math.Round(_temperature[componentName] + step, 1);
+                await Task.Delay(6 * 1000);
+            }
+
+            string completedPropertyPatch = PnpConvention.CreatePropertyEmbeddedValuePatch(
+                propertyName,
+                JsonConvert.SerializeObject(_temperature[componentName]),
+                ackCode: (int)StatusCode.Completed,
+                ackVersion: desiredProperties.Version,
+                unserializedAckDescription: JsonConvert.SerializeObject("Successfully updated target temperature"),
+                componentName: componentName);
+
+            var completedReportedProperty = new TwinCollection(completedPropertyPatch);
+            await _deviceClient.UpdateReportedPropertiesAsync(completedReportedProperty);
+            _logger.LogDebug($"Property: Update - component=\"{componentName}\", " +
+                $"{{\"{propertyName}\": {_temperature[componentName]} }} in °C is {StatusCode.Completed}");
         }
 
         // Report the property updates on "deviceInformation" component.
         private async Task UpdateDeviceInformationAsync(CancellationToken cancellationToken)
         {
             const string componentName = "deviceInformation";
-            string messageHeader = $"Property: Update - component = \"{componentName}\"";
 
-            const string manufacturer = "manufacturer";
-            const string manufacturerValue = "element15";
-            string manufacturerPatch = PnpHelper.CreatePropertyPatch(manufacturer, JsonConvert.SerializeObject(manufacturerValue), componentName);
-            var manufacturerProperty = new TwinCollection(manufacturerPatch);
-            await _deviceClient.UpdateReportedPropertiesAsync(manufacturerProperty, cancellationToken);
-            _logger.LogDebug($"{messageHeader}, property {{ \"{manufacturer}\": \"{manufacturerValue}\" }} is {StatusCode.Completed}.");
+            string deviceInfoPatch = PnpConvention.CreateComponentPropertyPatch(
+                componentName,
+                new Dictionary<string, object>
+                {
+                    { "manufacturer", "element15" },
+                    { "model", "ModelIDxcdvmk" },
+                    { "swVersion", "1.0.0" },
+                    { "osName", "Windows 10" },
+                    { "processorArchitecture", "64-bit" },
+                    { "processorManufacturer", "Intel" },
+                    { "totalStorage", 256 },
+                    { "totalMemory", 1024 },
+                });
 
-            const string model = "model";
-            const string modelValue = "ModelIDxcdvmk";
-            string modelPatch = PnpHelper.CreatePropertyPatch(model, JsonConvert.SerializeObject(modelValue), componentName);
-            var modelProperty = new TwinCollection(modelPatch);
-            await _deviceClient.UpdateReportedPropertiesAsync(modelProperty, cancellationToken);
-            _logger.LogDebug($"{messageHeader}, property {{ \"{model}\": \"{modelValue}\" }} is {StatusCode.Completed}.");
-
-            const string swVersion = "swVersion";
-            const string swVersionValue = "1.0.0";
-            string swVersionPatch = PnpHelper.CreatePropertyPatch(swVersion, JsonConvert.SerializeObject(swVersionValue), componentName);
-            var swVersionProperty = new TwinCollection(swVersionPatch);
-            await _deviceClient.UpdateReportedPropertiesAsync(swVersionProperty, cancellationToken);
-            _logger.LogDebug($"{messageHeader}, property {{ \"{swVersion}\": \"{swVersionValue}\" }} is {StatusCode.Completed}.");
-
-            const string osName = "osName";
-            const string osNameValue = "Windows 10";
-            string osNamePatch = PnpHelper.CreatePropertyPatch(osName, JsonConvert.SerializeObject(osNameValue), componentName);
-            var osNameProperty = new TwinCollection(osNamePatch);
-            await _deviceClient.UpdateReportedPropertiesAsync(osNameProperty, cancellationToken);
-            _logger.LogDebug($"{messageHeader}, property {{ \"{osName}\": \"{osNameValue}\" }} is {StatusCode.Completed}.");
-
-            const string processorArchitecture = "processorArchitecture";
-            const string processorArchitectureValue = "64-bit";
-            string processorArchitecturePatch = PnpHelper.CreatePropertyPatch(processorArchitecture,
-                JsonConvert.SerializeObject(processorArchitectureValue), componentName);
-            var processorArchitectureProperty = new TwinCollection(processorArchitecturePatch);
-            await _deviceClient.UpdateReportedPropertiesAsync(processorArchitectureProperty, cancellationToken);
-            _logger.LogDebug($"{messageHeader}, property {{ \"{processorArchitecture}\": \"{processorArchitectureValue}\" }} is {StatusCode.Completed}.");
-
-            const string processorManufacturer = "processorManufacturer";
-            const string processorManufacturerValue = "Intel";
-            string processorManufacturerPatch = PnpHelper.CreatePropertyPatch(processorManufacturer, JsonConvert.SerializeObject(processorManufacturerValue), componentName);
-            var processorManufacturerProperty = new TwinCollection(processorManufacturerPatch);
-            await _deviceClient.UpdateReportedPropertiesAsync(processorManufacturerProperty, cancellationToken);
-            _logger.LogDebug($"{messageHeader}, property {{ \"{processorManufacturer}\": \"{processorManufacturerValue}\" }} is {StatusCode.Completed}.");
-
-            const string totalStorage = "totalStorage";
-            const double totalStorageValue = 256;
-            string totalStoragePatch = PnpHelper.CreatePropertyPatch(totalStorage, JsonConvert.SerializeObject(totalStorageValue), componentName);
-            var totalStorageProperty = new TwinCollection(totalStoragePatch);
-            await _deviceClient.UpdateReportedPropertiesAsync(totalStorageProperty, cancellationToken);
-            _logger.LogDebug($"{messageHeader}, property {{ \"{totalStorage}\": {totalStorageValue}MB }} is {StatusCode.Completed}.");
-
-            const string totalMemory = "totalMemory";
-            const double totalMemoryValue = 1024;
-            string totalMemoryPatch = PnpHelper.CreatePropertyPatch(totalMemory, JsonConvert.SerializeObject(totalMemoryValue), componentName);
-            var totalMemoryProperty = new TwinCollection(totalMemoryPatch);
-            await _deviceClient.UpdateReportedPropertiesAsync(totalMemoryProperty, cancellationToken);
-            _logger.LogDebug($"{messageHeader}, property {{ \"{totalMemory}\": {totalMemoryValue}MB }} is {StatusCode.Completed}.");
+            var deviceInfoTc = new TwinCollection(deviceInfoPatch);
+            await _deviceClient.UpdateReportedPropertiesAsync(deviceInfoTc, cancellationToken);
+            _logger.LogDebug($"Property: Update - component = '{componentName}', properties update is complete.");
         }
 
         // Send working set of device memory over telemetry.
         private async Task SendDeviceMemoryAsync(CancellationToken cancellationToken)
         {
-            const string telemetryName = "workingSet";
+            const string workingSetName = "workingSet";
+
             long workingSet = Process.GetCurrentProcess().PrivateMemorySize64 / 1024;
 
-            using Message msg = PnpHelper.CreateMessage(telemetryName, JsonConvert.SerializeObject(workingSet));
+            var telemetry = new Dictionary<string, object>
+            {
+                { workingSetName, workingSet },
+            };
+
+            using Message msg = PnpConvention.CreateMessage(telemetry);
 
             await _deviceClient.SendEventAsync(msg, cancellationToken);
-            _logger.LogDebug($"Telemetry: Sent - {{ \"{telemetryName}\": {workingSet}KiB }}.");
+            _logger.LogDebug($"Telemetry: Sent - {JsonConvert.SerializeObject(telemetry)} in KB.");
         }
 
         // Send device serial number over property update.
         private async Task SendDeviceSerialNumberAsync(CancellationToken cancellationToken)
         {
             const string propertyName = "serialNumber";
-            string propertyPatch = PnpHelper.CreatePropertyPatch(propertyName, JsonConvert.SerializeObject(SerialNumber));
+            string propertyPatch = PnpConvention.CreatePropertyPatch(propertyName, SerialNumber);
             var reportedProperties = new TwinCollection(propertyPatch);
 
             await _deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken);
-            _logger.LogDebug($"Property: Update - {{ \"{propertyName}\": \"{SerialNumber}\" }} is {StatusCode.Completed}.");
+            _logger.LogDebug($"Property: Update - {{ \"{propertyName}\": \"{SerialNumber}\" }} is complete.");
         }
 
         private async Task SendTemperatureAsync(string componentName, CancellationToken cancellationToken)
@@ -366,23 +330,23 @@ namespace Microsoft.Azure.Devices.Client.Samples
         {
             const string telemetryName = "temperature";
             double currentTemperature = _temperature[componentName];
-            using Message msg = PnpHelper.CreateMessage(telemetryName, JsonConvert.SerializeObject(currentTemperature), componentName);
+            using Message msg = PnpConvention.CreateMessage(telemetryName, currentTemperature, componentName);
 
             await _deviceClient.SendEventAsync(msg, cancellationToken);
-            _logger.LogDebug($"Telemetry: Sent - component=\"{componentName}\", {{ \"{telemetryName}\": {currentTemperature}°C }}.");
+            _logger.LogDebug($"Telemetry: Sent - component=\"{componentName}\", {{ \"{telemetryName}\": {currentTemperature} }} in °C.");
 
             if (_temperatureReadingsDateTimeOffset.ContainsKey(componentName))
             {
-                _temperatureReadingsDateTimeOffset[componentName].TryAdd(DateTimeOffset.Now, currentTemperature);
+                _temperatureReadingsDateTimeOffset[componentName].TryAdd(DateTimeOffset.UtcNow, currentTemperature);
             }
             else
             {
-                _temperatureReadingsDateTimeOffset.TryAdd(componentName, new Dictionary<DateTimeOffset, double>()
-                {
+                _temperatureReadingsDateTimeOffset.TryAdd(
+                    componentName,
+                    new Dictionary<DateTimeOffset, double>
                     {
-                        DateTimeOffset.Now, currentTemperature
-                    }
-                });
+                        { DateTimeOffset.UtcNow, currentTemperature },
+                    });
             }
         }
 
@@ -390,11 +354,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
         {
             const string propertyName = "maxTempSinceLastReboot";
             double maxTemp = _maxTemp[componentName];
-            string propertyPatch = PnpHelper.CreatePropertyPatch(propertyName, JsonConvert.SerializeObject(maxTemp), componentName);
+            string propertyPatch = PnpConvention.CreateComponentPropertyPatch(componentName, propertyName, maxTemp);
             var reportedProperties = new TwinCollection(propertyPatch);
 
             await _deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken);
-            _logger.LogDebug($"Property: Update - component=\"{componentName}\", {{ \"{propertyName}\": {maxTemp}°C }} is {StatusCode.Completed}.");
+            _logger.LogDebug($"Property: Update - component=\"{componentName}\", {{ \"{propertyName}\": {maxTemp} }} in °C is complete.");
         }
     }
 }
