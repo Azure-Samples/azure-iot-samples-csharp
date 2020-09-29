@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TemperatureController", "Pn
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Thermostat", "PnpDeviceSamples\Thermostat\Thermostat.csproj", "{D408FF22-8A9A-4096-98B0-552318700AAC}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PnpHelpers", "PnpDeviceSamples\PnpConvention\PnpHelpers.csproj", "{DCFC3AF8-5E7D-4ADD-A08E-D50B3768564F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,10 @@ Global
 		{D408FF22-8A9A-4096-98B0-552318700AAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D408FF22-8A9A-4096-98B0-552318700AAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D408FF22-8A9A-4096-98B0-552318700AAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DCFC3AF8-5E7D-4ADD-A08E-D50B3768564F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCFC3AF8-5E7D-4ADD-A08E-D50B3768564F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCFC3AF8-5E7D-4ADD-A08E-D50B3768564F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCFC3AF8-5E7D-4ADD-A08E-D50B3768564F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -66,6 +72,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{9CC9E3B6-1051-4D01-8D9B-AF5F13FD88C1} = {F5303EDE-71ED-4F4F-973A-A9604DE9FA04}
 		{D408FF22-8A9A-4096-98B0-552318700AAC} = {F5303EDE-71ED-4F4F-973A-A9604DE9FA04}
+		{DCFC3AF8-5E7D-4ADD-A08E-D50B3768564F} = {F5303EDE-71ED-4F4F-973A-A9604DE9FA04}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A9E1FEF7-DB22-48EC-A7D2-0AECA91CDCF0}
