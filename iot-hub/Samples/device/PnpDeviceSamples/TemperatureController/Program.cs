@@ -103,7 +103,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
             var pnpPayload = new ProvisioningRegistrationAdditionalData
             {
-                JsonData = PnpHelper.CreateDpsPayload(ModelId),
+                JsonData = PnpConvention.CreateDpsPayload(ModelId),
             };
             return await pdc.RegisterAsync(pnpPayload, cancellationToken);
         }
