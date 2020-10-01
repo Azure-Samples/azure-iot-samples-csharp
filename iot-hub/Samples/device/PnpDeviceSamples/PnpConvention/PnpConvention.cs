@@ -1,24 +1,18 @@
-﻿using Microsoft.Azure.Devices.Client;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Shared;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace PnpHelpers
 {
     public class PnpConvention
     {
-        // The following regex expression minifies a json string.
-        // It makes sure that space characters within sentences are preserved, and all other space characters are discarded.
-        // The first option @"(""(?:[^""\\]|\\.)*"")" matches a double quoted string.
-        // The "(?:[^""\\])" indicates that the output (within quotes) is captured, and available as replacement in the Regex.Replace call below.
-        // The "[^""\\]" matches any character except a double quote or escape character \.
-        // The second option "\s+" matches all other space characters.
-        private static readonly Regex s_trimWhiteSpace = new Regex(@"(""(?:[^""\\]|\\.)*"")|\s+", RegexOptions.Compiled);
-
         /// <summary>
         /// The content type for a plug and play compatible telemetry message.
         /// </summary>
@@ -99,24 +93,24 @@ namespace PnpHelpers
         /// All properties are read-write from a device's perspective.
         /// For a root-level property update, the patch is in the format: <c>{ "samplePropertyName": 20 }</c>
         /// </remarks>
-        public static string CreatePropertyPatch(string propertyName, object propertyValue)
+        public static TwinCollection CreatePropertyPatch(string propertyName, object propertyValue)
         {
             return CreatePropertyPatch(new Dictionary<string, object> { { propertyName, propertyValue } });
         }
 
         /// <summary>
-        /// Creates a batch property update payload for the specified property key/value pairs/
+        /// Creates a batch property update payload for the specified property key/value pairs
         /// </summary>
         /// <remarks>
         /// This creates a property patch for both read-only and read-write properties, both of which are named from a service perspective.
         /// All properties are read-write from a device's perspective.
         /// For a root-level property update, the patch is in the format: <c>{ "samplePropertyName": 20 }</c>
         /// </remarks>
-        /// <param name="propertyKeyValuePairs">The twin properties and values to update.</param>
+        /// <param name="propertyPairs">The twin properties and values to update.</param>
         /// <returns>A compact payload of the properties to update.</returns>
-        public static string CreatePropertyPatch(IDictionary<string, object> propertyKeyValuePairs)
+        public static TwinCollection CreatePropertyPatch(IDictionary<string, object> propertyPairs)
         {
-            return JsonConvert.SerializeObject(propertyKeyValuePairs);
+            return new TwinCollection(JsonConvert.SerializeObject(propertyPairs));
         }
 
         /// <summary>
@@ -139,7 +133,7 @@ namespace PnpHelpers
         /// <param name="propertyName">The name of the twin property.</param>
         /// <param name="propertyValue">The unserialized value of the twin property.</param>
         /// <returns>The property patch for read-only and read-write property updates.</returns>
-        public static string CreateComponentPropertyPatch(string componentName, string propertyName, object propertyValue)
+        public static TwinCollection CreateComponentPropertyPatch(string componentName, string propertyName, object propertyValue)
         {
             if (string.IsNullOrWhiteSpace(propertyName))
             {
@@ -164,23 +158,23 @@ namespace PnpHelpers
         /// {
         ///   "sampleComponentName": {
         ///     "__t": "c",
-        ///     "samplePropertyName"": 20
+        ///     "samplePropertyName": 20
         ///   }
         /// }
         /// </code>
         /// </remarks>
         /// <param name="componentName">The name of the component in which the property is defined. Can be null for property defined under the root interface.</param>
-        /// <param name="propertyKeyValuePairs">The property name and an unserialized value, as defined in the DTDL interface.</param>
+        /// <param name="propertyPairs">The property name and an unserialized value, as defined in the DTDL interface.</param>
         /// <returns>The property patch for read-only and read-write property updates.</returns>
-        public static string CreateComponentPropertyPatch(string componentName, IDictionary<string, object> propertyKeyValuePairs)
+        public static TwinCollection CreateComponentPropertyPatch(string componentName, IDictionary<string, object> propertyPairs)
         {
             if (string.IsNullOrWhiteSpace(componentName))
             {
                 throw new ArgumentNullException(nameof(componentName));
             }
-            if (propertyKeyValuePairs == null)
+            if (propertyPairs == null)
             {
-                throw new ArgumentNullException(nameof(propertyKeyValuePairs));
+                throw new ArgumentNullException(nameof(propertyPairs));
             }
 
             var propertyPatch = new StringBuilder();
@@ -188,40 +182,98 @@ namespace PnpHelpers
             propertyPatch.Append($"\"{componentName}\":");
             propertyPatch.Append("{");
             propertyPatch.Append($"\"{PropertyComponentIdentifierKey}\":\"{PropertyComponentIdentifierValue}\",");
-            foreach (var kvp in propertyKeyValuePairs)
+            foreach (var kvp in propertyPairs)
             {
-                propertyPatch.Append($"\"{kvp.Key}\": {JsonConvert.SerializeObject(kvp.Value)},");
+                propertyPatch.Append($"\"{kvp.Key}\":{JsonConvert.SerializeObject(kvp.Value)},");
             }
 
             // remove the extra comma
             propertyPatch.Remove(propertyPatch.Length - 1, 1);
-             
+
             propertyPatch.Append("}}");
 
-            return propertyPatch.ToString();
+            return new TwinCollection(propertyPatch.ToString());
         }
 
         /// <summary>
-        /// Create a key-embedded value property patch for updating device properties. Embedded value property updates are
-        /// sent from a device in response to a service-initiated read-write property update.
+        /// Creates a response to a write request on a device property.
         /// </summary>
         /// <remarks>
-        /// A property is either read-only or read-write from a service perspective. All properties are read-write from a
-        /// device's perspective. For a root-level property update, the patch is in the format:
-        /// <code>
-        /// {
-        ///   "samplePropertyName": {
-        ///     "value": 20,
-        ///     "ac": 200,
-        ///     "av": 5,
-        ///     "ad": "The update was successful."
-        ///   }
-        /// }
-        /// </code>
-        ///
+        /// This creates a property patch for both read-only and read-write properties, both of which are named from a service perspective.
+        /// All properties are read-write from a device's perspective.
         /// For a component-level property update, the patch is in the format:
         /// <code>
         /// {
+        ///   "sampleComponentName": {
+        ///     "__t": "c",
+        ///     "samplePropertyName": 20
+        ///   }
+        /// }
+        /// </code>
+        /// </remarks>
+        /// <param name="propertyName">The name of the property to report.</param>
+        /// <param name="propertyValue">The unserialized property value.</param>
+        /// <param name="ackCode">The acknowledgement code, usually an HTTP Status Code e.g. 200, 400.</param>
+        /// <param name="ackVersion">The acknowledgement version, as supplied in the property update request.</param>
+        /// <param name="ackDescription">The acknowledgement description, an optional, human-readable message about the result of the property update.</param>
+        /// <returns>A serialized json string response.</returns>
+        public static TwinCollection CreateWritablePropertyResponse(
+            string propertyName,
+            object propertyValue,
+            int ackCode,
+            long ackVersion,
+            string ackDescription = null)
+        {
+            if (string.IsNullOrWhiteSpace(propertyName))
+            {
+                throw new ArgumentNullException(nameof(propertyName));
+            }
+
+            return CreateWritablePropertyResponse(
+                new Dictionary<string, object> { { propertyName, propertyValue } },
+                ackCode,
+                ackVersion,
+                ackDescription);
+        }
+
+        /// <summary>
+        /// Creates a response to a write request on a device property.
+        /// </summary>
+        /// <param name="propertyPairs">The name and unserialized value of the property to report.</param>
+        /// <param name="ackCode">The acknowledgement code, usually an HTTP Status Code e.g. 200, 400.</param>
+        /// <param name="ackVersion">The acknowledgement version, as supplied in the property update request.</param>
+        /// <param name="ackDescription">The acknowledgement description, an optional, human-readable message about the result of the property update.</param>
+        /// <returns>A serialized json string response.</returns>
+        public static TwinCollection CreateWritablePropertyResponse(
+            IDictionary<string, object> propertyPairs,
+            int ackCode,
+            long ackVersion,
+            string ackDescription = null)
+        {
+            if (propertyPairs == null)
+            {
+                throw new ArgumentNullException(nameof(propertyPairs));
+            }
+
+            var response = new Dictionary<string, WritablePropertyResponse>(propertyPairs.Count);
+            foreach (var kvp in propertyPairs)
+            {
+                if (string.IsNullOrWhiteSpace(kvp.Key))
+                {
+                    throw new ArgumentNullException(nameof(kvp.Key), $"One of the propertyPairs keys was null, empty, or white space.");
+                }
+                response.Add(kvp.Key, new WritablePropertyResponse(kvp.Value, ackCode, ackVersion, ackDescription));
+            }
+
+            return new TwinCollection(JsonConvert.SerializeObject(response));
+        }
+
+        /// <summary>
+        /// Creates a response to a write request on a device property.
+        /// </summary>
+        /// <remarks>
+        /// For a component-level property update, the patch is in the format:
+        /// <code>
         ///   "sampleComponentName": {
         ///     "__t": "c",
         ///     "samplePropertyName": {
@@ -234,63 +286,97 @@ namespace PnpHelpers
         /// }
         /// </code>
         /// </remarks>
-        /// <param name="propertyName">The property name, as defined in the DTDL interface.</param>
-        /// <param name="unserializedPropertyValue">The unserialized property value, in the format defined in the DTDL interface.</param>
-        /// <param name="ackCode">The acknowledgment code from the device, for the embedded value property update.</param>
-        /// <param name="ackVersion">The version no. of the service-initiated read-write property update.</param>
-        /// <param name="unserializedAckDescription">The serialized description from the device, accompanying the embedded value property update.</param>
-        /// <param name="componentName">The name of the component in which the property is defined. Can be null for property defined under the root interface.</param>
-        /// <returns>The property patch for embedded value property updates for read-write properties.</returns>
-        public static string CreatePropertyEmbeddedValuePatch(
+        /// <param name="componentName">The component to which the property belongs.</param>
+        /// <param name="propertyName">The name of the property to report.</param>
+        /// <param name="propertyValue">The unserialized property value.</param>
+        /// <param name="ackCode">The acknowledgement code, usually an HTTP Status Code e.g. 200, 400.</param>
+        /// <param name="ackVersion">The acknowledgement version, as supplied in the property update request.</param>
+        /// <param name="ackDescription">The acknowledgement description, an optional, human-readable message about the result of the property update.</param>
+        /// <returns>A serialized json string response.</returns>
+        public static TwinCollection CreateComponentWritablePropertyResponse(
+            string componentName,
             string propertyName,
-            object unserializedPropertyValue,
+            object propertyValue,
             int ackCode,
             long ackVersion,
-            string unserializedAckDescription = default,
-            string componentName = default)
+            string ackDescription = null)
         {
+            if (string.IsNullOrWhiteSpace(componentName))
+            {
+                throw new ArgumentNullException(nameof(componentName));
+            }
             if (string.IsNullOrWhiteSpace(propertyName))
             {
                 throw new ArgumentNullException(nameof(propertyName));
             }
-            if (unserializedPropertyValue == null)
-            {
-                throw new ArgumentNullException(nameof(unserializedPropertyValue));
-            }
 
-            string propertyPatch;
+            return CreateComponentWritablePropertyResponse(
+                componentName,
+                new Dictionary<string, object> { { propertyName, propertyValue } },
+                ackCode,
+                ackVersion,
+                ackDescription);
+        }
+
+        /// <summary>
+        /// Creates a response to a write request on a device property.
+        /// </summary>
+        /// <remarks>
+        /// For a component-level property update, the patch is in the format:
+        /// <code>
+        ///   "sampleComponentName": {
+        ///     "__t": "c",
+        ///     "samplePropertyName": {
+        ///       "value": 20,
+        ///       "ac": 200,
+        ///       "av": 5,
+        ///       "ad": "The update was successful."
+        ///     }
+        ///   }
+        /// }
+        /// </code>
+        /// </remarks>
+        /// <param name="componentName">The component to which the property belongs.</param>
+        /// <param name="propertyPairs">The name and unserialized value of the property to report.</param>
+        /// <param name="ackCode">The acknowledgement code, usually an HTTP Status Code e.g. 200, 400.</param>
+        /// <param name="ackVersion">The acknowledgement version, as supplied in the property update request.</param>
+        /// <param name="ackDescription">The acknowledgement description, an optional, human-readable message about the result of the property update.</param>
+        /// <returns>A serialized json string response.</returns>
+        public static TwinCollection CreateComponentWritablePropertyResponse(
+            string componentName,
+            IDictionary<string, object> propertyPairs,
+            int ackCode,
+            long ackVersion,
+            string ackDescription = null)
+        {
             if (string.IsNullOrWhiteSpace(componentName))
             {
-                propertyPatch =
-                    $"{{" +
-                    $"  \"{propertyName}\": " +
-                    $"      {{ " +
-                    $"          \"value\" : {JsonConvert.SerializeObject(unserializedPropertyValue)}," +
-                    $"          \"ac\" : {ackCode}, " +
-                    $"          \"av\" : {ackVersion}, " +
-                    $"          {(!string.IsNullOrWhiteSpace(unserializedAckDescription) ? $"\"ad\": {JsonConvert.SerializeObject(unserializedAckDescription)}" : "")}" +
-                    $"      }} " +
-                    $"}}";
+                throw new ArgumentNullException(nameof(componentName));
             }
-            else
+            if (propertyPairs == null)
             {
-                propertyPatch =
-                    $"{{" +
-                    $"  \"{componentName}\": " +
-                    $"      {{" +
-                    $"          \"{PropertyComponentIdentifierKey}\": \"{PropertyComponentIdentifierValue}\"," +
-                    $"          \"{propertyName}\": " +
-                    $"              {{ " +
-                    $"                  \"value\" : {JsonConvert.SerializeObject(unserializedPropertyValue)}," +
-                    $"                  \"ac\" : {ackCode}, " +
-                    $"                  \"av\" : {ackVersion}, " +
-                    $"                  {(!string.IsNullOrWhiteSpace(unserializedAckDescription) ? $"\"ad\": {JsonConvert.SerializeObject(unserializedAckDescription)}" : "")}" +
-                    $"              }} " +
-                    $"      }} " +
-                    $"}}";
+                throw new ArgumentNullException(nameof(propertyPairs));
             }
 
-            return TrimWhiteSpace(propertyPatch);
+            var propertyPatch = new Dictionary<string, object>
+            {
+                { PropertyComponentIdentifierKey, PropertyComponentIdentifierValue },
+            };
+            foreach (var kvp in propertyPairs)
+            {
+                if (string.IsNullOrWhiteSpace(kvp.Key))
+                {
+                    throw new ArgumentNullException(nameof(kvp.Key), $"One of the propertyPairs keys was null, empty, or white space.");
+                }
+                propertyPatch.Add(kvp.Key, new WritablePropertyResponse(kvp.Value, ackCode, ackVersion, ackDescription));
+            }
+
+            var response = new Dictionary<string, object>
+            {
+                { componentName, propertyPatch },
+            };
+
+            return new TwinCollection(JsonConvert.SerializeObject(response));
         }
 
         /// <summary>
@@ -332,17 +418,6 @@ namespace PnpHelpers
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// Helper to remove extra white space from the supplied string.
-        /// It makes sure that space characters within sentences are preserved, and all other space characters are discarded.
-        /// </summary>
-        /// <param name="input">The string to be formatted.</param>
-        /// <returns>The input string, with extra white space removed. </returns>
-        private static string TrimWhiteSpace(string input)
-        {
-            return s_trimWhiteSpace.Replace(input, "$1");
         }
     }
 }

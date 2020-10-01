@@ -1,4 +1,8 @@
-﻿using FluentAssertions;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using FluentAssertions;
+using Microsoft.Azure.Devices.Shared;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -25,8 +29,8 @@ namespace PnpHelpers
                 const string propertyName = "someName";
                 const int propertyValue = 10;
 
-                string patch = PnpConvention.CreatePropertyPatch(propertyName, propertyValue);
-                var jObject = JObject.Parse(patch);
+                TwinCollection patch = PnpConvention.CreatePropertyPatch(propertyName, propertyValue);
+                var jObject = JObject.Parse(patch.ToJson());
 
                 jObject.Count.Should().Be(1, "there should be a single property added");
                 jObject.Value<int>(propertyName).Should().Be(propertyValue);
@@ -47,9 +51,9 @@ namespace PnpHelpers
                 const string propertyName = "someName";
                 const int propertyValue = 10;
 
-                string patch = PnpConvention.CreateComponentPropertyPatch(componentName, propertyName, propertyValue);
+                TwinCollection patch = PnpConvention.CreateComponentPropertyPatch(componentName, propertyName, propertyValue);
 
-                var jObject = JObject.Parse(patch);
+                var jObject = JObject.Parse(patch.ToJson());
                 JObject component = jObject.Value<JObject>(componentName);
 
                 component.Count.Should().Be(2, "there should be two properties added - the above property and a component identifier {\"__t\": \"c\"}");
@@ -76,9 +80,9 @@ namespace PnpHelpers
                 const int ackCode = 200;
                 const long ackVersion = 2;
 
-                string patch = PnpConvention.CreatePropertyEmbeddedValuePatch(propertyName, propertyValue, ackCode, ackVersion);
+                TwinCollection patch = PnpConvention.CreateWritablePropertyResponse(propertyName, propertyValue, ackCode, ackVersion);
 
-                var jObject = JObject.Parse(patch);
+                var jObject = JObject.Parse(patch.ToJson());
                 EmbeddedPropertyPatch actualPatch = jObject.ToObject<EmbeddedPropertyPatch>();
 
                 // The property patch object should have "value", "ac" and "av" properties set. Since we did not supply an "ackDescription", "ad" should be null.
@@ -111,15 +115,15 @@ namespace PnpHelpers
                 const long ackVersion = 2;
                 const string ackDescription = "The update was successful";
 
-                string patch = PnpConvention.CreatePropertyEmbeddedValuePatch(
+                TwinCollection patch = PnpConvention.CreateComponentWritablePropertyResponse(
+                    componentName,
                     propertyName,
                     JsonConvert.SerializeObject(propertyValue),
                     ackCode,
                     ackVersion,
-                    ackDescription,
-                    componentName);
+                    ackDescription);
 
-                var jObject = JObject.Parse(patch);
+                var jObject = JObject.Parse(patch.ToJson());
                 JObject component = jObject.Value<JObject>(componentName);
 
                 // There should be two properties added to the component- the above property and a component identifier "__t": "c".
