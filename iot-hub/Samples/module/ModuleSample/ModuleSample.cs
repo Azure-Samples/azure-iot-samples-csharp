@@ -253,13 +253,13 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private async Task OnDesiredPropertyChanged(TwinCollection desiredProperties, object userContext)
         {
-            _logger.LogInformation($"Desired property changed:\n\t{desiredProperties.ToJson()}");
+            _logger.LogInformation($"Desired property changed: {desiredProperties.ToJson()}");
 
             TwinCollection reportedProperties = new TwinCollection();
-            reportedProperties["DateTimeLastDesiredPropertyChangeReceived"] = DateTime.Now;
+            reportedProperties["DateTimeLastDesiredPropertyChangeReceived"] = DateTimeOffset.Now.ToUniversalTime();
 
             await s_moduleClient.UpdateReportedPropertiesAsync(reportedProperties);
-            _logger.LogInformation("Sent current time as reported property.");
+            _logger.LogInformation($"Sent current time as reported property update: {reportedProperties.ToJson()}");
         }
     }
 }
