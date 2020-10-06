@@ -67,7 +67,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
             try
             {
-                await s_moduleClient.SetDesiredPropertyUpdateCallbackAsync(OnDesiredPropertyChanged, s_moduleClient, cts.Token);
+                await s_moduleClient.SetDesiredPropertyUpdateCallbackAsync(OnDesiredPropertyChanged, cts.Token, cts.Token);
                 await SendMessagesAsync(cts.Token);
             }
             catch (Exception ex)
@@ -252,13 +252,44 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private async Task OnDesiredPropertyChanged(TwinCollection desiredProperties, object userContext)
         {
+            var cancellationToken = (CancellationToken)userContext;
             _logger.LogInformation($"Desired property changed: {desiredProperties.ToJson()}");
 
             TwinCollection reportedProperties = new TwinCollection();
             reportedProperties["DateTimeLastDesiredPropertyChangeReceived"] = DateTimeOffset.Now.ToUniversalTime();
 
-            await s_moduleClient.UpdateReportedPropertiesAsync(reportedProperties);
-            _logger.LogInformation($"Sent current time as reported property update: {reportedProperties.ToJson()}");
+            // If cancellation has not been requested, and the device is connected, then send the reported property update.
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                if (s_connectionStatus == ConnectionStatus.Connected)
+                {
+                    try
+                    {
+                        await s_moduleClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken);
+                        _logger.LogInformation($"Sent current time as reported property update: {reportedProperties.ToJson()}");
+                        break;
+                    }
+                    catch (IotHubException ex) when (ex.IsTransient)
+                    {
+                        // Inspect the exception to figure out if operation should be retried, or if user-input is required.
+                        _logger.LogError($"An IotHubException was caught, but will try to recover and retry: {ex}");
+                    }
+                    catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
+                    {
+                        _logger.LogError($"A network related exception was caught, but will try to recover and retry: {ex}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Unexpected error {ex}");
+                    }
+
+                    // wait and retry
+                    await Task.Delay(s_sleepDuration);
+                }
+
+                // wait and retry
+                await Task.Delay(s_sleepDuration);
+            }
         }
     }
 }
