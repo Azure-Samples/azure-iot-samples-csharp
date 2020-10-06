@@ -179,7 +179,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             _logger.LogError("### This combination of ConnectionStatus and ConnectionStatusChangeReason is not expected," +
                                 " contact the client library team with logs.");
                             break;
-
                     }
 
                     break;
