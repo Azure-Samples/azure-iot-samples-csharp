@@ -33,7 +33,7 @@ var temperature = 25;
 var humidity = 70;
 string messagePayload = $"{{\"temperature\":{temperature},\"humidity\":{humidity}}}";
 
-var eventMessage = new Message(Encoding.UTF8.GetBytes(messagePayload))
+using var eventMessage = new Message(Encoding.UTF8.GetBytes(messagePayload))
 {
     MessageId = Guid.NewGuid().ToString(),
     ContentEncoding = Encoding.UTF8.ToString(),
