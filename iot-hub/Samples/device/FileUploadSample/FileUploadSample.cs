@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Azure.Devices.Client.Transport;
+using Microsoft.WindowsAzure.Storage.Blob;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -8,8 +13,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
 {
     public class FileUploadSample
     {
-        // The file to upload.
-        private const string FilePath = "TestPayload.txt";
         private readonly DeviceClient _deviceClient;
 
         public FileUploadSample(DeviceClient deviceClient)
@@ -19,6 +22,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         public async Task RunSampleAsync()
         {
+            const string filePath = "TestPayload.txt";
+
             using (var fileStreamSource = new FileStream(FilePath, FileMode.Open))
             {
                 var fileName = Path.GetFileName(fileStreamSource.Name);
