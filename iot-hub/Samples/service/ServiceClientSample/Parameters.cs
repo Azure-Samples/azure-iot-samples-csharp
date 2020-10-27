@@ -29,7 +29,7 @@ namespace Microsoft.Azure.Devices.Samples
             "TransportType",
             Default = TransportType.Amqp,
             Required = false,
-            HelpText = "The transport to use to communicate with the IoT Hub. Possible values include Amqp and Amqp_WebSocket_Only. The default value is Amqp.")]
+            HelpText = "The transport to use to communicate with the IoT Hub. Possible values include Amqp and Amqp_WebSocket_Only.")]
         public TransportType TransportType { get; set; }
     }
 }

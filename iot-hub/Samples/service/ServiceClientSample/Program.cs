@@ -44,11 +44,8 @@ namespace Microsoft.Azure.Devices.Samples
             // Instantiating this seems to do all we need for outputting SDK events to our console log
             _ = new ConsoleEventListener(SdkEventProviderPrefix, logger);
 
-            using ServiceClient serviceClient = ServiceClient.CreateFromConnectionString(parameters.HubConnectionString, parameters.TransportType);
-            var sample = new ServiceClientSample(serviceClient, parameters.DeviceId, logger);
+            var sample = new ServiceClientSample(parameters.HubConnectionString, parameters.TransportType, parameters.DeviceId, logger);
             await sample.RunSampleAsync();
-
-            await serviceClient.CloseAsync();
 
             Console.WriteLine("Done.");
             return 0;
