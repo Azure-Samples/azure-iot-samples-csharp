@@ -71,13 +71,13 @@ namespace Microsoft.Azure.Devices.Samples
                     catch (Exception e) when (ExceptionHelper.IsNetwork(e))
                     {
                         _logger.LogError($"Transient Exception occurred, will retry: {e}");
-                        await Task.Delay(s_sleepDuration);
                     }
                     catch (Exception e)
                     {
                         _logger.LogError($"Unexpected error, will need to reinitialize the client: {e}");
                         await InitializeServiceClientAsync();
                     }
+                    await Task.Delay(s_sleepDuration);
                 }
                 await Task.Delay(s_sleepDuration);
             }

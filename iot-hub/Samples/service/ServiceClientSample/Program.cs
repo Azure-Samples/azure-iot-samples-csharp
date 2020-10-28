@@ -11,6 +11,8 @@ namespace Microsoft.Azure.Devices.Samples
 {
     public class Program
     {
+        private const string SdkEventProviderPrefix = "Microsoft-Azure-";
+
         /// <summary>
         /// A sample to illustrate how to send telemetry messages to a device.
         /// </summary>
@@ -40,7 +42,6 @@ namespace Microsoft.Azure.Devices.Samples
                 });
             var logger = loggerFactory.CreateLogger<Program>();
 
-            const string SdkEventProviderPrefix = "Microsoft-Azure-";
             // Instantiating this seems to do all we need for outputting SDK events to our console log
             _ = new ConsoleEventListener(SdkEventProviderPrefix, logger);
 
