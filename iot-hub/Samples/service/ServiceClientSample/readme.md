@@ -45,5 +45,10 @@ await serviceClient.SendEventAsync(deviceId, message);
 
 ### Service client reconnection:
 
-The service client does not have any kind of connection recovery logic built in. On encountering an exception, the service client will propagate that information to the calling application. 
-At that point, it is recommended that you inspect the exception details and take necessary action:
+The service client does not have any kind of connection recovery logic built in. On encountering an exception, the service client will relay that information to the calling application. 
+At that point, it is recommended that you inspect the exception details and take necessary action.
+
+For eg.:
+- If it a network exception, you can retry the operation.
+- If it is a security exception (unauthorized exception), inspect your credentials and make sure they are up-to-date.
+- If it is a throttling/quota exceeded exception, monitor and/or modify the frequency of sending requests, or update your hub instance scale unit. See https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-quotas-throttling for more details.
