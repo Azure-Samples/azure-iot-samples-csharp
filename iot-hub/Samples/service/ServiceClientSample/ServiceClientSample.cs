@@ -92,6 +92,11 @@ namespace Microsoft.Azure.Devices.Samples
                 _serviceClient = null;
                 _logger.LogInformation("Closed and disposed the current service client instance.");
             }
+
+            var options = new ServiceClientOptions
+            {
+                SdkAssignsMessageId = SdkAssignsMessageId.WhenUnset,
+            };
             _serviceClient = ServiceClient.CreateFromConnectionString(_hubConnectionString, _transportType);
             _logger.LogInformation("Initialized a new service client instance.");
         }
