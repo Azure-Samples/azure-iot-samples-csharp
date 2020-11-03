@@ -41,7 +41,7 @@ namespace Microsoft.Azure.Devices.Samples
             try
             {
                 await InitializeServiceClientAsync();
-                await SendC2DMessagesAsync(cts.Token);
+                await SendC2dMessagesAsync(cts.Token);
             }
             catch (Exception ex)
             {
@@ -50,21 +50,21 @@ namespace Microsoft.Azure.Devices.Samples
 
         }
 
-        private async Task SendC2DMessagesAsync(CancellationToken cancellationToken)
+        private async Task SendC2dMessagesAsync(CancellationToken cancellationToken)
         {
             int messageCount = 0;
             while (!cancellationToken.IsCancellationRequested)
             {
                 var str = $"Hello, Cloud! - Message {++messageCount }";
                 var message = new Message(Encoding.ASCII.GetBytes(str));
-                _logger.LogInformation($"Sending C2D message {messageCount} with Id {message.MessageId} to {_deviceId} . . . ");
+                _logger.LogInformation($"Sending C2D message {messageCount} with Id {message.MessageId} to {_deviceId}.");
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     try
                     {
                         await _serviceClient.SendAsync(_deviceId, message, s_operationTimeout);
-                        _logger.LogInformation($"Sent message {messageCount}.");
+                        _logger.LogInformation($"Sent message {messageCount} with Id {message.MessageId} to {_deviceId}.");
                         message.Dispose();
                         break;
                     }
@@ -95,9 +95,9 @@ namespace Microsoft.Azure.Devices.Samples
 
             var options = new ServiceClientOptions
             {
-                SdkAssignsMessageId = SdkAssignsMessageId.WhenUnset,
+                SdkAssignsMessageId = Shared.SdkAssignsMessageId.WhenUnset,
             };
-            _serviceClient = ServiceClient.CreateFromConnectionString(_hubConnectionString, _transportType);
+            _serviceClient = ServiceClient.CreateFromConnectionString(_hubConnectionString, _transportType, options);
             _logger.LogInformation("Initialized a new service client instance.");
         }
     }
