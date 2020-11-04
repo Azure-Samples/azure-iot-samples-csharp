@@ -94,7 +94,12 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         }
                     }
 
-                    s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionStrings.First(), _transportType);
+                    var options = new ClientOptions
+                    {
+                        SdkAssignsMessageId = Shared.SdkAssignsMessageId.WhenUnset,
+                    };
+
+                    s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionStrings.First(), _transportType, options);
                     s_deviceClient.SetConnectionStatusChangesHandler(ConnectionStatusChangeHandler);
                     s_deviceClient.OperationTimeoutInMilliseconds = (uint)s_operationTimeout.TotalMilliseconds;
 

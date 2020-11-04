@@ -2,6 +2,87 @@
 
 This sample code demonstrates the various connection status changes and connection status change reasons the device client can return, and how to handle them.
 
+### Initialize the client:
+
+```csharp
+// Connection string:
+// Get the device connection string from Azure IoT Portal, or using Azure CLI. 
+// Azure portal - 
+// Navigate to your IoT Hub. From the left pane, under "Explorers", click on "IoT devices".
+// Click and navigate to your device.
+// Copy the connection strings listed (primary and/or secondary).
+// Azure CLI - 
+//  az iot hub device-identity connection-string show --device-id <device_id> [--key-type {primary, secondary}]
+//  --key-type is optional. It defaults to "primary".
+//
+// Transport type:
+// The transport to use to communicate with the IoT Hub. Possible values include Mqtt,
+// Mqtt_WebSocket_Only, Mqtt_Tcp_Only, Amqp, Amqp_WebSocket_Only, Amqp_Tcp_only, and Http1.
+//
+// Pass them to the application using command line parameters (see Parameters.cs).
+
+string connectionString = "<connection_string>";
+TransportType transportType = TransportType.Mqtt;
+deviceClient = DeviceClient.CreateFromConnectionString(connectionString, transportType);
+```
+
+### Send device to cloud telemetry:
+
+```csharp
+var temperature = 25;
+var humidity = 70;
+string messagePayload = $"{{\"temperature\":{temperature},\"humidity\":{humidity}}}";
+
+using var eventMessage = new Message(Encoding.UTF8.GetBytes(messagePayload))
+{
+    MessageId = Guid.NewGuid().ToString(),
+    ContentEncoding = Encoding.UTF8.ToString(),
+    ContentType = "application/json",
+};
+
+await deviceClient.SendEventAsync(message);
+```
+
+### Receive cloud to device telemetry (using the polling API) and complete the message:
+
+```csharp
+using Message receivedMessage = await deviceClient.ReceiveAsync();
+if (receivedMessage == null)
+{
+    Console.WriteLine("No message received; timed out.");
+    return;
+}
+
+string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
+var formattedMessage = new StringBuilder($"Received message: [{messageData}]\n");
+foreach (var prop in receivedMessage.Properties)
+{
+    formattedMessage.AppendLine($"\tProperty: key={prop.Key}, value={prop.Value}");
+}
+Console.WriteLine(formattedMessage.ToString());
+
+await deviceClient.CompleteAsync(receivedMessage);
+```
+
+### Receive cloud to device telemetry (using the callback) and complete the message:
+
+```csharp
+private async Task OnC2dMessageReceived(Message receivedMessage, object userContext)
+{
+    string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
+    var formattedMessage = new StringBuilder($"Received message: [{messageData}]\n");
+    foreach (var prop in receivedMessage.Properties)
+    {
+        formattedMessage.AppendLine($"\tProperty: key={prop.Key}, value={prop.Value}");
+    }
+    Console.WriteLine(formattedMessage.ToString());
+
+    await deviceClient.CompleteAsync(receivedMessage);
+}
+
+await deviceClient.SetReceiveMessageHandlerAsync(OnC2dMessageReceived, deviceClient);
+```
+
 Some examples on how to simulate client reconnection:
 - Unplugging the network cable - this will cause a transient network exception to be thrown, which will be retried internally by the SDK.
 - Roll over your client instance's shared access key or initialize your client instance with a shared access signature based connection string (with a fixed expiration time for the token) - this will cause the client to return a status of `Disconnected` with a status change reason of `Bad_Credential`. If you perform an operation when the client is in this state, your application will receive an `UnauthorizedException`, which is marked as non-transient. The SDK will not retry in this case.
