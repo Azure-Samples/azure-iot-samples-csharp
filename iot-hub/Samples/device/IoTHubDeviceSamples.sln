@@ -25,10 +25,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PnpHelpers", "PnpDeviceSamp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ColorConsoleLogger", "..\..\..\helpers\ColorConsoleLogger\ColorConsoleLogger.csproj", "{0819BE3F-DC5D-4E0E-B415-DEAFC10B1A90}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Devices.Shared", "..\..\..\..\..\azure\shared\src\Microsoft.Azure.Devices.Shared.csproj", "{05759491-80BC-40D6-8D3C-760C4579A7BB}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Devices.Client", "..\..\..\..\..\azure\iothub\device\src\Microsoft.Azure.Devices.Client.csproj", "{F19A062C-E1DD-4391-9839-568FADB46D6F}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,14 +71,6 @@ Global
 		{0819BE3F-DC5D-4E0E-B415-DEAFC10B1A90}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0819BE3F-DC5D-4E0E-B415-DEAFC10B1A90}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0819BE3F-DC5D-4E0E-B415-DEAFC10B1A90}.Release|Any CPU.Build.0 = Release|Any CPU
-		{05759491-80BC-40D6-8D3C-760C4579A7BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{05759491-80BC-40D6-8D3C-760C4579A7BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{05759491-80BC-40D6-8D3C-760C4579A7BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{05759491-80BC-40D6-8D3C-760C4579A7BB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F19A062C-E1DD-4391-9839-568FADB46D6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F19A062C-E1DD-4391-9839-568FADB46D6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F19A062C-E1DD-4391-9839-568FADB46D6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F19A062C-E1DD-4391-9839-568FADB46D6F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

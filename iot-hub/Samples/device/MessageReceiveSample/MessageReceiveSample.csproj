@@ -11,8 +11,4 @@
 	<PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.33.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\azure\iothub\device\src\Microsoft.Azure.Devices.Client.csproj" />
-  </ItemGroup>
-
 </Project>
