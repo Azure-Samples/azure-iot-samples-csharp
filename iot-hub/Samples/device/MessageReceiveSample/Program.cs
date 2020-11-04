@@ -29,15 +29,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     Environment.Exit(1);
                 });
 
-            var options = new ClientOptions
-            {
-                SdkAssignsMessageId = Shared.SdkAssignsMessageId.WhenUnset,
-            };
-
             using var deviceClient = DeviceClient.CreateFromConnectionString(
                 parameters.PrimaryConnectionString,
-                parameters.TransportType,
-                options);
+                parameters.TransportType);
             var sample = new MessageReceiveSample(deviceClient, parameters.TransportType);
             await sample.RunSampleAsync();
 
