@@ -44,6 +44,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
             Console.WriteLine($"\n{DateTime.Now}> Device waiting for C2D messages from the hub for {s_receiveTimeout}...");
             Console.WriteLine($"{DateTime.Now}> Use the Azure Portal IoT Hub blade or Azure IoT Explorer to send a message to this device.");
             await Task.Delay(s_receiveTimeout);
+
+            // Now unsubscibe from receiving the callback.
+            await _deviceClient.SetReceiveMessageHandlerAsync(null, _deviceClient);
         }
 
         private async Task ReceiveC2dMessagesPollingAndComplete(TimeSpan timeout)
