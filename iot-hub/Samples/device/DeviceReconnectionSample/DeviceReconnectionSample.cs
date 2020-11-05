@@ -53,6 +53,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
             InitializeClient();
         }
 
+        private bool IsDeviceConnected => s_connectionStatus == ConnectionStatus.Connected;
+
         public async Task RunSampleAsync()
         {
             using var cts = new CancellationTokenSource();
@@ -316,7 +318,5 @@ namespace Microsoft.Azure.Devices.Client.Samples
             return (connectionStatus == ConnectionStatus.Disconnected || connectionStatus == ConnectionStatus.Disabled)
                 && _deviceConnectionStrings.Any();
         }
-
-        private bool IsDeviceConnected => s_connectionStatus == ConnectionStatus.Connected;
     }
 }

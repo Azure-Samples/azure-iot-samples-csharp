@@ -18,24 +18,30 @@ This sample code demonstrates the various connection status changes and connecti
 // Transport type:
 // The transport to use to communicate with the IoT Hub. Possible values include Mqtt,
 // Mqtt_WebSocket_Only, Mqtt_Tcp_Only, Amqp, Amqp_WebSocket_Only, Amqp_Tcp_only, and Http1.
-//
-// Pass them to the application using command line parameters (see Parameters.cs).
 
 string connectionString = "<connection_string>";
 TransportType transportType = TransportType.Mqtt;
-deviceClient = DeviceClient.CreateFromConnectionString(connectionString, transportType);
+
+// This option is helpful in delegating the assignment of Message.MessageId to the sdk.
+// If the user doesn't set a value for Message.MessageId, the sdk will assign it a random GUID before sending the message.
+var options = new ClientOptions
+{
+    SdkAssignsMessageId = Shared.SdkAssignsMessageId.WhenUnset,
+};
+deviceClient = DeviceClient.CreateFromConnectionString(connectionString, transportType, options);
 ```
 
 ### Send device to cloud telemetry:
 
 ```csharp
+// This snippet shows you how to call the API for sending telemetry from your device client.
+// In order to ensure that your client is resilient to disconnection events and exceptions, refer to https://github.com/Azure-Samples/azure-iot-samples-csharp/blob/master/iot-hub/Samples/device/DeviceReconnectionSample/DeviceReconnectionSample.cs.
 var temperature = 25;
 var humidity = 70;
 string messagePayload = $"{{\"temperature\":{temperature},\"humidity\":{humidity}}}";
 
 using var eventMessage = new Message(Encoding.UTF8.GetBytes(messagePayload))
 {
-    MessageId = Guid.NewGuid().ToString(),
     ContentEncoding = Encoding.UTF8.ToString(),
     ContentType = "application/json",
 };
@@ -46,6 +52,8 @@ await deviceClient.SendEventAsync(message);
 ### Receive cloud to device telemetry (using the polling API) and complete the message:
 
 ```csharp
+// This snippet shows you how to call the API for receiving telemetry sent to your device client.
+// In order to ensure that your client is resilient to disconnection events and exceptions, refer to https://github.com/Azure-Samples/azure-iot-samples-csharp/blob/master/iot-hub/Samples/device/DeviceReconnectionSample/DeviceReconnectionSample.cs.
 using Message receivedMessage = await deviceClient.ReceiveAsync();
 if (receivedMessage == null)
 {
@@ -55,32 +63,50 @@ if (receivedMessage == null)
 
 string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
 var formattedMessage = new StringBuilder($"Received message: [{messageData}]\n");
-foreach (var prop in receivedMessage.Properties)
+
+// User set application properties can be retrieved from the Message.Properties dictionary.
+foreach (KeyValuePair<string, string> prop in receivedMessage.Properties)
 {
     formattedMessage.AppendLine($"\tProperty: key={prop.Key}, value={prop.Value}");
 }
-Console.WriteLine(formattedMessage.ToString());
 
+// System properties can be accessed using their respective accessors.
+formattedMessage.AppendLine($"\tMessageId: {receivedMessage.MessageId}");
+
+Console.WriteLine(formattedMessage.ToString());
 await deviceClient.CompleteAsync(receivedMessage);
 ```
 
 ### Receive cloud to device telemetry (using the callback) and complete the message:
 
 ```csharp
+// This snippet shows you how to call the API for receiving telemetry sent to your device client.
+// In order to ensure that your client is resilient to disconnection events and exceptions,
+// refer to https://github.com/Azure-Samples/azure-iot-samples-csharp/blob/master/iot-hub/Samples/device/DeviceReconnectionSample/DeviceReconnectionSample.cs.
 private async Task OnC2dMessageReceived(Message receivedMessage, object userContext)
 {
     string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
     var formattedMessage = new StringBuilder($"Received message: [{messageData}]\n");
-    foreach (var prop in receivedMessage.Properties)
+
+    // User set application properties can be retrieved from the Message.Properties dictionary.
+    foreach (KeyValuePair<string, string> prop in receivedMessage.Properties)
     {
         formattedMessage.AppendLine($"\tProperty: key={prop.Key}, value={prop.Value}");
     }
-    Console.WriteLine(formattedMessage.ToString());
 
+    // System properties can be accessed using their respective accessors.
+    formattedMessage.AppendLine($"\tMessageId: {receivedMessage.MessageId}");
+
+    Console.WriteLine(formattedMessage.ToString());
     await deviceClient.CompleteAsync(receivedMessage);
 }
 
+// Subscribe to the receive message API.
 await deviceClient.SetReceiveMessageHandlerAsync(OnC2dMessageReceived, deviceClient);
+
+// Once you are done receiving telemetry messages sent to your device client,
+// you can unsubscribe from the receive callback by setting a null handler.
+await deviceClient.SetReceiveMessageHandlerAsync(null, deviceClient);
 ```
 
 Some examples on how to simulate client reconnection:

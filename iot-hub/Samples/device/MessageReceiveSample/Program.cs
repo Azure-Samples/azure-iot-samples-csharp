@@ -32,7 +32,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             using var deviceClient = DeviceClient.CreateFromConnectionString(
                 parameters.PrimaryConnectionString,
                 parameters.TransportType);
-            var sample = new MessageReceiveSample(deviceClient, parameters.TransportType);
+            var sample = new MessageReceiveSample(deviceClient);
             await sample.RunSampleAsync();
 
             Console.WriteLine("Done.");
