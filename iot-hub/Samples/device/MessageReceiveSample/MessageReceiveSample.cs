@@ -63,11 +63,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     continue;
                 }
 
-                Console.WriteLine($"{DateTime.Now}> Polling ReceiveAsync() - received message with Id={receivedMessage?.MessageId}");
+                Console.WriteLine($"{DateTime.Now}> Polling ReceiveAsync() - received message with Id={receivedMessage.MessageId}");
                 ProcessReceivedMessage(receivedMessage);
 
                 await _deviceClient.CompleteAsync(receivedMessage);
-                Console.WriteLine($"{DateTime.Now}> Completed C2D message with Id={receivedMessage?.MessageId}.");
+                Console.WriteLine($"{DateTime.Now}> Completed C2D message with Id={receivedMessage.MessageId}.");
 
                 receivedMessage.Dispose();
             }
@@ -77,11 +77,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private async Task OnC2dMessageReceived(Message receivedMessage, object _)
         {
-            Console.WriteLine($"{DateTime.Now}> C2D message callback - message received with Id={receivedMessage?.MessageId}.");
+            Console.WriteLine($"{DateTime.Now}> C2D message callback - message received with Id={receivedMessage.MessageId}.");
             ProcessReceivedMessage(receivedMessage);
 
             await _deviceClient.CompleteAsync(receivedMessage);
-            Console.WriteLine($"{DateTime.Now}> Completed C2D message with Id={receivedMessage?.MessageId}.");
+            Console.WriteLine($"{DateTime.Now}> Completed C2D message with Id={receivedMessage.MessageId}.");
 
             receivedMessage.Dispose();
         }
