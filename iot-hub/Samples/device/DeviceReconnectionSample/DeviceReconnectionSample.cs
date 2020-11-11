@@ -18,11 +18,12 @@ namespace Microsoft.Azure.Devices.Client.Samples
         private const int TemperatureThreshold = 30;
 
         private static readonly TimeSpan s_sleepDuration = TimeSpan.FromSeconds(5);
-        private static readonly TimeSpan s_operationTimeout = TimeSpan.FromHours(1);
 
         private readonly object _initLock = new object();
+        private readonly object _connectionStatusLock = new object();
         private readonly List<string> _deviceConnectionStrings;
         private readonly TransportType _transportType;
+        private readonly ClientOptions _clientOptions = new ClientOptions { SdkAssignsMessageId = Shared.SdkAssignsMessageId.WhenUnset };
 
         private readonly ILogger _logger;
 
@@ -49,8 +50,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
             _transportType = transportType;
             _logger.LogInformation($"Using {_transportType} transport.");
-
-            InitializeClient();
         }
 
         private bool IsDeviceConnected => s_connectionStatus == ConnectionStatus.Connected;
@@ -69,6 +68,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
             try
             {
+                await InitializeAndOpenClientAsync();
                 await Task.WhenAll(SendMessagesAsync(cts.Token), ReceiveMessagesAsync(cts.Token));
             }
             catch (Exception ex)
@@ -77,7 +77,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
-        private void InitializeClient()
+        private async Task InitializeAndOpenClientAsync()
         {
             if (ShouldClientBeInitialized(s_connectionStatus))
             {
@@ -96,15 +96,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         }
                     }
 
-                    var options = new ClientOptions
-                    {
-                        SdkAssignsMessageId = Shared.SdkAssignsMessageId.WhenUnset,
-                    };
-
-                    s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionStrings.First(), _transportType, options);
+                    s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionStrings.First(), _transportType, _clientOptions);
                     s_deviceClient.SetConnectionStatusChangesHandler(ConnectionStatusChangeHandler);
-                    s_deviceClient.OperationTimeoutInMilliseconds = (uint)s_operationTimeout.TotalMilliseconds;
-
                     _logger.LogDebug($"Initialized the client instance.");
                 }
 
@@ -112,8 +105,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 {
                     // Force connection now.
                     // OpenAsync() is an idempotent call, it has the same effect if called once or multiple times on the same client.
-                    s_deviceClient.OpenAsync().GetAwaiter().GetResult();
-                    _logger.LogDebug($"Initialized the client instance.");
+                    await s_deviceClient.OpenAsync();
+                    _logger.LogDebug($"Opened the client instance.");
                 }
                 catch (UnauthorizedException)
                 {
@@ -122,11 +115,18 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
-        private void ConnectionStatusChangeHandler(ConnectionStatus status, ConnectionStatusChangeReason reason)
+        // It is not good practice to have async void methods, however, DeviceClient.SetConnectionStatusChangesHandler() event handler signature has a void return type.
+        // As a result, any operation within this block will be executed unmonitored on another thread.
+        // To prevent multi-threaded synchronization issues, the async method InitializeClientAsync being called in here first grabs a lock
+        // before attempting to initailize or dispose the device client instance.
+        private async void ConnectionStatusChangeHandler(ConnectionStatus status, ConnectionStatusChangeReason reason)
         {
-            _logger.LogDebug($"Connection status changed: status={status}, reason={reason}");
+            lock (_connectionStatusLock)
+            {
+                _logger.LogDebug($"Connection status changed: status={status}, reason={reason}");
+                s_connectionStatus = status;
+            }
 
-            s_connectionStatus = status;
             switch (s_connectionStatus)
             {
                 case ConnectionStatus.Connected:
@@ -154,7 +154,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             {
                                 // Not great to print out a connection string, but this is done for sample/demo purposes.
                                 _logger.LogWarning($"The current connection string {badCs} is invalid. Trying another.");
-                                InitializeClient();
+                                await InitializeAndOpenClientAsync();
                                 break;
                             }
 
@@ -170,14 +170,14 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             _logger.LogWarning("### The DeviceClient has been disconnected because the retry policy expired." +
                                 "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
 
-                            InitializeClient();
+                            await InitializeAndOpenClientAsync();
                             break;
 
                         case ConnectionStatusChangeReason.Communication_Error:
                             _logger.LogWarning("### The DeviceClient has been disconnected due to a non-retry-able exception. Inspect the exception for details." +
                                 "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
 
-                            InitializeClient();
+                            await InitializeAndOpenClientAsync();
                             break;
 
                         default:
