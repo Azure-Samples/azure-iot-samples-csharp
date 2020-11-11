@@ -98,6 +98,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                     s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionStrings.First(), _transportType, _clientOptions);
                     s_deviceClient.SetConnectionStatusChangesHandler(ConnectionStatusChangeHandler);
+                    s_deviceClient.OperationTimeoutInMilliseconds = (uint)TimeSpan.FromSeconds(30).TotalMilliseconds;
                     _logger.LogDebug($"Initialized the client instance.");
                 }
 
@@ -121,13 +122,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
         // before attempting to initailize or dispose the device client instance.
         private async void ConnectionStatusChangeHandler(ConnectionStatus status, ConnectionStatusChangeReason reason)
         {
-            lock (_connectionStatusLock)
-            {
-                _logger.LogDebug($"Connection status changed: status={status}, reason={reason}");
-                s_connectionStatus = status;
-            }
+            _logger.LogDebug($"Connection status changed: status={status}, reason={reason}");
+            s_connectionStatus = status;
 
-            switch (s_connectionStatus)
+            switch (status)
             {
                 case ConnectionStatus.Connected:
                     _logger.LogDebug("### The DeviceClient is CONNECTED; all operations will be carried out as normal.");
@@ -148,12 +146,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         case ConnectionStatusChangeReason.Bad_Credential:
                             // When getting this reason, the current connection string being used is not valid.
                             // If we had a backup, we can try using that.
-                            string badCs = _deviceConnectionStrings[0];
                             _deviceConnectionStrings.RemoveAt(0);
                             if (_deviceConnectionStrings.Any())
                             {
-                                // Not great to print out a connection string, but this is done for sample/demo purposes.
-                                _logger.LogWarning($"The current connection string {badCs} is invalid. Trying another.");
+                                _logger.LogWarning($"The current connection string is invalid. Trying another.");
                                 await InitializeAndOpenClientAsync();
                                 break;
                             }
