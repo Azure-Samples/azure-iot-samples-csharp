@@ -20,7 +20,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
         private static readonly TimeSpan s_sleepDuration = TimeSpan.FromSeconds(5);
 
         private readonly object _initLock = new object();
-        private readonly object _connectionStatusLock = new object();
         private readonly List<string> _deviceConnectionStrings;
         private readonly TransportType _transportType;
         private readonly ClientOptions _clientOptions = new ClientOptions { SdkAssignsMessageId = Shared.SdkAssignsMessageId.WhenUnset };
