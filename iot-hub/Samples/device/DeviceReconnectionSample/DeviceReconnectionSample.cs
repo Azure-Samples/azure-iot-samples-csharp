@@ -97,7 +97,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                     s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionStrings.First(), _transportType, _clientOptions);
                     s_deviceClient.SetConnectionStatusChangesHandler(ConnectionStatusChangeHandler);
-                    s_deviceClient.OperationTimeoutInMilliseconds = (uint)TimeSpan.FromSeconds(30).TotalMilliseconds;
                     _logger.LogDebug($"Initialized the client instance.");
                 }
 
