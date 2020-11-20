@@ -15,7 +15,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 {
     public class Program
     {
-        // DTDL interface used: https://github.com/Azure/opendigitaltwins-dtdl/blob/master/DTDL/v2/samples/TemperatureController.json
+        // DTDL interface used: https://github.com/Azure/iot-plugandplay-models
         private const string ModelId = "dtmi:com:example:TemperatureController;2";
 
         private static ILogger s_logger;
