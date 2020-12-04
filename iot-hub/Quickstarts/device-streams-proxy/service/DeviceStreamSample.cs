@@ -14,6 +14,7 @@ namespace Microsoft.Azure.Devices.Samples
 {
     public class DeviceStreamSample
     {
+        private CancellationTokenSource _cancellationTokenSource;
         private ServiceClient _serviceClient;
         private String _deviceId;
         private int _localPort;
@@ -25,19 +26,19 @@ namespace Microsoft.Azure.Devices.Samples
             _localPort = localPort;
         }
 
-        private static async Task HandleIncomingDataAsync(NetworkStream localStream, ClientWebSocket remoteStream, CancellationToken cancellationToken)
+        private async Task HandleIncomingDataAsync(NetworkStream localStream, ClientWebSocket remoteStream)
         {
             byte[] receiveBuffer = new byte[10240];
 
             while (localStream.CanRead)
             {
-                var receiveResult = await remoteStream.ReceiveAsync(receiveBuffer, cancellationToken).ConfigureAwait(false);
+                var receiveResult = await remoteStream.ReceiveAsync(receiveBuffer, _cancellationTokenSource.Token).ConfigureAwait(false);
 
                 await localStream.WriteAsync(receiveBuffer, 0, receiveResult.Count).ConfigureAwait(false);
             }
         }
 
-        private static async Task HandleOutgoingDataAsync(NetworkStream localStream, ClientWebSocket remoteStream, CancellationToken cancellationToken)
+        private async Task HandleOutgoingDataAsync(NetworkStream localStream, ClientWebSocket remoteStream)
         {
             byte[] buffer = new byte[10240];
 
@@ -45,11 +46,11 @@ namespace Microsoft.Azure.Devices.Samples
             {
                 int receiveCount = await localStream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
 
-                await remoteStream.SendAsync(new ArraySegment<byte>(buffer, 0, receiveCount), WebSocketMessageType.Binary, true, cancellationToken).ConfigureAwait(false);
+                await remoteStream.SendAsync(new ArraySegment<byte>(buffer, 0, receiveCount), WebSocketMessageType.Binary, true, _cancellationTokenSource.Token).ConfigureAwait(false);
             }
         }
 
-        private static async void HandleIncomingConnectionsAndCreateStreams(string deviceId, ServiceClient serviceClient, TcpClient tcpClient)
+        private async void HandleIncomingConnectionsAndCreateStreams(string deviceId, TcpClient tcpClient)
         {
             DeviceStreamRequest deviceStreamRequest = new DeviceStreamRequest(
                 streamName: "TestStream"
@@ -57,7 +58,7 @@ namespace Microsoft.Azure.Devices.Samples
 
             using (var localStream = tcpClient.GetStream())
             {
-                DeviceStreamResponse result = await serviceClient.CreateStreamAsync(deviceId, deviceStreamRequest, CancellationToken.None).ConfigureAwait(false);
+                DeviceStreamResponse result = await _serviceClient.CreateStreamAsync(deviceId, deviceStreamRequest, CancellationToken.None).ConfigureAwait(false);
 
                 Console.WriteLine($"Stream response received: Name={deviceStreamRequest.StreamName} IsAccepted={result.IsAccepted}");
 
@@ -65,22 +66,23 @@ namespace Microsoft.Azure.Devices.Samples
                 {
                     try
                     {
-                        using (var cancellationTokenSource = new CancellationTokenSource())
-                        using (var remoteStream = await DeviceStreamingCommon.GetStreamingClientAsync(result.Url, result.AuthorizationToken, cancellationTokenSource.Token).ConfigureAwait(false))
+                        using (_cancellationTokenSource = new CancellationTokenSource())
+                        using (var remoteStream = await DeviceStreamingCommon.GetStreamingClientAsync(result.Url, result.AuthorizationToken,_cancellationTokenSource.Token).ConfigureAwait(false))
                         {
                             Console.WriteLine("Starting streaming");
 
                             await Task.WhenAny(
-                                HandleIncomingDataAsync(localStream, remoteStream, cancellationTokenSource.Token),
-                                HandleOutgoingDataAsync(localStream, remoteStream, cancellationTokenSource.Token)).ConfigureAwait(false);
+                                HandleIncomingDataAsync(localStream, remoteStream),
+                                HandleOutgoingDataAsync(localStream, remoteStream)).ConfigureAwait(false);
                         }
 
-                            Console.WriteLine("Done streaming");
+                        Console.WriteLine("Done streaming");
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine("Got an exception: {0}", ex);
                     }
+                    _cancellationTokenSource = null;
                 }
             }
             tcpClient.Close();
@@ -94,8 +96,11 @@ namespace Microsoft.Azure.Devices.Samples
             while (true)
             {
                 var tcpClient = await tcpListener.AcceptTcpClientAsync().ConfigureAwait(false);
-
-                HandleIncomingConnectionsAndCreateStreams(_deviceId, _serviceClient, tcpClient);
+                if(_cancellationTokenSource!=null)
+                {
+                    _cancellationTokenSource.Cancel();
+                }
+                HandleIncomingConnectionsAndCreateStreams(_deviceId, tcpClient);
             }
         }
     }
