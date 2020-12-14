@@ -18,6 +18,7 @@ jobs:
         inputs:
           version: 5.0.x
           performMultiLevelLookup: true
+          installationPath: $(Agent.ToolsDirectory)/dotnet
       - task: Docker@1
         displayName: 'Start TPM Simulator'
         inputs:
@@ -59,6 +60,7 @@ jobs:
         inputs:
           version: 5.0.x
           performMultiLevelLookup: true
+          installationPath: $(Agent.ToolsDirectory)/dotnet          
       - powershell: ./build.ps1 -clean -configuration Release -run
         displayName: build and run
         env:
