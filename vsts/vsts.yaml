@@ -13,6 +13,11 @@ jobs:
       vmImage: 'ubuntu-latest'
     timeoutInMinutes: 60
     steps:
+      - task: UseDotNet@2
+        displayName: 'Use .NET Core SDK'
+        inputs:
+          version: 5.0.x
+          performMultiLevelLookup: true
       - task: Docker@1
         displayName: 'Start TPM Simulator'
         inputs:
@@ -49,6 +54,11 @@ jobs:
       vmImage: 'windows-latest'
     timeoutInMinutes: 60
     steps:
+      - task: UseDotNet@2
+        displayName: 'Use .NET Core SDK'
+        inputs:
+          version: 5.0.x
+          performMultiLevelLookup: true
       - powershell: ./build.ps1 -clean -configuration Release -run
         displayName: build and run
         env:
