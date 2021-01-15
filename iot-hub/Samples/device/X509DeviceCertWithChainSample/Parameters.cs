@@ -1,4 +1,7 @@
-﻿using CommandLine;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using CommandLine;
 using Microsoft.Azure.Devices.Client;
 using System;
 using System.Collections.Generic;
@@ -6,6 +9,9 @@ using System.Text;
 
 namespace X509DeviceCertWithChainSample
 {
+    /// <summary>
+    /// Parameters for the application.
+    /// </summary>
     internal class Parameters
     {
         [Option(
@@ -23,38 +29,33 @@ namespace X509DeviceCertWithChainSample
         public string DeviceName { get; set; }
 
         [Option(
-            'p',
             "devicePfxPassword",
             Required = true,
             HelpText = "The password of device certificate.")]
         public string DevicePfxPassword { get; set; }
 
         [Option(
-            'r',
             "rootCertPath",
             Required = true,
             HelpText = "Path to rootCA certificate.")]
         public string RootCertPath { get; set; }
 
         [Option(
-            'i',
             "intermediate1CertPassword",
             Required = true,
             HelpText = "Path to intermediate 1 certificate.")]
-        public string Intermediate1CertPassword { get; set; }
+        public string Intermediate1CertPath { get; set; }
 
         [Option(
-            'j',
             "intermediate2CertPassword",
             Required = true,
             HelpText = "Path to intermediate 2 certificate.")]
-        public string Intermediate2CertPassword { get; set; }
+        public string Intermediate2CertPath { get; set; }
 
         [Option(
-            'k',
             "devicePfxPath",
             Required = true,
-            HelpText = "Path to device pfx path.")]
+            HelpText = "Path to device pfx.")]
         public string DevicePfxPath { get; set; }
 
         [Option(
