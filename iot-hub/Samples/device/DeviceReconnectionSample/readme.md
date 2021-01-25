@@ -115,6 +115,8 @@ Some examples on how to simulate client reconnection:
 <br/>You will need to dispose the existing client instance, update your keys and reinitialize a new client instance.
 - You can disable your device instance or delete it from your IoT hub instance - this will cause the client to return a status of `Disconnected` with a status change reason of `Device_Disabled`. If you perform an operation when the client is in this state, your application will receive a `DeviceNotFoundException`, which is marked as non-transient. The SDK will not retry in this case.
 <br/>You will need to fix your device's status in Azure, and then reinitialize a new client instance.
+- You can also see the client reconnection in action during sas token renewal on MQTT. Sas token renewals on MQTT as not proactive, but are instead reliant on the service disconnecting the connection on token expiry (there is a ~10mins delay, during which service continues to accept the expired token). Once service disconnects the connection, the sdk will report a status of "Disconnected_retrying | Communication_Error", and will then immediately attempt to reconnect with a renewed sas token.
+<br/>The disconnection on token expiration should not be more than a couple of seconds. If this disconnection is not acceptable for your application, you should consider using AMQP protocol instead, which will proactively renew the sas token prior to its expiration.
 
 The device client exhibits the following connection status changes with reason:
 
