@@ -4,6 +4,7 @@
 using Microsoft.Azure.Devices.Client.Exceptions;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,10 +15,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
 {
     public class DeviceReconnectionSample
     {
-        private static readonly Random s_randomGenerator = new Random();
         private const int TemperatureThreshold = 30;
-
+        private static readonly Random s_randomGenerator = new Random();
         private static readonly TimeSpan s_sleepDuration = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan s_deviceOperationTimeout = TimeSpan.FromSeconds(30);
 
         private readonly object _initLock = new object();
         private readonly List<string> _deviceConnectionStrings;
@@ -25,6 +26,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         private readonly ClientOptions _clientOptions = new ClientOptions { SdkAssignsMessageId = Shared.SdkAssignsMessageId.WhenUnset };
 
         private readonly ILogger _logger;
+        private readonly ConcurrentQueue<Message> _receivedMessagesQueue = new ConcurrentQueue<Message>();
 
         // Mark these fields as volatile so that their latest values are referenced.
         private static volatile DeviceClient s_deviceClient;
@@ -68,7 +70,15 @@ namespace Microsoft.Azure.Devices.Client.Samples
             try
             {
                 await InitializeAndOpenClientAsync();
-                await Task.WhenAll(SendMessagesAsync(cts.Token), ReceiveMessagesAsync(cts.Token));
+
+                if (_transportType.Equals(TransportType.Http1))
+                {
+                    await TaskHelper.WhenAllFailFast(SendMessagesAsync(cts.Token), ReceiveMessagesAsync(cts.Token), CompleteReceivedMessagesAsync(cts.Token));
+                }
+                else
+                {
+                    await TaskHelper.WhenAllFailFast(SendMessagesAsync(cts.Token), CompleteReceivedMessagesAsync(cts.Token));
+                }
             }
             catch (Exception ex)
             {
@@ -97,6 +107,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                     s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionStrings.First(), _transportType, _clientOptions);
                     s_deviceClient.SetConnectionStatusChangesHandler(ConnectionStatusChangeHandler);
+
+                    // Updating the client's operation timeout to 30secs for the purpose of a sample. The default value is 4mins.
+                    s_deviceClient.OperationTimeoutInMilliseconds = (uint)s_deviceOperationTimeout.TotalMilliseconds;
                     _logger.LogDebug($"Initialized the client instance.");
                 }
 
@@ -106,6 +119,21 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     // OpenAsync() is an idempotent call, it has the same effect if called once or multiple times on the same client.
                     await s_deviceClient.OpenAsync();
                     _logger.LogDebug($"Opened the client instance.");
+
+                    switch (_transportType)
+                    {
+                        case TransportType.Amqp:
+                        case TransportType.Amqp_Tcp_Only:
+                        case TransportType.Amqp_WebSocket_Only:
+                        case TransportType.Mqtt:
+                        case TransportType.Mqtt_Tcp_Only:
+                        case TransportType.Mqtt_WebSocket_Only:
+                            await s_deviceClient.SetReceiveMessageHandlerAsync(CloudToDeviceMessageHandler, s_deviceClient);
+                            _logger.LogInformation("Subscribed to recieve C2D messages," +
+                                " use the IoT Hub Azure Portal/ Azure IoT Explorer/ service client SDK to send a message to this device.");
+                            break;
+                    }
+
                 }
                 catch (UnauthorizedException)
                 {
@@ -199,7 +227,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     _logger.LogInformation($"Device sending message {++messageCount} to IoT Hub...");
 
                     (Message message, string payload) = PrepareMessage(messageCount);
-                    while (true)
+                    while (!cancellationToken.IsCancellationRequested)
                     {
                         try
                         {
@@ -210,16 +238,15 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         }
                         catch (IotHubException ex) when (ex.IsTransient)
                         {
-                            // Inspect the exception to figure out if operation should be retried, or if user-input is required.
-                            _logger.LogError($"An IotHubException was caught, but will try to recover and retry: {ex}");
+                            _logger.LogError($"A transient IotHubException was caught, will retry sending the message: {ex}");
+                        }
+                        catch (UnauthorizedException ex)
+                        {
+                            _logger.LogError($"An UnauthorizedException was caught, recovery will be handled by the ConnectionStatusChangeHandler: {ex}");
                         }
                         catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
                         {
-                            _logger.LogError($"A network related exception was caught, but will try to recover and retry: {ex}");
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError($"Unexpected error {ex}");
+                            _logger.LogError($"A network related exception was caught, will retry sending the message: {ex}");
                         }
 
                         // wait and retry
@@ -235,32 +262,97 @@ namespace Microsoft.Azure.Devices.Client.Samples
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (!IsDeviceConnected)
+                if (IsDeviceConnected)
                 {
-                    await Task.Delay(s_sleepDuration);
-                    continue;
+                    _logger.LogInformation($"Device waiting for C2D messages from the hub for {s_sleepDuration}...");
+                    _logger.LogInformation("Use the IoT Hub Azure Portal or Azure IoT Explorer to send a message to this device.");
+
+                    try
+                    {
+                        using Message receivedMessage = await s_deviceClient.ReceiveAsync();
+                        if (receivedMessage == null)
+                        {
+                            _logger.LogInformation("No message received; timed out.");
+                            await Task.Delay(s_sleepDuration);
+                            continue;
+                        }
+
+                        await CloudToDeviceMessageHandler(receivedMessage, null);
+                    }
+                    catch (IotHubException ex) when (ex.IsTransient)
+                    {
+                        _logger.LogError($"A transient IotHubException was caught, will retry receiving the message: {ex}");
+                    }
+                    catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
+                    {
+                        _logger.LogError($"A network related exception was caught, will retry receiving the message: {ex}");
+                    }
                 }
 
-                _logger.LogInformation($"Device waiting for C2D messages from the hub for {s_sleepDuration}...");
-                _logger.LogInformation("Use the IoT Hub Azure Portal or Azure IoT Explorer to send a message to this device.");
+                await Task.Delay(s_sleepDuration);
+            }
+        }
 
-                try
+        private Task CloudToDeviceMessageHandler(Message receivedMessage, object context)
+        {
+            string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
+            var formattedMessage = new StringBuilder($"Received message: [{messageData}], with lockToken: [{receivedMessage.LockToken}].\n");
+
+            foreach (var prop in receivedMessage.Properties)
+            {
+                formattedMessage.AppendLine($"\tProperty: key={prop.Key}, value={prop.Value}");
+            }
+            _logger.LogInformation(formattedMessage.ToString());
+
+            _receivedMessagesQueue.Enqueue(receivedMessage);
+            return Task.CompletedTask;
+        }
+
+        private async Task CompleteReceivedMessagesAsync(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                if (IsDeviceConnected)
                 {
-                    await ReceiveMessageAndCompleteAsync();
+                    if (_receivedMessagesQueue.TryPeek(out Message messageToBeCompleted))
+                    {
+                        try
+                        {
+                            await s_deviceClient.CompleteAsync(messageToBeCompleted);
+                            _logger.LogInformation($"Completed message with lockToken [{messageToBeCompleted.LockToken}].");
+
+                            // There is a single threaded access to this ConcurrentQueue, so we can ensure that the first element that was peeked above is the element that is getting dequeued.
+                            _receivedMessagesQueue.TryDequeue(out _);
+                            messageToBeCompleted.Dispose();
+                        }
+                        catch (DeviceMessageLockLostException ex)
+                        {
+                            _logger.LogWarning($"Attempted to complete a received message whose lock token has expired, ignoring the message as it will need to be received again: {ex}");
+
+                            // There is a single threaded access to this ConcurrentQueue, so we can ensure that the first element that was peeked above is the element that is getting dequeued.
+                            _receivedMessagesQueue.TryDequeue(out _);
+                            messageToBeCompleted.Dispose();
+                        }
+                        catch (IotHubException ex) when (ex.IsTransient)
+                        {
+                            _logger.LogError($"A transient IotHubException was caught, will retry marking the message as \"Complete\": {ex}");
+                        }
+                        catch (UnauthorizedException ex)
+                        {
+                            _logger.LogError($"An UnauthorizedException was caught, recovery will be handled by the ConnectionStatusChangeHandler: {ex}");
+                        }
+                        catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
+                        {
+                            _logger.LogError($"A network related exception was caught, will retry marking the message as \"Complete\": {ex}");
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogDebug("There are no C2D messages to be completed.");
+                    }
                 }
-                catch (DeviceMessageLockLostException ex)
-                {
-                    _logger.LogWarning($"Attempted to complete a received message whose lock token has expired; ignoring: {ex}");
-                }
-                catch (IotHubException ex) when (ex.IsTransient)
-                {
-                    // Inspect the exception to figure out if operation should be retried, or if user-input is required.
-                    _logger.LogError($"An IotHubException was caught, but will try to recover and retry explicitly: {ex}");
-                }
-                catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
-                {
-                    _logger.LogError($"A network related exception was caught, but will try to recover and retry explicitly: {ex}");
-                }
+
+                await Task.Delay(s_sleepDuration);
             }
         }
 
@@ -279,28 +371,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
             eventMessage.Properties.Add("temperatureAlert", (temperature > TemperatureThreshold) ? "true" : "false");
 
             return (eventMessage, messagePayload);
-        }
-
-        private async Task ReceiveMessageAndCompleteAsync()
-        {
-            using Message receivedMessage = await s_deviceClient.ReceiveAsync(s_sleepDuration);
-            if (receivedMessage == null)
-            {
-                _logger.LogInformation("No message received; timed out.");
-                return;
-            }
-
-            string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
-            var formattedMessage = new StringBuilder($"Received message: [{messageData}]\n");
-
-            foreach (var prop in receivedMessage.Properties)
-            {
-                formattedMessage.AppendLine($"\tProperty: key={prop.Key}, value={prop.Value}");
-            }
-            _logger.LogInformation(formattedMessage.ToString());
-
-            await s_deviceClient.CompleteAsync(receivedMessage);
-            _logger.LogInformation($"Completed message [{messageData}].");
         }
 
         // If the client reports Connected status, it is already in operational state.
