@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
     public class CleanupEnrollmentsSample
     {
         private ProvisioningServiceClient _provisioningServiceClient;
-        // Maximum number of elements per query.
+        // Maximum number of elements per query - DPS has a limit of 10.
         private const int QueryPageSize = 10;
         private static int _individualEnrollmentsDeleted;
         private static int _enrollmentGroupsDeleted;
@@ -55,7 +55,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
                     List<IndividualEnrollment> individualEnrollments = new List<IndividualEnrollment>();
                     foreach (IndividualEnrollment enrollment in items)
                     {
-                        if (!individualEnrollmentsToBeRetained.Contains(enrollment.RegistrationId))
+                        if (!individualEnrollmentsToBeRetained.Contains(enrollment.RegistrationId, StringComparer.OrdinalIgnoreCase))
                         {
                             individualEnrollments.Add(enrollment);
                             Console.WriteLine($"Individual Enrollment to be deleted: {enrollment.RegistrationId}");
@@ -66,6 +66,8 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
                     {
                         await DeleteBulkIndividualEnrollments(individualEnrollments).ConfigureAwait(false);
                     }
+
+                    await Task.Delay(1000).ConfigureAwait(false);
                 }
             }
         }
@@ -83,7 +85,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
                     var items = queryResult.Items;
                     foreach (EnrollmentGroup enrollment in items)
                     {
-                        if (!groupEnrollmentsToBeRetained.Contains(enrollment.EnrollmentGroupId))
+                        if (!groupEnrollmentsToBeRetained.Contains(enrollment.EnrollmentGroupId, StringComparer.OrdinalIgnoreCase))
                         {
                             Console.WriteLine($"EnrollmentGroup to be deleted: {enrollment.EnrollmentGroupId}");
                             _enrollmentGroupsDeleted++;
