@@ -119,12 +119,9 @@ namespace ReadD2cMessages
 
         private static void PrintProperties(KeyValuePair<string, object> prop) 
         {
-            string propValue = prop.Value.ToString();
-            if (prop.Value is DateTime) 
-            {
-                // Include the millisecond portion when printing the date
-                propValue = ((DateTime)prop.Value).ToString("MM/dd/yyyy hh:mm:ss.fff tt");
-            }
+            string propValue = prop.Value is DateTime
+                ? ((DateTime)prop.Value).ToString("O") // using a built-in date format here that includes milliseconds
+                : prop.Value.ToString();
 
             Console.WriteLine($"\t\t{prop.Key}: {propValue}");
         }
