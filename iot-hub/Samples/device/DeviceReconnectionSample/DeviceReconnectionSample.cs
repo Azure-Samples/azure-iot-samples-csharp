@@ -74,6 +74,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
             {
                 _logger.LogError($"Unrecoverable exception caught, user action is required, so exiting...: \n{ex}");
             }
+
+            _initSemaphore.Dispose();
         }
 
         private async Task InitializeAndOpenClientAsync()
