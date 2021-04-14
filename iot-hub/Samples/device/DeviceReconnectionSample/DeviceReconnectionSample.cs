@@ -19,7 +19,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private static readonly TimeSpan s_sleepDuration = TimeSpan.FromSeconds(5);
 
-        private readonly object _initLock = new object();
+        private readonly SemaphoreSlim _initSemaphore = new SemaphoreSlim(1, 1);
         private readonly List<string> _deviceConnectionStrings;
         private readonly TransportType _transportType;
         private readonly ClientOptions _clientOptions = new ClientOptions { SdkAssignsMessageId = Shared.SdkAssignsMessageId.WhenUnset };
@@ -81,7 +81,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
             if (ShouldClientBeInitialized(s_connectionStatus))
             {
                 // Allow a single thread to dispose and initialize the client instance.
-                lock (_initLock)
+                await _initSemaphore.WaitAsync();
+                try
                 {
                     if (ShouldClientBeInitialized(s_connectionStatus))
                     {
@@ -90,7 +91,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         // If the device client instance has been previously initialized, then dispose it.
                         if (s_deviceClient != null)
                         {
-                            s_deviceClient.CloseAsync().GetAwaiter().GetResult(); // cannot await a task in a lock statement
+                            await s_deviceClient.CloseAsync();
                             s_deviceClient.Dispose();
                             s_deviceClient = null;
                         }
@@ -99,6 +100,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionStrings.First(), _transportType, _clientOptions);
                     s_deviceClient.SetConnectionStatusChangesHandler(ConnectionStatusChangeHandler);
                     _logger.LogDebug($"Initialized the client instance.");
+                }
+                finally
+                {
+                    _initSemaphore.Release();
                 }
 
                 try
