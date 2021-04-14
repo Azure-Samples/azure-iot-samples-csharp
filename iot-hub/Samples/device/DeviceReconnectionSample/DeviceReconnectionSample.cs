@@ -90,6 +90,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         // If the device client instance has been previously initialized, then dispose it.
                         if (s_deviceClient != null)
                         {
+                            s_deviceClient.CloseAsync().GetAwaiter().GetResult(); // cannot await a task in a lock statement
                             s_deviceClient.Dispose();
                             s_deviceClient = null;
                         }
