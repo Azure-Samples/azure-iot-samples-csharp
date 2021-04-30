@@ -21,54 +21,45 @@ namespace ImportExportDevicesWithManagedIdentitySample
         public async Task RunSampleAsync(string sourceHubConnectionString,
             string destinationHubConnectionString,
             string blobContainerUri,
-            ManagedIdentityType identityType,
             string userDefinedManagedIdentityResourceId = null)
         {
-            if (identityType == ManagedIdentityType.UserDefined
-                && string.IsNullOrWhiteSpace(userDefinedManagedIdentityResourceId))
-            {
-                    throw new ArgumentNullException(nameof(userDefinedManagedIdentityResourceId),
-                        "userDefinedManagedIdentityResourceId is required if identityType is UserDefined.");
-            }
-
             Console.WriteLine($"Exporting devices from source hub to {blobContainerUri}/devices.txt.");
             await ExportDevicesAsync(sourceHubConnectionString,
                 blobContainerUri,
-                identityType,
                 userDefinedManagedIdentityResourceId);
             Console.WriteLine("Exporting devices completed.");
 
             Console.WriteLine($"Importing devices from {blobContainerUri}/devices.txt to destination hub.");
             await ImportDevicesAsync(destinationHubConnectionString,
                 blobContainerUri,
-                identityType,
                 userDefinedManagedIdentityResourceId);  
             Console.WriteLine("Importing devices completed.");
         }
 
         public async Task ExportDevicesAsync(string hubConnectionString,
             string blobContainerUri,
-            ManagedIdentityType identityType,
             string userDefinedManagedIdentityResourceId = null)
         {
-            using RegistryManager srcRegistryManager = RegistryManager.CreateFromConnectionString(hubConnectionString);            
+            using RegistryManager srcRegistryManager = RegistryManager.CreateFromConnectionString(hubConnectionString);
 
+            // If StorageAuthenticationType is set to IdentityBased and userAssignedIdentity property is
+            // not null, the jobs will use user defined managed identity. If the IoT hub is not
+            // configured with the user defined managed identity specified in userAssignedIdentity,
+            // the job will fail.
+            // If StorageAuthenticationType is set to IdentityBased the userAssignedIdentity property is
+            // null, the jobs will use system defined identity. If the IoT hub is not configured with the
+            // user defined managed identity, the job will fail.
+            // If StorageAuthenticationType is set to IdentityBased and neither user defined nor system defined
+            // managed identities are configured on the hub, the job will fail.
             JobProperties jobProperties = new JobProperties
             {
                 OutputBlobContainerUri = blobContainerUri,
-                StorageAuthenticationType = StorageAuthenticationType.IdentityBased
-            };
-
-            // Configure the ManagedIdentity if identityType is UserDefined.
-            // This value will be ignored if identityType is SystemDefined.
-            // The default is SystemDefined if StorageAuthenticationType is set to IdentityBased.
-            if (identityType == ManagedIdentityType.UserDefined)
-            {
-                jobProperties.Identity = new ManagedIdentity
+                StorageAuthenticationType = StorageAuthenticationType.IdentityBased,
+                Identity = new ManagedIdentity
                 {
                     userAssignedIdentity = userDefinedManagedIdentityResourceId
-                };
-            }
+                }
+            };
 
             JobProperties jobResult = await srcRegistryManager
                 .ExportDevicesAsync(jobProperties);
@@ -98,28 +89,29 @@ namespace ImportExportDevicesWithManagedIdentitySample
 
         public async Task ImportDevicesAsync(string hubConnectionString,
             string blobContainerUri,
-            ManagedIdentityType identityType,
             string userDefinedManagedIdentityResourceId = null)
         {
             using RegistryManager destRegistryManager = RegistryManager.CreateFromConnectionString(hubConnectionString);
 
+            // If StorageAuthenticationType is set to IdentityBased and userAssignedIdentity property is
+            // not null, the jobs will use user defined managed identity. If the IoT hub is not
+            // configured with the user defined managed identity specified in userAssignedIdentity,
+            // the job will fail.
+            // If StorageAuthenticationType is set to IdentityBased the userAssignedIdentity property is
+            // null, the jobs will use system defined identity. If the IoT hub is not configured with the
+            // user defined managed identity, the job will fail.
+            // If StorageAuthenticationType is set to IdentityBased and neither user defined nor system defined
+            // managed identities are configured on the hub, the job will fail.
             JobProperties jobProperties = new JobProperties
             {
                 InputBlobContainerUri = blobContainerUri,
                 OutputBlobContainerUri = blobContainerUri,
-                StorageAuthenticationType = StorageAuthenticationType.IdentityBased
-            };
-
-            // Configure the ManagedIdentity if identityType is UserDefined.
-            // This value will be ignored if identityType is SystemDefined.
-            // The default is SystemDefined if StorageAuthenticationType is set to IdentityBased.
-            if (identityType == ManagedIdentityType.UserDefined)
-            {
-                jobProperties.Identity = new ManagedIdentity
+                StorageAuthenticationType = StorageAuthenticationType.IdentityBased,
+                Identity = new ManagedIdentity
                 {
                     userAssignedIdentity = userDefinedManagedIdentityResourceId
-                };
-            }
+                }
+            };
 
             JobProperties jobResult = await destRegistryManager
                 .ImportDevicesAsync(jobProperties);

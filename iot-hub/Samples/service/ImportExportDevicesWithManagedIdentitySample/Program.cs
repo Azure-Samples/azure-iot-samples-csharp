@@ -37,7 +37,6 @@ namespace ImportExportDevicesWithManagedIdentitySample
             await sample.RunSampleAsync(parameters.SourceHubConnectionString,
                 parameters.DestinationHubConnectionString,
                 parameters.BlobContainerUri,
-                parameters.IdentityType,
                 parameters.UserDefinedManagedIdentityResourceId);
         }
 
