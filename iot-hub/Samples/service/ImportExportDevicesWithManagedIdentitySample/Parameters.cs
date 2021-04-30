@@ -29,15 +29,9 @@ namespace ImportExportDevicesWithManagedIdentitySample
         public string BlobContainerUri { get; set; }
 
         [Option(
-           "identityType",
-           Required = true,
-           HelpText = "The type of managed identity to use. Possible values are SystemDefined and UserDefined.")]
-        public ManagedIdentityType IdentityType { get; set; }
-
-        [Option(
             "userDefinedManagedIdentityResourceId",
             Required = false,
-            HelpText = "The resource Id of the user defined managed identity. This is only required when the identityType is set to UserDefined.")]
+            HelpText = "The resource Id of the user defined managed identity. This is not required if you want to use system defined managed identity.")]
         public string UserDefinedManagedIdentityResourceId { get; set; }
     }
 }
