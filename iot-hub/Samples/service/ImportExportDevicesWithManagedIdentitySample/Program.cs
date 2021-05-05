@@ -13,7 +13,7 @@ namespace ImportExportDevicesWithManagedIdentitySample
     /// to the destination hub.
     /// For this sample to succeed, the managed identity should be configured to access the 
     /// storage account used for import and export.
-    /// For more information on configuration, see TODO <see href=""/>.
+    /// For more information on configuration, see <see href="https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-managed-identity"/>.
     /// For more information on managed identities, see <see href="https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview"/>
     /// </summary>
     public class Program
