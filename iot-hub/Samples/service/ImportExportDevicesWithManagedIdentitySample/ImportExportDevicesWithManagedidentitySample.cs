@@ -51,15 +51,14 @@ namespace ImportExportDevicesWithManagedIdentitySample
             // user defined managed identity, the job will fail.
             // If StorageAuthenticationType is set to IdentityBased and neither user defined nor system defined
             // managed identities are configured on the hub, the job will fail.
-            JobProperties jobProperties = new JobProperties
-            {
-                OutputBlobContainerUri = blobContainerUri,
-                StorageAuthenticationType = StorageAuthenticationType.IdentityBased,
-                Identity = new ManagedIdentity
+            JobProperties jobProperties = JobProperties.CreateForExportJob(
+                outputBlobContainerUri: blobContainerUri,
+                excludeKeysInExport: false,
+                storageAuthenticationType: StorageAuthenticationType.IdentityBased,
+                identity: new ManagedIdentity
                 {
                     userAssignedIdentity = userDefinedManagedIdentityResourceId
-                }
-            };
+                });
 
             JobProperties jobResult = await srcRegistryManager
                 .ExportDevicesAsync(jobProperties);
@@ -102,16 +101,14 @@ namespace ImportExportDevicesWithManagedIdentitySample
             // user defined managed identity, the job will fail.
             // If StorageAuthenticationType is set to IdentityBased and neither user defined nor system defined
             // managed identities are configured on the hub, the job will fail.
-            JobProperties jobProperties = new JobProperties
-            {
-                InputBlobContainerUri = blobContainerUri,
-                OutputBlobContainerUri = blobContainerUri,
-                StorageAuthenticationType = StorageAuthenticationType.IdentityBased,
-                Identity = new ManagedIdentity
+            JobProperties jobProperties = JobProperties.CreateForImportJob(
+                inputBlobContainerUri: blobContainerUri,
+                outputBlobContainerUri: blobContainerUri,
+                storageAuthenticationType: StorageAuthenticationType.IdentityBased,
+                identity: new ManagedIdentity
                 {
                     userAssignedIdentity = userDefinedManagedIdentityResourceId
-                }
-            };
+                });
 
             JobProperties jobResult = await destRegistryManager
                 .ImportDevicesAsync(jobProperties);
