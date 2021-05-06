@@ -60,16 +60,16 @@ namespace Microsoft.Azure.Devices.Samples
         //   Log into https://azure.portal.com, go to Resources, find your hub and select it.
         //   Then look for Shared Access Policies and select it. 
         //   Then select IoThubowner and copy one of the connection strings.
-        private static string _envIotHubConnectionString = Environment.GetEnvironmentVariable("IOTHUB_CONN_STRING");
+        private static string _envIotHubConnectionString = Environment.GetEnvironmentVariable("SOURCE_IOTHUB_CONNECTION_STRING");
 
         // When copying data from one hub to another, this is the connection string
         //   to the destination hub, i.e. the new one.
-        private static string _envDestIotHubConnectionString = Environment.GetEnvironmentVariable("DEST_IOTHUB_CONN_STRING");
+        private static string _envDestIotHubConnectionString = Environment.GetEnvironmentVariable("DESTINATION_IOTHUB_CONNECTION_STRING");
 
         // Connection string to the storage account used to hold the imported or exported data.
         //   Log into https://azure.portal.com, go to Resources, find your storage account and select it.
         //   Select Access Keys and copy one of the connection strings.
-        private static string _envStorageAccountConnectionString = Environment.GetEnvironmentVariable("STORAGE_ACCT_CONN_STRING");
+        private static string _envStorageAccountConnectionString = Environment.GetEnvironmentVariable("STORAGE_ACCOUNT_CONNECTION_STRING");
 
         public static async Task Main(string[] args)
         {

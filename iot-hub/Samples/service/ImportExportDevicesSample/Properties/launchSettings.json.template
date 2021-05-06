@@ -3,9 +3,9 @@
     "ImportExportDevicesSample": {
       "commandName": "Project",
       "environmentVariables": {
-        "SOURCE_IOTHUB_CONN_STRING_CSHARP": "<connection string to IoT Hub you're going to copy from>",
-        "DEST_IOTHUB_CONN_STRING_CSHARP": "<connection string to new IoT Hub>",
-        "STORAGE_CONN_STRING_CSHARP": "<storage account connection string>"
+        "SOURCE_IOTHUB_CONNECTION_STRING": "<connection string to IoT Hub you're going to copy from>",
+        "DESTINATION_IOTHUB_CONNECTION_STRING": "<connection string to new IoT Hub>",
+        "STORAGE_ACCOUNT_CONNECTION_STRING": "<storage account connection string>"
       }
     }
   }
