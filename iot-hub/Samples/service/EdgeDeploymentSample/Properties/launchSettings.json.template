@@ -3,7 +3,7 @@
     "RegistryManagerSample": {
       "commandName": "Project",
       "environmentVariables": {
-        "IOTHUB_CONNECTION_STRING": "<yourIoTHubConnectionString>"
+        "IOTHUB_CONNECTION_STRING": "<yourIoTHubConnectionString>",
       }
     }
   }
