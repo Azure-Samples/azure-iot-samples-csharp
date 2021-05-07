@@ -11,7 +11,7 @@ namespace IotHubSasCredentialAuthenticationSample
     /// <summary>
     /// This sample connects to the IoT hub using SAS token and sends a cloud-to-device message.
     /// </summary>
-    public class IotHubSasCredentialAuthenticationSample
+    public class AzureHubSasCredentialAuthenticationSample
     {
         public async Task RunSampleAsync(ServiceClient client, string deviceId)
         {

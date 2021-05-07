@@ -52,7 +52,7 @@ namespace IotHubSasCredentialAuthenticationSample
             var hostName = parameters.ResourceUri.Split('/')[0];
             using var serviceClient = ServiceClient.Create(hostName, sasCredential, parameters.TransportType);
 
-            var sample = new IotHubSasCredentialAuthenticationSample();
+            var sample = new AzureHubSasCredentialAuthenticationSample();
             await sample.RunSampleAsync(serviceClient, parameters.DeviceId);
         }
 

@@ -33,7 +33,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ColorConsoleLogger", "..\..
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoleBasedAuthenticationSample", "RoleBasedAuthenticationSample\RoleBasedAuthenticationSample.csproj", "{6629D377-B025-4798-BD30-18E47202AB75}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IotHubSasCredentialAuthenticationSample", "IotHubSasCredentialAuthenticationSample\IotHubSasCredentialAuthenticationSample.csproj", "{DBF43001-0F17-417C-865C-93E04FC9C933}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AzureSasCredentialAuthenticationSample", "IotHubSasCredentialAuthenticationSample\AzureSasCredentialAuthenticationSample.csproj", "{DBF43001-0F17-417C-865C-93E04FC9C933}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutomaticDeviceManagementSample", "AutomaticDeviceManagementSample\AutomaticDeviceManagementSample.csproj", "{03C202B4-B872-42E6-B7BB-40EBC00162F0}"
 EndProject
