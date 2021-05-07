@@ -31,11 +31,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TemperatureController", "Pn
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ColorConsoleLogger", "..\..\..\helpers\ColorConsoleLogger\ColorConsoleLogger.csproj", "{DBABF65A-F2E7-4736-9B99-D760E664B9C6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoleBasedAuthenticationSample", "RoleBasedAuthenticationSample\RoleBasedAuthenticationSample.csproj", "{6629D377-B025-4798-BD30-18E47202AB75}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Devices", "..\..\..\..\azure-iot-sdk-csharp-track1\iothub\service\src\Microsoft.Azure.Devices.csproj", "{277FFAD5-18C4-427A-A305-4CE608DD249C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoleBasedAuthenticationSample", "RoleBasedAuthenticationSample\RoleBasedAuthenticationSample.csproj", "{6629D377-B025-4798-BD30-18E47202AB75}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IotHubSasCredentialAuthenticationSample", "IotHubSasCredentialAuthenticationSample\IotHubSasCredentialAuthenticationSample.csproj", "{DBF43001-0F17-417C-865C-93E04FC9C933}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutomaticDeviceManagementSample", "AutomaticDeviceManagementSample\AutomaticDeviceManagementSample.csproj", "{03C202B4-B872-42E6-B7BB-40EBC00162F0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -203,18 +203,6 @@ Global
 		{6629D377-B025-4798-BD30-18E47202AB75}.Release|x64.Build.0 = Release|Any CPU
 		{6629D377-B025-4798-BD30-18E47202AB75}.Release|x86.ActiveCfg = Release|Any CPU
 		{6629D377-B025-4798-BD30-18E47202AB75}.Release|x86.Build.0 = Release|Any CPU
-		{277FFAD5-18C4-427A-A305-4CE608DD249C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{277FFAD5-18C4-427A-A305-4CE608DD249C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{277FFAD5-18C4-427A-A305-4CE608DD249C}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{277FFAD5-18C4-427A-A305-4CE608DD249C}.Debug|x64.Build.0 = Debug|Any CPU
-		{277FFAD5-18C4-427A-A305-4CE608DD249C}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{277FFAD5-18C4-427A-A305-4CE608DD249C}.Debug|x86.Build.0 = Debug|Any CPU
-		{277FFAD5-18C4-427A-A305-4CE608DD249C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{277FFAD5-18C4-427A-A305-4CE608DD249C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{277FFAD5-18C4-427A-A305-4CE608DD249C}.Release|x64.ActiveCfg = Release|Any CPU
-		{277FFAD5-18C4-427A-A305-4CE608DD249C}.Release|x64.Build.0 = Release|Any CPU
-		{277FFAD5-18C4-427A-A305-4CE608DD249C}.Release|x86.ActiveCfg = Release|Any CPU
-		{277FFAD5-18C4-427A-A305-4CE608DD249C}.Release|x86.Build.0 = Release|Any CPU
 		{DBF43001-0F17-417C-865C-93E04FC9C933}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DBF43001-0F17-417C-865C-93E04FC9C933}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DBF43001-0F17-417C-865C-93E04FC9C933}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -227,6 +215,18 @@ Global
 		{DBF43001-0F17-417C-865C-93E04FC9C933}.Release|x64.Build.0 = Release|Any CPU
 		{DBF43001-0F17-417C-865C-93E04FC9C933}.Release|x86.ActiveCfg = Release|Any CPU
 		{DBF43001-0F17-417C-865C-93E04FC9C933}.Release|x86.Build.0 = Release|Any CPU
+		{03C202B4-B872-42E6-B7BB-40EBC00162F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03C202B4-B872-42E6-B7BB-40EBC00162F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03C202B4-B872-42E6-B7BB-40EBC00162F0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{03C202B4-B872-42E6-B7BB-40EBC00162F0}.Debug|x64.Build.0 = Debug|Any CPU
+		{03C202B4-B872-42E6-B7BB-40EBC00162F0}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{03C202B4-B872-42E6-B7BB-40EBC00162F0}.Debug|x86.Build.0 = Debug|Any CPU
+		{03C202B4-B872-42E6-B7BB-40EBC00162F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03C202B4-B872-42E6-B7BB-40EBC00162F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03C202B4-B872-42E6-B7BB-40EBC00162F0}.Release|x64.ActiveCfg = Release|Any CPU
+		{03C202B4-B872-42E6-B7BB-40EBC00162F0}.Release|x64.Build.0 = Release|Any CPU
+		{03C202B4-B872-42E6-B7BB-40EBC00162F0}.Release|x86.ActiveCfg = Release|Any CPU
+		{03C202B4-B872-42E6-B7BB-40EBC00162F0}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
