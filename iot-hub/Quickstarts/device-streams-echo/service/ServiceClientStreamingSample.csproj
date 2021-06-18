@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-  	<PackageReference Include="Microsoft.Azure.Devices" Version="1.27.0-preview-*" />
+  	<PackageReference Include="Microsoft.Azure.Devices" Version=".28.0-preview-001" />
   </ItemGroup>
 
 </Project>
