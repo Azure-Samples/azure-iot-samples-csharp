@@ -16,6 +16,8 @@
   </ItemGroup>
   
   <ItemGroup>
-	<PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.32.0-preview-001" />
+    <!-- As of preview_2021-6-8 release (https://github.com/Azure/azure-iot-sdk-csharp/releases/tag/preview_2021-6-8),
+     1.32.0-preview-001 is the latest version of the device/module sdk that contains support for device streaming. -->
+    <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.32.0-preview-001" />
   </ItemGroup>
 </Project>
