@@ -127,7 +127,10 @@ try {
         $iothubHost = ($Env:IOTHUB_CONNECTION_STRING.Split(';') | Where-Object {$_ -like "HostName=*"}).Split("=")[1]
 
         RunApp iot-hub\Samples\service\AutomaticDeviceManagementSample "IoTHub\Service\AutomaticDeviceManagementSample"
+
+        Write-Warning "Using device $deviceId for the AzureSasCredentialAuthenticationSample."
         RunApp iot-hub\Samples\service\AzureSasCredentialAuthenticationSample "IoTHub\Service\AzureSasCredentialAuthenticationSample" "-r $iothubHost -d $deviceId -s ""$env:IOT_HUB_SAS_KEY"" -n ""$env:IOT_HUB_SAS_KEY_NAME"""
+        
         RunApp iot-hub\Samples\service\EdgeDeploymentSample "IoTHub\Service\EdgeDeploymentSample"
         RunApp iot-hub\Samples\service\JobsSample "IoTHub\Service\JobsSample"
         RunApp iot-hub\Samples\service\RegistryManagerSample "IoTHub\Service\RegistryManagerSample" "-c ""$env:IOTHUB_CONNECTION_STRING"" -p ""$env:IOTHUB_PFX_X509_THUMBPRINT"""
@@ -136,10 +139,12 @@ try {
         RunApp iot-hub\Samples\service\ServiceClientSample "IoTHub\Service\ServiceClientSample" "-c ""$env:IOTHUB_CONNECTION_STRING"" -d $deviceId -r $sampleRunningTimeInSeconds"
 
         # Run provisioning\device samples
-        #RunApp provisioning\Samples\device\ComputeDerivedSymmetricKeySample
-        #RunApp provisioning\Samples\device\SymmetricKeySample
-        #RunApp provisioning\Samples\device\TpmSample
-        #RunApp provisioning\Samples\device\X509Sample
+
+        # ComputeDerivedSymmetricKeySample uses the supplied group enrollment key to compute the SHA256 based hash of the supplied device Id.
+        # For the sake of running this sample on the pipeline, we will only test the hash computation by passing in a base-64 string and a string to be hashed.
+        RunApp provisioning\Samples\device\ComputeDerivedSymmetricKeySample "Provisioning\Device\ComputeDerivedSymmetricKeySample" "-d ""$env:DPS_SYMMETRIC_KEY_INDIVIDUAL_ENROLLMENT_REGISTRATION_ID"" -p ""$env:DPS_SYMMETRIC_KEY_INDIVIDUAL_ENROLLEMNT_PRIMARY_KEY"""
+        
+        RunApp provisioning\Samples\device\SymmetricKeySample "Provisioning\Device\SymmetricKeySample" "-s ""$env:DPS_IDSCOPE"" -i ""$env:DPS_SYMMETRIC_KEY_INDIVIDUAL_ENROLLMENT_REGISTRATION_ID"" -p ""$env:DPS_SYMMETRIC_KEY_INDIVIDUAL_ENROLLEMNT_PRIMARY_KEY"""
 
         # Run provisioning\service samples
         RunApp provisioning\Samples\service\BulkOperationSample "Provisioning\Service\BulkOperationSample"
@@ -152,26 +157,34 @@ try {
 
         # These samples are currently not added to the pipeilne run. The open items against them need to be addressed before they can be added to the pipeline run.
 
-        # Ignore: DeviceStreaming creates a bi-directional tunnel to enable client-server communication. These device and service samples need to be merged so that they have both the device and service components.
-        # DeviceStreaming is available in Central US EUAP, so we can run this against our preview pipelines.
-        # For more details on regional availability of device streams, see https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-device-streams-overview#regional-availability.
-        # RunApp iot-hub\Samples\device\DeviceStreamingSample "IoTHub\Device\DeviceStreamingSample" "-p ""$env:IOTHUB_DEVICE_CONN_STRING"""
-        # $deviceId = ($Env:IOTHUB_DEVICE_CONN_STRING.Split(';') | where {$_ -like "DeviceId*"}).Split("=")[1]
-        # Write-Warning "Using device $deviceId for the DeviceStreamingSample."
-        # RunApp iot-hub\Samples\service\DeviceStreamingSample "IoTHub\Service\DeviceStreamingSample" "-c ""$env:IOTHUB_CONNECTION_STRING"" -d $deviceId"
+        # TODO: Not working, for some reason. Need to debug this.
+        #RunApp provisioning\Samples\device\TpmSample
 
-        # Ignore: X509DeviceCertWithChainSample has some pre-requisites associated. Need to make sure that they can run unattended.
+        # TODO: Ignore: iot-hub\Samples\service\RoleBasedAuthenticationSample - requires an AAD app to be set up - not tested.
 
-        # Ignore: ImportExportDevicesSample needs to be refactored to accept command-line parameters.
+        # Tested manually:
+
+        # Ignore: iot-hub\Samples\device\DeviceStreamingSample - requires the service-side counterpart to run.
+
+        # Ignore: iot-hub\Samples\device\X509DeviceCertWithChainSample - requires the X509 certificate to be placed in the sample execution folder.
+
+        # Ignore: iot-hub\Samples\service\DeviceStreamingSample - requires the device-side counterpart to run.
+
+        # Ignore: iot-hub\Samples\service\DigitalTwinClientSamples - requires device-side counterpart to run.
+
+        # Ignore: iot-hub\Samples\service\ImportExportDevicesSample - needs to be refactored to accept command-line parameters.
+        # This sample also deletes all devices from the referenced hub, so if it is to use our primary hub then this logic will need to be updated.
         
-        # Ignore: ImportExportDevicesWithManagedIdentitySample has some pre-requisites associated. Need to ensure the managed identity can access the storage accounts.
+        # Ignore: iot-hub\Samples\service\ImportExportDevicesWithManagedIdentitySample - requires that hubs be set up with managed identity.
+        # Also need to ensure that the managed identities are given access to the storage account.
 
-        # Ignore: RoleBasedAuthenticationSample requires an AAD app to be set up.
+        # Ignore: iot-hub\Samples\service\PnpServiceSamples - requires device-side counterpart to run.
 
-        # Ignore: EnrollmentGroupSample needs to be refactored to accept command-line parameters.
-        
-        # Ignore: DigitalTwinClientSamples requires device-side counterpart to run.
-        # Ignore: PnpServiceSamples requires device-side counterpart to run.
+        # Ignore: provisioning\Samples\device\SymmetricKeySample - Group Enrollments requires the derived symmetric key to be computed separately.
+
+        # Ignore: provisioning\Samples\device\X509Sample - requires the X509 certificate to be placed in the sample execution folder.
+
+        # Ignore: provisioning\Samples\service\EnrollmentGroupSample - needs to be refactored to accept command-line parameters.
     }
 
     $buildFailed = $false
