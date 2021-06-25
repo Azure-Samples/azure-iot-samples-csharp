@@ -32,7 +32,7 @@ namespace ImportExportDevicesWithManagedIdentitySample
             Console.WriteLine($"Importing devices from {blobContainerUri}/devices.txt to destination hub.");
             await ImportDevicesAsync(destinationHubConnectionString,
                 blobContainerUri,
-                userDefinedManagedIdentityResourceId);  
+                userDefinedManagedIdentityResourceId);
             Console.WriteLine("Importing devices completed.");
         }
 
@@ -48,7 +48,7 @@ namespace ImportExportDevicesWithManagedIdentitySample
             // the job will fail.
             // If StorageAuthenticationType is set to IdentityBased the userAssignedIdentity property is
             // null, the jobs will use system defined identity. If the IoT hub is not configured with the
-            // user defined managed identity, the job will fail.
+            // system defined managed identity, the job will fail.
             // If StorageAuthenticationType is set to IdentityBased and neither user defined nor system defined
             // managed identities are configured on the hub, the job will fail.
             JobProperties jobProperties = JobProperties.CreateForExportJob(
@@ -98,7 +98,7 @@ namespace ImportExportDevicesWithManagedIdentitySample
             // the job will fail.
             // If StorageAuthenticationType is set to IdentityBased the userAssignedIdentity property is
             // null, the jobs will use system defined identity. If the IoT hub is not configured with the
-            // user defined managed identity, the job will fail.
+            // system defined managed identity, the job will fail.
             // If StorageAuthenticationType is set to IdentityBased and neither user defined nor system defined
             // managed identities are configured on the hub, the job will fail.
             JobProperties jobProperties = JobProperties.CreateForImportJob(
