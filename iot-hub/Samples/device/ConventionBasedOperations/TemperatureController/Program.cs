@@ -129,7 +129,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
         // connection status changes.
         private static DeviceClient InitializeDeviceClient(string deviceConnectionString)
         {
-            var options = new ClientOptions
+            // Specify a custom System.Text.Json based PayloadConvention to be used.
+            var options = new ClientOptions(SystemTextJsonPayloadConvention.Instance)
             {
                 ModelId = ModelId,
             };
