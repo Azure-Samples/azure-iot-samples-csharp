@@ -535,7 +535,7 @@ await _deviceClient.SubscribeToWritablePropertiesEventAsync(
 
 # IoT Plug And Play device samples
 
-These samples demonstrate how a device that follows the [IoT Plug and Play conventions][pnp-convention] interacts with IoT Hub or IoT Central, to:
+These samples demonstrate how an [Azure IoT Plug and Play][pnp-convention] device interacts with IoT Hub or IoT Central, to:
 
 - Send telemetry.
 - Update client properties and be notified of service requested property update requests.
