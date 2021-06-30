@@ -40,7 +40,7 @@ namespace RoleBasedAuthenticationSample
             "clientId",
             Required = true,
             HelpText = "The client Id of the Azure Active Directory application." +
-            " For other ways to use role based authentication, see https://docs.microsoft.com/en-us/dotnet/api/azure.identity?view=azure-dotnet.")]
+            " This sample uses client Id based authentication. For other ways to use role based authentication, see https://docs.microsoft.com/en-us/dotnet/api/azure.identity?view=azure-dotnet.")]
         public string ClientId { get; set; }
 
         [Option(
