@@ -116,8 +116,8 @@ try {
         RunApp iot-hub\Samples\device\TwinSample "IoTHub\Device\TwinSample" "-p ""$env:IOTHUB_DEVICE_CONN_STRING"" -r $sampleRunningTimeInSeconds"
 
         $pnpDeviceSecurityType = "connectionString"
-        RunApp iot-hub\Samples\device\PnpDeviceSamples\TemperatureController "IoTHub\Device\PnpDeviceSamples\TemperatureController" "--DeviceSecurityType $pnpDeviceSecurityType -p ""$env:PNP_TC_DEVICE_CONN_STRING"" -r $sampleRunningTimeInSeconds"
-        RunApp iot-hub\Samples\device\PnpDeviceSamples\Thermostat "IoTHub\Device\PnpDeviceSamples\Thermostat" "--DeviceSecurityType $pnpDeviceSecurityType -p ""$env:PNP_THERMOSTAT_DEVICE_CONN_STRING"" -r $sampleRunningTimeInSeconds"
+        RunApp iot-hub\Samples\device\ConventionBasedOperations\TemperatureController "IoTHub\Device\ConventionBasedOperations\TemperatureController" "--DeviceSecurityType $pnpDeviceSecurityType -p ""$env:PNP_TC_DEVICE_CONN_STRING"" -r $sampleRunningTimeInSeconds"
+        RunApp iot-hub\Samples\device\ConventionBasedOperations\Thermostat "IoTHub\Device\ConventionBasedOperations\Thermostat" "--DeviceSecurityType $pnpDeviceSecurityType -p ""$env:PNP_THERMOSTAT_DEVICE_CONN_STRING"" -r $sampleRunningTimeInSeconds"
 
         # Run the iot-hub\module sample
         RunApp iot-hub\Samples\module\ModuleSample "IoTHub\Module\ModuleSample" "-p ""$env:IOTHUB_MODULE_CONN_STRING"" -r $sampleRunningTimeInSeconds"
@@ -134,6 +134,9 @@ try {
         RunApp iot-hub\Samples\service\EdgeDeploymentSample "IoTHub\Service\EdgeDeploymentSample"
         RunApp iot-hub\Samples\service\JobsSample "IoTHub\Service\JobsSample"
         RunApp iot-hub\Samples\service\RegistryManagerSample "IoTHub\Service\RegistryManagerSample" "-c ""$env:IOTHUB_CONNECTION_STRING"" -p ""$env:IOTHUB_PFX_X509_THUMBPRINT"""
+
+        Write-Warning "Using device $deviceId for the RoleBasedAuthenticationSample."
+        RunApp iot-hub\Samples\service\RoleBasedAuthenticationSample "IoTHub\Service\RoleBasedAuthenticationSample" "-h $iothubHost -d $deviceId --clientId ""$env:IOTHUB_CLIENT_ID"" --tenantId ""$env:MSFT_TENANT_ID"" --clientSecret ""$env:IOTHUB_CLIENT_SECRET"""
 
         Write-Warning "Using device $deviceId for the ServiceClientSample."
         RunApp iot-hub\Samples\service\ServiceClientSample "IoTHub\Service\ServiceClientSample" "-c ""$env:IOTHUB_CONNECTION_STRING"" -d $deviceId -r $sampleRunningTimeInSeconds"
@@ -159,8 +162,6 @@ try {
 
         # TODO: Not working, for some reason. Need to debug this.
         #RunApp provisioning\Samples\device\TpmSample
-
-        # TODO: Ignore: iot-hub\Samples\service\RoleBasedAuthenticationSample - requires an AAD app to be set up - not tested.
 
         # Tested manually:
 

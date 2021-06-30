@@ -56,7 +56,7 @@ namespace AzureSasCredentialAuthenticationSample
             'n',
             "SharedAccessKeyName",
             Required = true,
-            HelpText = "The shared access key name for the access key supplied.")]
+            HelpText = "The shared access key name for the access key supplied. Eg. iothubowner, registryRead etc.")]
         public string SharedAccessKeyName { get; set; }
     }
 }

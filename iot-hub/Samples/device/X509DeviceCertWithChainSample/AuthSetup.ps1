@@ -23,6 +23,13 @@ param(
     [string] $deviceId
 )
 
+# Check that script is run in admin mode
+$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+if (-not $isAdmin)
+{
+    throw "This script must be run in administrative mode."
+}
+
 # Setup parameters
 $subjectPrefix = "IoT Test"
 $rootCommonName = "$subjectPrefix Root CA"

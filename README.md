@@ -16,7 +16,21 @@ azure-iot-samples-csharp provides a set of easy-to-understand, continuously-test
 
 These samples are against the `preview` releases of the Azure IoT Hub SDK for .NET. For samples against the GA releases, see [here](https://github.com/Azure-Samples/azure-iot-samples-csharp).
 
-> NOTE: The `preview` branch is meant to hold only those samples that are relevant to the corresponding `preview` feature added in the SDK. Once the `preview` feature is GA'd, these samples will be moved over to the main branch. This branch is not intended to be directly merged into the main branch.
+> NOTES: 
+> - Device streaming feature is not being included in our newer preview releases as there is no active development going on in the service. For more details on the feature, see [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-device-streams-overview).
+>  
+>   This feature has not been included in any preview release after [2020-10-14](https://github.com/Azure/azure-iot-sdk-csharp/releases/tag/preview_2020-10-14). However, the feature is still available under [previews/deviceStreaming](https://github.com/Azure/azure-iot-sdk-csharp/tree/previews/deviceStreaming) branch.  
+>  
+>   The latest preview nuget versions that contain the feature are:  
+>   Microsoft.Azure.Devices.Client - 1.32.0-preview-001  
+>   Microsoft.Azure.Devices - 1.28.0-preview-001
+>
+>   - [Device streaming device sample](https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/preview/iot-hub/Samples/device/DeviceStreamingSample)
+>   - [Device streaming service sample](https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/preview/iot-hub/Samples/service/DeviceStreamingSample)
+>
+> - The `preview` branch is meant to hold only those samples that are relevant to the corresponding `preview` feature added in the SDK. Once the `preview` feature is GA'd, these samples will be moved over to the main branch. This branch is not intended to be directly merged into the main branch.
+>
+> - It is not recommended to take dependency on preview nugets for production applications as breaking changes can be introduced in preview nugets.
 
 ## Prerequisites
 
