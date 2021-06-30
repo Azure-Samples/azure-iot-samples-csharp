@@ -24,20 +24,6 @@ azure-iot-samples-csharp provides a set of easy-to-understand, continuously-test
 
 Samples showing how to use the various preview features of Microsoft Azure IoT .NET SDK are present [here](https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/preview).
 
-> Note: 
-> Device streaming feature is not being included in our newer preview releases as there is no active development going on in the service. For more details on the feature, see [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-device-streams-overview).
->  
-> Device streaming feature has not been included in any preview release after [2020-10-14](https://github.com/Azure/azure-iot-sdk-csharp/releases/tag/preview_2020-10-14). However, the feature is still available under [previews/deviceStreaming](https://github.com/Azure/azure-iot-sdk-csharp/tree/previews/deviceStreaming) branch.  
->  
-> The latest preview nuget versions that contain the feature are:  
-Microsoft.Azure.Devices.Client - 1.32.0-preview-001  
-Microsoft.Azure.Devices - 1.28.0-preview-001
->
-> - [Device streaming device sample](https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/preview/iot-hub/Samples/device/DeviceStreamingSample)
-> - [Device streaming service sample](https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/preview/iot-hub/Samples/service/DeviceStreamingSample)
-
-> It is not recommended to take dependency on preview nugets for production applications as breaking changes can be introduced in preview nugets.
-
 ## Resources
 
 - [azure-iot-sdk-csharp](https://github.com/Azure/azure-iot-sdk-csharp): contains the source code for Azure IoT C# SDK.
