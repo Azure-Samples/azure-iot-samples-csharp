@@ -22,7 +22,7 @@ azure-iot-samples-csharp provides a set of easy-to-understand, continuously-test
 
 ## Preview features
 
-Samples samples showing how to use the various preview features of Microsoft Azure IoT .NET SDK are present [here](https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/preview).
+Samples showing how to use the various preview features of Microsoft Azure IoT .NET SDK are present [here](https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/preview).
 
 The following features are currently in preview:
 - .NET 5.0 support for IoT Hub and DPS sdks.

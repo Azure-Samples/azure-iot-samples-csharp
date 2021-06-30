@@ -46,7 +46,7 @@ namespace ImportExportDevicesWithManagedIdentitySample
             // not null, the jobs will use user defined managed identity. If the IoT hub is not
             // configured with the user defined managed identity specified in userAssignedIdentity,
             // the job will fail.
-            // If StorageAuthenticationType is set to IdentityBased the userAssignedIdentity property is
+            // If StorageAuthenticationType is set to IdentityBased and userAssignedIdentity property is
             // null, the jobs will use system defined identity. If the IoT hub is not configured with the
             // system defined managed identity, the job will fail.
             // If StorageAuthenticationType is set to IdentityBased and neither user defined nor system defined
@@ -96,7 +96,7 @@ namespace ImportExportDevicesWithManagedIdentitySample
             // not null, the jobs will use user defined managed identity. If the IoT hub is not
             // configured with the user defined managed identity specified in userAssignedIdentity,
             // the job will fail.
-            // If StorageAuthenticationType is set to IdentityBased the userAssignedIdentity property is
+            // If StorageAuthenticationType is set to IdentityBased and userAssignedIdentity property is
             // null, the jobs will use system defined identity. If the IoT hub is not configured with the
             // system defined managed identity, the job will fail.
             // If StorageAuthenticationType is set to IdentityBased and neither user defined nor system defined
