@@ -47,7 +47,7 @@ namespace RoleBasedAuthenticationSample
             "tenantId",
             Required = true,
             HelpText = "The Azure Active Directory tenant (directory) Id." +
-            " For other ways to use role based authentication, see https://docs.microsoft.com/en-us/dotnet/api/azure.identity?view=azure-dotnet.")]
+            " This sample uses tenant Id based authentication. For other ways to use role based authentication, see https://docs.microsoft.com/en-us/dotnet/api/azure.identity?view=azure-dotnet.")]
         public string TenantId { get; set; }
 
         [Option(
