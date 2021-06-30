@@ -364,10 +364,9 @@ await _deviceClient.UpdateReportedPropertiesAsync(propertiesToBeUpdated, cancell
 
 ```csharp
 // Update the property "serialNumber".
-var propertiesToBeUpdated = new ClientPropertyCollection
-{
-    ["serialNumber"] = "SR-1234",
-};
+var propertiesToBeUpdated = new ClientPropertyCollection();
+propertiesToBeUpdated.AddRootProperty("serialNumber", "SR-1234");
+
 ClientPropertiesUpdateResponse updateResponse = await _deviceClient
     .UpdateClientPropertiesAsync(propertiesToBeUpdated, cancellationToken);
 long updatedVersion = updateResponse.Version;
