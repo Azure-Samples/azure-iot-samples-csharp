@@ -60,18 +60,27 @@ namespace Microsoft.Azure.Devices.Logging
                 return;
             }
 
-            var color = _config.LogLevelToColorMapping[logLevel];
-            if (_config.EventIds.Contains(ColorConsoleLoggerConfiguration.DefaultEventId) || _config.EventIds.Contains(eventId.Id))
+            ConsoleColor color;
+            if (_config.AzureIotSdkEventToColorMapping.ContainsKey(eventId))
             {
-                ConsoleColor initialColor = Console.ForegroundColor;
-
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write($"{DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", CultureInfo.InvariantCulture)}>> ");
-
-                Console.ForegroundColor = color;
-                Console.WriteLine($"{logLevel} - {formatter(state, exception)}");
-                Console.ForegroundColor = initialColor;
+                // If Azure IoT SDK specific event-besed color mapping is present, then use it.
+                color = _config.AzureIotSdkEventToColorMapping[eventId];
             }
+            else
+            {
+                // Otherwise, use log-level-based color mapping.
+                color = _config.LogLevelToColorMapping[logLevel];
+            }
+
+            ConsoleColor initialColor = Console.ForegroundColor;
+
+            // Print the timestamp in DarkGreen.
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.Write($"{DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", CultureInfo.InvariantCulture)}>> ");
+
+            Console.ForegroundColor = color;
+            Console.WriteLine($"{logLevel} - {formatter(state, exception)}");
+            Console.ForegroundColor = initialColor;
         }
     }
 }

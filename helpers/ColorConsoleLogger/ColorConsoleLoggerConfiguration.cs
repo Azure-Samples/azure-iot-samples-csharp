@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Devices.Logging
     public class ColorConsoleLoggerConfiguration
     {
         // If the EventId is set to 0, the logger will log all events.
-        internal const int DefaultEventId = 0;
+        private const int DefaultEventId = 0;
 
         /// <summary>
         /// A dictionary containing the log level to console color mappings to be used while writing log entries to the console.
@@ -26,6 +26,29 @@ namespace Microsoft.Azure.Devices.Logging
             { LogLevel.Warning, ConsoleColor.DarkMagenta },
             { LogLevel.Error, ConsoleColor.Red },
             { LogLevel.Critical, ConsoleColor.DarkRed },
+        };
+
+        /// <summary>
+        /// A dictionary containing the event Id to console color mappings for Azure IoT sdk events.
+        /// </summary>
+        public IReadOnlyDictionary<EventId, ConsoleColor> AzureIotSdkEventToColorMapping { get; } = new Dictionary<EventId, ConsoleColor>
+        {
+            // Microsoft.Azure.Device.Client.Enter
+            { 1, ConsoleColor.Green },
+            // Microsoft.Azure.Device.Client.Exit
+            { 2, ConsoleColor.Green},
+            // Microsoft.Azure.Device.Client.Associate
+            { 3, ConsoleColor.Yellow},
+            // Microsoft.Azure.Device.Client.Info
+            { 4, ConsoleColor.DarkCyan},
+            // Microsoft.Azure.Device.Client.Error
+            { 5, ConsoleColor.Red},
+            // Microsoft.Azure.Device.Client.CriticalFailure
+            { 6, ConsoleColor.DarkRed},
+            // Microsoft.Azure.Device.Client.Create
+            { 20, ConsoleColor.Magenta},
+            // Microsoft.Azure.Device.Client.GenerateToken
+            { 21, ConsoleColor.Magenta}
         };
 
         /// <summary>

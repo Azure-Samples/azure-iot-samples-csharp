@@ -78,7 +78,8 @@ await deviceClient.CompleteAsync(receivedMessage);
 ```
 
 ### Receive cloud to device telemetry (using the callback) and complete the message:
-* NOTE: This API is available only on MQTT and AMQP.
+
+> NOTE: This API is available only on MQTT and AMQP.
 
 ```csharp
 // This snippet shows you how to call the API for receiving telemetry sent to your device client.
@@ -100,9 +101,14 @@ private async Task OnC2dMessageReceived(Message receivedMessage, object userCont
 
     // For operations executed over MQTT, it is recommended that you queue the received messages in a ConcurrentQueue
     // (or a similar thread-safe collection) and dequeue then in a separate thread and complete them.
-    // This is because MQTT protocol requires that the messages be "Completed" in the order that they were received in,
+    // This is because MQTT protocol requires that the messages be completed in the order that they were received
+    // (PUBACK tokens must in sent in the order that PUBLISH messages were received).
+    
+    TODO
+    
+    // The danger with not ensuring the right order ....
     // and completing them via the C2D callback could cause potential re-ordering issues, especially if 
-    // you carry out async operations within the callback prior to calling "deviceClient.CompleteAsync(receivedMessage)"
+    // you carry out async operations within the callback prior to calling "client.CompleteAsync(receivedMessage)"
     // (the order in which the tasks from the task pool are resumed cannot be guaranteed).
     Console.WriteLine(formattedMessage.ToString());
     await deviceClient.CompleteAsync(receivedMessage);

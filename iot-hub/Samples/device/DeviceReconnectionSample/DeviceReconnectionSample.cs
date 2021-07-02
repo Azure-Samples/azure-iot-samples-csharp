@@ -71,14 +71,13 @@ namespace Microsoft.Azure.Devices.Client.Samples
             {
                 await InitializeAndOpenClientAsync();
 
-                if (_transportType.Equals(TransportType.Http1))
+                var tasks = new List<Task> { SendMessagesAsync(cts.Token), CompleteReceivedMessagesAsync(cts.Token) };
+                if (_transportType == TransportType.Http1)
                 {
-                    await TaskHelper.WhenAllFailFast(SendMessagesAsync(cts.Token), ReceiveMessagesAsync(cts.Token), CompleteReceivedMessagesAsync(cts.Token));
+                    tasks.Add(ReceiveMessagesAsync(cts.Token));
                 }
-                else
-                {
-                    await TaskHelper.WhenAllFailFast(SendMessagesAsync(cts.Token), CompleteReceivedMessagesAsync(cts.Token));
-                }
+
+                await TaskHelper.WhenAllFailFast(tasks.ToArray());
             }
             catch (Exception ex)
             {
@@ -238,15 +237,15 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         }
                         catch (IotHubException ex) when (ex.IsTransient)
                         {
-                            _logger.LogError($"A transient IotHubException was caught, will retry sending the message: {ex}");
+                            _logger.LogError($"A transient IotHubException was caught, but the device application will retry sending the message: {ex}");
                         }
                         catch (UnauthorizedException ex)
                         {
-                            _logger.LogError($"An UnauthorizedException was caught, recovery will be handled by the ConnectionStatusChangeHandler: {ex}");
+                            _logger.LogError($"An UnauthorizedException was caught, but the recovery will be handled by the ConnectionStatusChangeHandler: {ex}");
                         }
                         catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
                         {
-                            _logger.LogError($"A network related exception was caught, will retry sending the message: {ex}");
+                            _logger.LogError($"A network related exception was caught, but the device application will retry sending the message: {ex}");
                         }
 
                         // wait and retry
@@ -281,11 +280,15 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     }
                     catch (IotHubException ex) when (ex.IsTransient)
                     {
-                        _logger.LogError($"A transient IotHubException was caught, will retry receiving the message: {ex}");
+                        _logger.LogError($"A transient IotHubException was caught, but the device application will retry receiving the message: {ex}");
+                    }
+                    catch (UnauthorizedException ex)
+                    {
+                        _logger.LogError($"An UnauthorizedException was caught, but the recovery will be handled by the ConnectionStatusChangeHandler: {ex}");
                     }
                     catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
                     {
-                        _logger.LogError($"A network related exception was caught, will retry receiving the message: {ex}");
+                        _logger.LogError($"A network related exception was caught, but the device application will retry receiving the message: {ex}");
                     }
                 }
 
@@ -314,12 +317,14 @@ namespace Microsoft.Azure.Devices.Client.Samples
             {
                 if (IsDeviceConnected)
                 {
-                    if (_receivedMessagesQueue.TryPeek(out Message messageToBeCompleted))
+                    if (_receivedMessagesQueue.TryDequeue(out Message messageToBeCompleted))
                     {
                         try
                         {
-                            await s_deviceClient.CompleteAsync(messageToBeCompleted);
-                            _logger.LogInformation($"Completed message with lockToken [{messageToBeCompleted.LockToken}].");
+                            _receivedMessagesQueue.TryDequeue(out Message messageToBeCompleted11);
+                            _logger.LogInformation($"To complete message with lockToken [{messageToBeCompleted11.LockToken}].");
+                            await s_deviceClient.CompleteAsync(messageToBeCompleted11);
+                            _logger.LogInformation($"Completed message with lockToken [{messageToBeCompleted11.LockToken}].");
 
                             // There is a single threaded access to this ConcurrentQueue, so we can ensure that the first element that was peeked above is the element that is getting dequeued.
                             _receivedMessagesQueue.TryDequeue(out _);
@@ -327,7 +332,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         }
                         catch (DeviceMessageLockLostException ex)
                         {
-                            _logger.LogWarning($"Attempted to complete a received message whose lock token has expired, ignoring the message as it will need to be received again: {ex}");
+                            _logger.LogWarning($"Attempted to complete a received message whose lock token has expired, the device application will ignore the message as it will need to be received again: {ex}");
 
                             // There is a single threaded access to this ConcurrentQueue, so we can ensure that the first element that was peeked above is the element that is getting dequeued.
                             _receivedMessagesQueue.TryDequeue(out _);
@@ -335,15 +340,15 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         }
                         catch (IotHubException ex) when (ex.IsTransient)
                         {
-                            _logger.LogError($"A transient IotHubException was caught, will retry marking the message as \"Complete\": {ex}");
+                            _logger.LogError($"A transient IotHubException was caught, but the device application will retry marking the message as \"Complete\": {ex}");
                         }
                         catch (UnauthorizedException ex)
                         {
-                            _logger.LogError($"An UnauthorizedException was caught, recovery will be handled by the ConnectionStatusChangeHandler: {ex}");
+                            _logger.LogError($"An UnauthorizedException was caught, but the recovery will be handled by the ConnectionStatusChangeHandler: {ex}");
                         }
                         catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
                         {
-                            _logger.LogError($"A network related exception was caught, will retry marking the message as \"Complete\": {ex}");
+                            _logger.LogError($"A network related exception was caught, but the device application will retry marking the message as \"Complete\": {ex}");
                         }
                     }
                     else
