@@ -5,6 +5,7 @@ using Microsoft.Azure.Devices.Client.Exceptions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -68,7 +69,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             try
             {
                 await InitializeAndOpenClientAsync();
-                await Task.WhenAll(SendMessagesAsync(cts.Token), ReceiveMessagesAsync(cts.Token));
+                await Task.WhenAll(/*SendMessagesAsync(cts.Token), */ReceiveMessagesAsync(cts.Token));
             }
             catch (Exception ex)
             {
@@ -241,6 +242,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private async Task ReceiveMessagesAsync(CancellationToken cancellationToken)
         {
+            var sw = Stopwatch.StartNew();
+            int count = 0;
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 if (!IsDeviceConnected)
@@ -249,25 +253,34 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     continue;
                 }
 
-                _logger.LogInformation($"Device waiting for C2D messages from the hub for {s_sleepDuration}...");
-                _logger.LogInformation("Use the IoT Hub Azure Portal or Azure IoT Explorer to send a message to this device.");
+                /*_logger.LogInformation($"Device waiting for C2D messages from the hub for {s_sleepDuration}...");
+                _logger.LogInformation("Use the IoT Hub Azure Portal or Azure IoT Explorer to send a message to this device.");*/
 
                 try
                 {
+                    _logger.LogInformation($"ReceiveAsync {count++} initiated.");
                     await ReceiveMessageAndCompleteAsync();
+                    _logger.LogInformation($"Operation took {sw.Elapsed} to complete.");
                 }
                 catch (DeviceMessageLockLostException ex)
                 {
-                    _logger.LogWarning($"Attempted to complete a received message whose lock token has expired; ignoring: {ex}");
+                    _logger.LogWarning($"Attempted to complete a received message whose lock token has expired; ignoring: {ex.Message}.");
+                    _logger.LogInformation($"Operation took {sw.Elapsed} to abort.");
                 }
                 catch (IotHubException ex) when (ex.IsTransient)
                 {
                     // Inspect the exception to figure out if operation should be retried, or if user-input is required.
-                    _logger.LogError($"An IotHubException was caught, but will try to recover and retry explicitly: {ex}");
+                    _logger.LogError($"An IotHubException was caught, but will try to recover and retry explicitly: {ex.Message}.");
+                    _logger.LogInformation($"Operation took {sw.Elapsed} to abort.");
                 }
                 catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
                 {
-                    _logger.LogError($"A network related exception was caught, but will try to recover and retry explicitly: {ex}");
+                    _logger.LogError($"A network related exception was caught, but will try to recover and retry explicitly: {ex.Message}.");
+                    _logger.LogInformation($"Operation took {sw.Elapsed} to abort.");
+                }
+                finally
+                {
+                    sw.Restart();
                 }
             }
         }
@@ -291,24 +304,47 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private async Task ReceiveMessageAndCompleteAsync()
         {
-            using Message receivedMessage = await s_deviceClient.ReceiveAsync(s_sleepDuration);
-            if (receivedMessage == null)
+            var maxWaitTimeout = TimeSpan.FromSeconds(10);
+            Task maxWaitTimeoutTask = Task.Delay(maxWaitTimeout);
+
+            Task<Message> receiveMessageTask = s_deviceClient.ReceiveAsync(s_sleepDuration);
+            Task completedTask = await Task.WhenAny(receiveMessageTask, maxWaitTimeoutTask);
+
+            if (completedTask.Id == receiveMessageTask.Id)
             {
-                _logger.LogInformation("No message received; timed out.");
-                return;
+                if (completedTask is Task<Message> receivedMessageTask)
+                {
+                    using Message receivedMessage = receivedMessageTask.Result;
+
+                    if (receivedMessage == null)
+                    {
+                        _logger.LogInformation("No message received; timed out.");
+                        return;
+                    }
+
+                    string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
+                    var formattedMessage = new StringBuilder($"Received message: [{messageData}]\n");
+
+                    foreach (var prop in receivedMessage.Properties)
+                    {
+                        formattedMessage.AppendLine($"\tProperty: key={prop.Key}, value={prop.Value}");
+                    }
+                    _logger.LogInformation(formattedMessage.ToString());
+
+                    await s_deviceClient.CompleteAsync(receivedMessage);
+                    _logger.LogInformation($"Completed message [{messageData}].");
+                }
+                else
+                {
+                    _logger.LogError("The task returned could not be cast to the type expected - aborting.");
+                    throw new InvalidCastException("The task returned could not be cast to the type expected - aborting.");
+                }
             }
-
-            string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
-            var formattedMessage = new StringBuilder($"Received message: [{messageData}]\n");
-
-            foreach (var prop in receivedMessage.Properties)
+            else
             {
-                formattedMessage.AppendLine($"\tProperty: key={prop.Key}, value={prop.Value}");
+                _logger.LogError("ReceiveAsync() did not complete in the expected time - aborting.");
+                throw new ApplicationException("ReceiveAsync() did not complete in the expected time - aborting.");
             }
-            _logger.LogInformation(formattedMessage.ToString());
-
-            await s_deviceClient.CompleteAsync(receivedMessage);
-            _logger.LogInformation($"Completed message [{messageData}].");
         }
 
         // If the client reports Connected status, it is already in operational state.
