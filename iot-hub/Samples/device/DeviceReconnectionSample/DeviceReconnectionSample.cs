@@ -270,7 +270,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                     // Wait until the first of the receive operation task or the maximum timeout delay task completes.
                     // If the task that first completes is the receive operation, then process the result as desired.
-                    // If the task that fist completes is the maximum timeout delay task, then the receive operation task was stalled for over 10 seconds.
+                    // If the task that first completes is the maximum timeout delay task, then the receive operation task was stalled for over 10 seconds.
                     // Log the time and abort the application. Inspect the SDK logs to understand what went wrong.
                     Task completedTask = await Task.WhenAny(receiveMessageTask, maxWaitTimeoutTask);
                     if (completedTask.Id == receiveMessageTask.Id)
@@ -313,6 +313,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     _logger.LogDebug($"ReceiveAsync {count} execution time: {sw.Elapsed}.");
                     runningTimeList.Add(sw.Elapsed.TotalSeconds);
 
+                    // Format the TotalSeconds elapsed upto 2 decimal places.
                     _logger.LogDebug($"Report (in seconds):" +
                         $" Count={count}," +
                         $" min. running time={runningTimeList.Min():N2}," +
