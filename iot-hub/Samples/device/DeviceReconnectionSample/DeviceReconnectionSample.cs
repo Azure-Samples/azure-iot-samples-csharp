@@ -261,7 +261,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                 try
                 {
-                    _logger.LogDebug($"ReceiveAsync {count++} initiated.");
+                    _logger.LogDebug($"ReceiveAsync {++count} initiated.");
 
                     Task<Message> receiveMessageTask = s_deviceClient.ReceiveAsync(s_sleepDuration);
                     Task completedTask = await Task.WhenAny(receiveMessageTask, maxWaitTimeoutTask);
