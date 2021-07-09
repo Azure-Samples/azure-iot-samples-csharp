@@ -243,7 +243,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         private async Task ReceiveMessagesAsync(CancellationToken cancellationToken)
         {
             var maxWaitTimeout = TimeSpan.FromSeconds(10);
-            var runningTimeList = new List<TimeSpan>();
+            var runningTimeList = new List<double>();
 
             var sw = new Stopwatch();
             int count = 0;
@@ -257,15 +257,21 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     continue;
                 }
 
+                // Create a task that is set to complete after maxWaitTimeout (10 seconds).
                 Task maxWaitTimeoutTask = Task.Delay(maxWaitTimeout);
 
                 try
                 {
                     _logger.LogDebug($"ReceiveAsync {++count} initiated.");
 
+                    // Initiate a ReceiveAsync() operation that is set to time out in s_sleepDuration (5 seconds).
                     sw.Start();
                     Task<Message> receiveMessageTask = s_deviceClient.ReceiveAsync(s_sleepDuration);
 
+                    // Wait until the first of the receive operation task or the maximum timeout delay task completes.
+                    // If the task that first completes is the receive operation, then process the result as desired.
+                    // If the task that fist completes is the maximum timeout delay task, then the receive operation task was stalled for over 10 seconds.
+                    // Log the time and abort the application. Inspect the SDK logs to understand what went wrong.
                     Task completedTask = await Task.WhenAny(receiveMessageTask, maxWaitTimeoutTask);
                     if (completedTask.Id == receiveMessageTask.Id)
                     {
@@ -293,7 +299,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     }
                     else
                     {
-                        _logger.LogError("ReceiveAsync() did not complete in the expected time - aborting.");
+                        _logger.LogError("ReceiveAsync() did not complete in the expected time - aborting. Inspect the SDK logs to understand what went wrong.");
                         throw new DeviceReconnectionSampleException("ReceiveAsync() did not complete in the expected time - aborting.");
                     }
                 }
@@ -303,28 +309,22 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 }
                 catch (IotHubException ex) when (ex.IsTransient)
                 {
-                    // Inspect the exception to figure out if operation should be retried, or if user-input is required.
                     _logger.LogError($"An IotHubException was caught, but will try to recover and retry explicitly: {ex.GetType()}: {ex.Message}.");
                 }
                 catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
                 {
                     _logger.LogError($"A network related exception was caught, but will try to recover and retry explicitly: {ex.GetType()}: {ex.Message}.");
                 }
-                catch (Exception ex) when (!(ex is DeviceReconnectionSampleException))
-                {
-                    _logger.LogError($"A non-recoverable terminal exception was caught." +
-                        $" Retrying the operation is no longer useful, but we will continue for the sake of demonstrating the timeout.");
-                }
                 finally
                 {
                     _logger.LogDebug($"ReceiveAsync {count} execution time: {sw.Elapsed}.");
-                    runningTimeList.Add(sw.Elapsed);
+                    runningTimeList.Add(sw.Elapsed.TotalSeconds);
 
-                    _logger.LogDebug($"Report:" +
+                    _logger.LogDebug($"Report (in seconds):" +
                         $" Count={count}," +
-                        $" min. running time={runningTimeList.Min()}," +
-                        $" max. running time={runningTimeList.Max()}," +
-                        $" avg. running time (in seconds)={runningTimeList.Average(timeSpan => timeSpan.TotalSeconds)}.");
+                        $" min. running time={runningTimeList.Min():N2}," +
+                        $" max. running time={runningTimeList.Max():N2}," +
+                        $" avg. running time={runningTimeList.Average():N2}.");
 
                     sw.Reset();
                 }
