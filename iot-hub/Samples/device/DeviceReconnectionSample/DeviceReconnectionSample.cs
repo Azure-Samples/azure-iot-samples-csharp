@@ -315,7 +315,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 }
                 catch (Exception ex) when (!(ex is DeviceReconnectionSampleException))
                 {
-                    _logger.LogError($"A non-recoverable terminal exception was caught. Retrying the operation is no longer useful, but we will continue to demonstrate the timeout.");
+                    _logger.LogError($"A non-recoverable terminal exception was caught." +
+                        $" Retrying the operation is no longer useful, but we will continue for the sake of demonstrating the timeout.");
                     _logger.LogDebug($"Operation took {sw.Elapsed} to abort.");
                 }
                 finally
