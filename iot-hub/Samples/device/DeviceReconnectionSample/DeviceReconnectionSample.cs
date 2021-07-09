@@ -275,26 +275,19 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     Task completedTask = await Task.WhenAny(receiveMessageTask, maxWaitTimeoutTask);
                     if (completedTask.Id == receiveMessageTask.Id)
                     {
-                        if (completedTask is Task<Message> receivedMessageTask)
+                        Task<Message> receivedMessageTask = completedTask as Task<Message>;
+                        using Message receivedMessage = receivedMessageTask.Result;
+
+                        if (receivedMessage == null)
                         {
-                            using Message receivedMessage = receivedMessageTask.Result;
-
-                            if (receivedMessage == null)
-                            {
-                                _logger.LogInformation("No message received; timed out.");
-                            }
-                            else
-                            {
-                                _logger.LogInformation($"Received message with Id={receivedMessage.MessageId}. Process this as relevant for your application.");
-
-                                await s_deviceClient.CompleteAsync(receivedMessage);
-                                _logger.LogInformation($"Completed message with Id={receivedMessage.MessageId}.");
-                            }
+                            _logger.LogInformation("No message received; timed out.");
                         }
                         else
                         {
-                            _logger.LogError("The task returned could not be cast to the type expected - aborting.");
-                            throw new DeviceReconnectionSampleException("The task returned could not be cast to the type expected - aborting.");
+                            _logger.LogInformation($"Received message with Id={receivedMessage.MessageId}. Process this as relevant for your application.");
+
+                            await s_deviceClient.CompleteAsync(receivedMessage);
+                            _logger.LogInformation($"Completed message with Id={receivedMessage.MessageId}.");
                         }
                     }
                     else
