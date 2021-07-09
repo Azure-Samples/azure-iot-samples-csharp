@@ -313,6 +313,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     _logger.LogDebug($"ReceiveAsync {count} execution time: {sw.Elapsed}.");
                     runningTimeList.Add(sw.Elapsed.TotalSeconds);
 
+                    // Format the TotalSeconds elapsed upto 2 decimal places.
                     _logger.LogDebug($"Report (in seconds):" +
                         $" Count={count}," +
                         $" min. running time={runningTimeList.Min():N2}," +
