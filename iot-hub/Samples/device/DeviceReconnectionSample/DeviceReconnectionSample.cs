@@ -245,7 +245,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             var maxWaitTimeout = TimeSpan.FromSeconds(10);
             var runningTimeList = new List<TimeSpan>();
 
-            var sw = Stopwatch.StartNew();
+            var sw = new Stopwatch();
             int count = 0;
 
             while (!cancellationToken.IsCancellationRequested)
@@ -263,9 +263,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 {
                     _logger.LogDebug($"ReceiveAsync {++count} initiated.");
 
+                    sw.Start();
                     Task<Message> receiveMessageTask = s_deviceClient.ReceiveAsync(s_sleepDuration);
-                    Task completedTask = await Task.WhenAny(receiveMessageTask, maxWaitTimeoutTask);
 
+                    Task completedTask = await Task.WhenAny(receiveMessageTask, maxWaitTimeoutTask);
                     if (completedTask.Id == receiveMessageTask.Id)
                     {
                         if (completedTask is Task<Message> receivedMessageTask)
@@ -325,7 +326,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         $" max. running time={runningTimeList.Max()}," +
                         $" avg. running time (in seconds)={runningTimeList.Average(timeSpan => timeSpan.TotalSeconds)}.");
 
-                    sw.Restart();
+                    sw.Reset();
                 }
             }
         }
