@@ -275,13 +275,14 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             if (receivedMessage == null)
                             {
                                 _logger.LogInformation("No message received; timed out.");
-                                continue;
                             }
+                            else
+                            {
+                                _logger.LogInformation($"Received message with Id={receivedMessage.MessageId}. Process this as relevant for your application.");
 
-                            _logger.LogInformation($"Received message with Id={receivedMessage.MessageId}. Process this as relevant for your application.");
-
-                            await s_deviceClient.CompleteAsync(receivedMessage);
-                            _logger.LogInformation($"Completed message with Id={receivedMessage.MessageId}.");
+                                await s_deviceClient.CompleteAsync(receivedMessage);
+                                _logger.LogInformation($"Completed message with Id={receivedMessage.MessageId}.");
+                            }
                         }
                         else
                         {
@@ -294,33 +295,28 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         _logger.LogError("ReceiveAsync() did not complete in the expected time - aborting.");
                         throw new DeviceReconnectionSampleException("ReceiveAsync() did not complete in the expected time - aborting.");
                     }
-
-                    _logger.LogDebug($"Operation took {sw.Elapsed} to complete.");
                 }
                 catch (DeviceMessageLockLostException ex)
                 {
                     _logger.LogWarning($"Attempted to complete a received message whose lock token has expired; ignoring: {ex.GetType()}: {ex.Message}.");
-                    _logger.LogDebug($"Operation took {sw.Elapsed} to abort.");
                 }
                 catch (IotHubException ex) when (ex.IsTransient)
                 {
                     // Inspect the exception to figure out if operation should be retried, or if user-input is required.
                     _logger.LogError($"An IotHubException was caught, but will try to recover and retry explicitly: {ex.GetType()}: {ex.Message}.");
-                    _logger.LogDebug($"Operation took {sw.Elapsed} to abort.");
                 }
                 catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
                 {
                     _logger.LogError($"A network related exception was caught, but will try to recover and retry explicitly: {ex.GetType()}: {ex.Message}.");
-                    _logger.LogDebug($"Operation took {sw.Elapsed} to abort.");
                 }
                 catch (Exception ex) when (!(ex is DeviceReconnectionSampleException))
                 {
                     _logger.LogError($"A non-recoverable terminal exception was caught." +
                         $" Retrying the operation is no longer useful, but we will continue for the sake of demonstrating the timeout.");
-                    _logger.LogDebug($"Operation took {sw.Elapsed} to abort.");
                 }
                 finally
                 {
+                    _logger.LogDebug($"ReceiveAsync {count} execution time: {sw.Elapsed}.");
                     runningTimeList.Add(sw.Elapsed);
 
                     _logger.LogDebug($"Report:" +
