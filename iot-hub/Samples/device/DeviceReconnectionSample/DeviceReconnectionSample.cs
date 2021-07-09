@@ -286,13 +286,13 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         else
                         {
                             _logger.LogError("The task returned could not be cast to the type expected - aborting.");
-                            throw new InvalidCastException("The task returned could not be cast to the type expected - aborting.");
+                            throw new DeviceReconnectionSampleException("The task returned could not be cast to the type expected - aborting.");
                         }
                     }
                     else
                     {
                         _logger.LogError("ReceiveAsync() did not complete in the expected time - aborting.");
-                        throw new ApplicationException("ReceiveAsync() did not complete in the expected time - aborting.");
+                        throw new DeviceReconnectionSampleException("ReceiveAsync() did not complete in the expected time - aborting.");
                     }
 
                     _logger.LogDebug($"Operation took {sw.Elapsed} to complete.");
@@ -311,6 +311,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
                 {
                     _logger.LogError($"A network related exception was caught, but will try to recover and retry explicitly: {ex.GetType()}: {ex.Message}.");
+                    _logger.LogDebug($"Operation took {sw.Elapsed} to abort.");
+                }
+                catch (Exception ex) when (!(ex is DeviceReconnectionSampleException))
+                {
+                    _logger.LogError($"A non-recoverable terminal exception was caught. Retrying the operation is no longer useful, but we will continue to demonstrate the timeout.");
                     _logger.LogDebug($"Operation took {sw.Elapsed} to abort.");
                 }
                 finally
