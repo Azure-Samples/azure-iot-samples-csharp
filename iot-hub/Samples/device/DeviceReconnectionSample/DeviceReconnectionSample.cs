@@ -276,7 +276,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     if (completedTask.Id == receiveMessageTask.Id)
                     {
                         Task<Message> receivedMessageTask = completedTask as Task<Message>;
-                        using Message receivedMessage = receivedMessageTask.Result;
+
+                        // await the returned task so that any exception that occurred within the completed task is rethrown.
+                        using Message receivedMessage = await receivedMessageTask;
 
                         if (receivedMessage == null)
                         {
@@ -285,9 +287,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         else
                         {
                             _logger.LogInformation($"Received message with Id={receivedMessage.MessageId}. Process this as relevant for your application.");
-
-                            await s_deviceClient.CompleteAsync(receivedMessage);
-                            _logger.LogInformation($"Completed message with Id={receivedMessage.MessageId}.");
                         }
                     }
                     else
