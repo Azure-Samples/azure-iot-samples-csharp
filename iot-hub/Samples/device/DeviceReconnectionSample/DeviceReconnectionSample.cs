@@ -252,6 +252,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             {
                 if (!IsDeviceConnected)
                 {
+                    _logger.LogDebug($"Client is not connected, will sleep for {s_sleepDuration}.");
                     await Task.Delay(s_sleepDuration);
                     continue;
                 }
@@ -260,7 +261,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                 try
                 {
-                    _logger.LogInformation($"ReceiveAsync {count++} initiated.");
+                    _logger.LogDebug($"ReceiveAsync {count++} initiated.");
 
                     Task<Message> receiveMessageTask = s_deviceClient.ReceiveAsync(s_sleepDuration);
                     Task completedTask = await Task.WhenAny(receiveMessageTask, maxWaitTimeoutTask);
@@ -294,29 +295,29 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         throw new ApplicationException("ReceiveAsync() did not complete in the expected time - aborting.");
                     }
 
-                    _logger.LogInformation($"Operation took {sw.Elapsed} to complete.");
+                    _logger.LogDebug($"Operation took {sw.Elapsed} to complete.");
                 }
                 catch (DeviceMessageLockLostException ex)
                 {
-                    _logger.LogWarning($"Attempted to complete a received message whose lock token has expired; ignoring: {ex.Message}.");
-                    _logger.LogInformation($"Operation took {sw.Elapsed} to abort.");
+                    _logger.LogWarning($"Attempted to complete a received message whose lock token has expired; ignoring: {ex.GetType()}: {ex.Message}.");
+                    _logger.LogDebug($"Operation took {sw.Elapsed} to abort.");
                 }
                 catch (IotHubException ex) when (ex.IsTransient)
                 {
                     // Inspect the exception to figure out if operation should be retried, or if user-input is required.
-                    _logger.LogError($"An IotHubException was caught, but will try to recover and retry explicitly: {ex.Message}.");
-                    _logger.LogInformation($"Operation took {sw.Elapsed} to abort.");
+                    _logger.LogError($"An IotHubException was caught, but will try to recover and retry explicitly: {ex.GetType()}: {ex.Message}.");
+                    _logger.LogDebug($"Operation took {sw.Elapsed} to abort.");
                 }
                 catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
                 {
-                    _logger.LogError($"A network related exception was caught, but will try to recover and retry explicitly: {ex.Message}.");
-                    _logger.LogInformation($"Operation took {sw.Elapsed} to abort.");
+                    _logger.LogError($"A network related exception was caught, but will try to recover and retry explicitly: {ex.GetType()}: {ex.Message}.");
+                    _logger.LogDebug($"Operation took {sw.Elapsed} to abort.");
                 }
                 finally
                 {
                     runningTimeList.Add(sw.Elapsed);
 
-                    _logger.LogInformation($"Report:" +
+                    _logger.LogDebug($"Report:" +
                         $" Count={count}," +
                         $" min. running time={runningTimeList.Min()}," +
                         $" max. running time={runningTimeList.Max()}," +
