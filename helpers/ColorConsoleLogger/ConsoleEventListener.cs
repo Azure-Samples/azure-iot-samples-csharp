@@ -79,7 +79,7 @@ namespace Microsoft.Azure.Devices.Logging
                     eventIdent = eventData.EventName;
 #endif
                     string text = $"[{eventData.EventSource.Name}-{eventIdent}]{(eventData.Payload != null ? $" ({string.Join(", ", eventData.Payload)})." : "")}";
-                    _logger.LogTrace(text);
+                    _logger.LogTrace(eventData.EventId, text);
                 }
             }
         }
