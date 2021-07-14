@@ -29,6 +29,33 @@ namespace Microsoft.Azure.Devices.Logging
         };
 
         /// <summary>
+        /// A dictionary containing the client SDK event Id to console color mappings to be used while writing log entries to the console.
+        /// <list type="bullet">
+        /// <item> <description>EnterEventId = 1</description> </item>
+        /// <item> <description>ExitEventId = 2</description> </item>
+        /// <item> <description>AssociateEventId = 3</description> </item>
+        /// <item> <description>InfoEventId = 4</description> </item>
+        /// <item> <description>ErrorEventId = 5</description> </item>
+        /// <item> <description>CriticalFailureEventId = 6</description> </item>
+        /// <item> <description>DumpArrayEventId = 7</description> </item>
+        /// <item> <description>CreateId = 20</description> </item>
+        /// <item> <description>GenerateTokenId = 21</description> </item>
+        /// </list>
+        /// </summary>
+        public IReadOnlyDictionary<int, ConsoleColor> ClientSdkEventToColorMapping { get; } = new Dictionary<int, ConsoleColor>
+        {
+            { 1, ConsoleColor.DarkGreen },
+            { 2, ConsoleColor.DarkGreen },
+            { 3, ConsoleColor.Yellow },
+            { 4, ConsoleColor.Blue },
+            { 5, ConsoleColor.Red },
+            { 6, ConsoleColor.DarkRed },
+            { 7, ConsoleColor.Magenta },
+            { 20, ConsoleColor.Yellow },
+            { 21, ConsoleColor.Green },
+        };
+
+        /// <summary>
         /// The min log level that will be written to the console, defaults to <see cref="LogLevel.Information"/>.
         /// </summary>
         public LogLevel MinLogLevel { get; set; } = LogLevel.Information;

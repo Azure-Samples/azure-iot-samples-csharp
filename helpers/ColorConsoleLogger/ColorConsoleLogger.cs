@@ -61,16 +61,26 @@ namespace Microsoft.Azure.Devices.Logging
             }
 
             var color = _config.LogLevelToColorMapping[logLevel];
+
+            // Client SDK events are written at trace level and those can have more specific color rules.
+            if (logLevel == LogLevel.Trace && _config.ClientSdkEventToColorMapping.ContainsKey(eventId.Id))
+            {
+                color = _config.ClientSdkEventToColorMapping[eventId.Id];
+            }
+
             if (_config.EventIds.Contains(ColorConsoleLoggerConfiguration.DefaultEventId) || _config.EventIds.Contains(eventId.Id))
             {
-                ConsoleColor initialColor = Console.ForegroundColor;
+                ConsoleColor initialBackgroundColor = Console.BackgroundColor;
+                ConsoleColor initialForegroundColor = Console.ForegroundColor;
 
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write($"{DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", CultureInfo.InvariantCulture)}>> ");
-
+                Console.BackgroundColor = ConsoleColor.Black;
                 Console.ForegroundColor = color;
+
+                Console.Write($"{DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", CultureInfo.InvariantCulture)}>> ");
                 Console.WriteLine($"{logLevel} - {formatter(state, exception)}");
-                Console.ForegroundColor = initialColor;
+
+                Console.BackgroundColor = initialBackgroundColor;
+                Console.ForegroundColor = initialForegroundColor;
             }
         }
     }
