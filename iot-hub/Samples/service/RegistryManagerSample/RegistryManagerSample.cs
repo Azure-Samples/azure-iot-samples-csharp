@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Devices.Samples
         public async Task RunSampleAsync()
         {
             using RegistryManager registryManager = RegistryManager
-                .CreateFromConnectionString(_parameters.ConnectionString);
+                .CreateFromConnectionString(_parameters.IoTHubConnectionString);
 
             try
             {
@@ -189,13 +189,13 @@ namespace Microsoft.Azure.Devices.Samples
 
             // Set a desired value for a property the device supports, with the corresponding data type
             var patch =
-@"{
-  ""properties"": {
-    ""desired"": {
-      ""customKey"": ""customValue""
-    }
-  }
-}";
+            @"{
+              ""properties"": {
+                ""desired"": {
+                  ""customKey"": ""customValue""
+                }
+              }
+            }";
             Console.WriteLine($"Using property patch of:\n{patch}");
 
             await registryManager.UpdateTwinAsync(twin.DeviceId, patch, twin.ETag);
