@@ -23,8 +23,8 @@ namespace Microsoft.Azure.Devices.Logging
             { LogLevel.Trace, ConsoleColor.Blue },
             { LogLevel.Debug, ConsoleColor.DarkYellow },
             { LogLevel.Information, ConsoleColor.Cyan },
-            { LogLevel.Warning, ConsoleColor.DarkMagenta },
-            { LogLevel.Error, ConsoleColor.Red },
+            { LogLevel.Warning, ConsoleColor.Red },
+            { LogLevel.Error, ConsoleColor.DarkRed },
             { LogLevel.Critical, ConsoleColor.DarkRed },
         };
 
@@ -48,8 +48,8 @@ namespace Microsoft.Azure.Devices.Logging
             { 2, ConsoleColor.DarkGreen },
             { 3, ConsoleColor.Yellow },
             { 4, ConsoleColor.Blue },
-            { 5, ConsoleColor.Red },
-            { 6, ConsoleColor.DarkRed },
+            { 5, ConsoleColor.DarkMagenta },
+            { 6, ConsoleColor.DarkMagenta },
             { 7, ConsoleColor.Magenta },
             { 20, ConsoleColor.Yellow },
             { 21, ConsoleColor.Green },
