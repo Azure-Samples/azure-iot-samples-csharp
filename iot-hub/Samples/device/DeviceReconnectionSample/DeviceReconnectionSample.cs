@@ -242,7 +242,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private async Task ReceiveMessagesAsync(CancellationToken cancellationToken)
         {
-            int maxWaitTimeout = (int)s_deviceClient.OperationTimeoutInMilliseconds;
+            int maxWaitTimeout = (int)((int)s_deviceClient.OperationTimeoutInMilliseconds + TimeSpan.FromSeconds(30).TotalMilliseconds);
             var runningTimeList = new List<double>();
 
             var sw = new Stopwatch();
@@ -257,9 +257,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     continue;
                 }
 
-                // Create a task that is set to complete after maxWaitTimeout (4 minutes).
+                // Create a task that is set to complete after maxWaitTimeout (4+ minutes).
                 Task maxWaitTimeoutTask = Task.Delay(maxWaitTimeout);
-                _logger.LogDebug($"maxWaitTimeout = s_deviceClient.OperationTimeoutInMilliseconds = {maxWaitTimeout}.");
+                _logger.LogDebug($"s_deviceClient.OperationTimeoutInMilliseconds = {s_deviceClient.OperationTimeoutInMilliseconds}.");
+                _logger.LogDebug($"maxWaitTimeout = {maxWaitTimeout}.");
 
                 try
                 {
