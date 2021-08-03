@@ -242,7 +242,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private async Task ReceiveMessagesAsync(CancellationToken cancellationToken)
         {
-            var maxWaitTimeout = TimeSpan.FromSeconds(10);
+            int maxWaitTimeout = (int)s_deviceClient.OperationTimeoutInMilliseconds;
             var runningTimeList = new List<double>();
 
             var sw = new Stopwatch();
@@ -257,20 +257,21 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     continue;
                 }
 
-                // Create a task that is set to complete after maxWaitTimeout (10 seconds).
+                // Create a task that is set to complete after maxWaitTimeout (4 minutes).
                 Task maxWaitTimeoutTask = Task.Delay(maxWaitTimeout);
+                _logger.LogDebug($"maxWaitTimeout = s_deviceClient.OperationTimeoutInMilliseconds = {maxWaitTimeout}.");
 
                 try
                 {
-                    _logger.LogDebug($"ReceiveAsync {++count} initiated.");
+                    _logger.LogDebug($"ReceiveAsync() {++count} initiated.");
 
-                    // Initiate a ReceiveAsync() operation that is set to time out in s_sleepDuration (5 seconds).
+                    // Initiate a ReceiveAsync() operation that is set to time out as per s_deviceClient.OperationTimeoutInMilliseconds.
                     sw.Start();
-                    Task<Message> receiveMessageTask = s_deviceClient.ReceiveAsync(s_sleepDuration);
+                    Task<Message> receiveMessageTask = s_deviceClient.ReceiveAsync();
 
                     // Wait until the first of the receive operation task or the maximum timeout delay task completes.
                     // If the task that first completes is the receive operation, then process the result as desired.
-                    // If the task that first completes is the maximum timeout delay task, then the receive operation task was stalled for over 10 seconds.
+                    // If the task that first completes is the maximum timeout delay task, then the receive operation task was stalled for over 4 minutes.
                     // Log the time and abort the application. Inspect the SDK logs to understand what went wrong.
                     Task completedTask = await Task.WhenAny(receiveMessageTask, maxWaitTimeoutTask);
                     if (completedTask.Id == receiveMessageTask.Id)
