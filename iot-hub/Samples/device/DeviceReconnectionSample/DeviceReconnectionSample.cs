@@ -30,6 +30,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         // Mark these fields as volatile so that their latest values are referenced.
         private static volatile DeviceClient s_deviceClient;
         private static volatile ConnectionStatus s_connectionStatus = ConnectionStatus.Disconnected;
+        private static volatile int s_connectionStatusChangeEvents;
 
         public DeviceReconnectionSample(List<string> deviceConnectionStrings, TransportType transportType, ILogger logger)
         {
@@ -131,6 +132,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         {
             _logger.LogDebug($"Connection status changed: status={status}, reason={reason}");
             s_connectionStatus = status;
+            s_connectionStatusChangeEvents++;
 
             switch (status)
             {
@@ -242,8 +244,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private async Task ReceiveMessagesAsync(CancellationToken cancellationToken)
         {
-            int maxWaitTimeout = (int)((int)s_deviceClient.OperationTimeoutInMilliseconds + TimeSpan.FromSeconds(30).TotalMilliseconds);
-            var runningTimeList = new List<double>();
+            TimeSpan clientOperationTimeout = TimeSpan.FromMilliseconds(s_deviceClient.OperationTimeoutInMilliseconds);
+            TimeSpan maxWaitTimeout = clientOperationTimeout + TimeSpan.FromSeconds(10);
+            var runningTimeList = new List<TimeSpan>();
 
             var sw = new Stopwatch();
             int count = 0;
@@ -259,7 +262,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                 // Create a task that is set to complete after maxWaitTimeout (4+ minutes).
                 Task maxWaitTimeoutTask = Task.Delay(maxWaitTimeout);
-                _logger.LogDebug($"s_deviceClient.OperationTimeoutInMilliseconds = {s_deviceClient.OperationTimeoutInMilliseconds}.");
+                _logger.LogDebug($"s_deviceClient.OperationTimeoutInMilliseconds = {clientOperationTimeout}.");
                 _logger.LogDebug($"maxWaitTimeout = {maxWaitTimeout}.");
 
                 try
@@ -312,14 +315,15 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 finally
                 {
                     _logger.LogDebug($"ReceiveAsync {count} execution time (TimeSpan): {sw.Elapsed}.");
-                    runningTimeList.Add(sw.Elapsed.TotalSeconds);
+                    runningTimeList.Add(sw.Elapsed);
 
-                    // Format the TotalSeconds elapsed upto 2 decimal places.
-                    _logger.LogDebug($"Report (in seconds):" +
+                    _logger.LogDebug($"Report (TimeSpan):" +
                         $" Count={count}," +
-                        $" min. running time={runningTimeList.Min():N2}," +
-                        $" max. running time={runningTimeList.Max():N2}," +
-                        $" avg. running time={runningTimeList.Average():N2}.");
+                        $" min. running time={runningTimeList.Min()}," +
+                        $" max. running time={runningTimeList.Max()}," +
+                        $" avg. running time={new TimeSpan((long)runningTimeList.Select(ts => ts.Ticks).Average())}.");
+
+                    _logger.LogDebug($"Total connection status change events till now: {s_connectionStatusChangeEvents}.");
 
                     sw.Reset();
                 }
