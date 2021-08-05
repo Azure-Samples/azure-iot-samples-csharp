@@ -1,0 +1,20 @@
+name: $(BuildID)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+
+resources:
+  - repo: self
+    clean: true
+
+jobs:
+  - job: CLEANUP
+    displayName: Cleanup
+    pool:
+      vmImage: 'windows-latest'
+    timeoutInMinutes: 60
+    steps:
+      - powershell: ./build.ps1 -clean -configuration Release -build -run
+        displayName: Cleanup
+        env:
+          IOTHUB_CONNECTION_STRING: $(IOTHUB-CONNECTION-STRING)         
+          STORAGE_ACCOUNT_CONNECTION_STRING: $(STORAGE-ACCOUNT-CONNECTION-STRING)
+          PATH_TO_DEVICE_PREFIX_FOR_DELETION_FILE: csharp_samples_devices_list.csv
+          PROVISIONING_CONNECTION_STRING: $(PROVISIONING-CONNECTION-STRING)

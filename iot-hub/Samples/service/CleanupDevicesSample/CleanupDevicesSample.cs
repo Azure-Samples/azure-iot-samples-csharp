@@ -4,6 +4,7 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
+using Microsoft.Azure.Devices.Common.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,6 +21,8 @@ namespace Microsoft.Azure.Devices.Samples
     public class CleanupDevicesSample
     {
         private const string ImportExportDevicesFileName = "devices.txt";
+        private const int MaxIterationWait = 60;
+        private static readonly TimeSpan WaitDuration = TimeSpan.FromSeconds(10);
 
         private static readonly TimeSpan s_waitDuration = TimeSpan.FromSeconds(5);
         private static readonly IReadOnlyList<JobStatus> s_completedJobs = new[]
@@ -37,7 +40,7 @@ namespace Microsoft.Azure.Devices.Samples
         {
             _registryManager = rm ?? throw new ArgumentNullException(nameof(rm));
             _blobContainerClient = sc ?? throw new ArgumentNullException(nameof(sc));
-
+            Console.WriteLine($"deleteDevicesWithPrefix count: {deleteDevicesWithPrefix.Count}");
             _deleteDevicesWithPrefix = deleteDevicesWithPrefix;
         }
 
@@ -65,8 +68,29 @@ namespace Microsoft.Azure.Devices.Samples
                     excludeKeysInExport: true,
                     storageAuthenticationType: StorageAuthenticationType.KeyBased);
 
-            JobProperties exportAllDevicesJob = await _registryManager.ExportDevicesAsync(exportAllDevicesProperties);
+            JobProperties exportAllDevicesJob = null;
+            
+            int tryCount = 0;
+            while (true)
+            {
+                try
+                {
+                    exportAllDevicesJob = await _registryManager.ExportDevicesAsync(exportAllDevicesProperties);
+                    break;
+                }
+                // Wait for pending jobs to finish.
+                catch (JobQuotaExceededException) when (++tryCount < MaxIterationWait)
+                {
+                    Console.WriteLine($"JobQuotaExceededException... waiting.");
+                    await Task.Delay(WaitDuration).ConfigureAwait(false);
+                }
+            }
 
+            if(exportAllDevicesJob == null)
+            {
+                throw new Exception("Export devices job failed.");
+            }
+            
             // Wait until the export job is finished.
             while (true)
             {
@@ -104,6 +128,7 @@ namespace Microsoft.Azure.Devices.Samples
                 string deviceId = device.Id;
                 foreach (string prefix in _deleteDevicesWithPrefix)
                 {
+                    Console.WriteLine($"Adding devices with prefix {prefix} to deletion list.");
                     if (deviceId.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                     {
                         devicesToBeDeleted.Add(device);
@@ -126,7 +151,29 @@ namespace Microsoft.Azure.Devices.Samples
                         inputBlobContainerUri: storageAccountSasUri,
                         outputBlobContainerUri: storageAccountSasUri,
                         storageAuthenticationType: StorageAuthenticationType.KeyBased);
-                JobProperties importDevicesToBeDeletedJob = await _registryManager.ImportDevicesAsync(importDevicesToBeDeletedProperties);
+
+                JobProperties importDevicesToBeDeletedJob = null;
+
+                tryCount = 0;
+                while (true)
+                {
+                    try
+                    {
+                        importDevicesToBeDeletedJob = await _registryManager.ImportDevicesAsync(importDevicesToBeDeletedProperties);
+                        break;
+                    }
+                    // Wait for pending jobs to finish.
+                    catch (JobQuotaExceededException) when (++tryCount < MaxIterationWait)
+                    {
+                        Console.WriteLine($"JobQuotaExceededException... waiting.");
+                        await Task.Delay(WaitDuration).ConfigureAwait(false);
+                    }
+                }
+
+                if (importDevicesToBeDeletedJob == null)
+                {
+                    throw new Exception("Import devices job failed.");
+                }
 
                 // Wait until job is finished.
                 while (true)
