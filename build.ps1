@@ -109,7 +109,7 @@ try {
         RunApp iot-hub\Samples\service\AzureSasCredentialAuthenticationSample "IoTHub\Service\AzureSasCredentialAuthenticationSample" "-r $iothubHost -d $deviceId -s ""$env:IOT_HUB_SAS_KEY"" -n ""$env:IOT_HUB_SAS_KEY_NAME"""
         
         Write-Warning "Using device $deviceId for the RoleBasedAuthenticationSample."
-        RunApp iot-hub\Samples\service\RoleBasedAuthenticationSample "IoTHub\Service\RoleBasedAuthenticationSample" "-h $iothubHost -d $deviceId --ClientId ""$env:IOTHUB_CLIENT_ID"" --TenantId ""$env:MSFT_TENANT_ID"" --ClientSecret ""$env:IOTHUB_CLIENT_SECRET"""
+        RunApp iot-hub\Samples\service\RoleBasedAuthenticationSample "IoTHub\Service\RoleBasedAuthenticationSample" "-h $iothubHost -d $deviceId --ClientId ""$env:IOTHUB_CLIENT_ID"" --TenantId ""$env:MSFT_TENANT_ID"" --ClientSecret """$env:IOTHUB_CLIENT_SECRET""""
 
         Write-Warning "Using device $deviceId for the ServiceClientSample."
         RunApp iot-hub\Samples\service\ServiceClientSample "IoTHub\Service\ServiceClientSample" "-c ""$env:IOTHUB_CONNECTION_STRING"" -d $deviceId -r $sampleRunningTimeInSeconds"
