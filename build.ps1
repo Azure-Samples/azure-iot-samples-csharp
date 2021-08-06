@@ -94,19 +94,12 @@ $errorMessage = ""
 try {
     if ($build)
     {
-        BuildProject iot-hub\Samples\device "IoTHub Device Samples"
-        BuildProject iot-hub\Samples\module "IoTHub Module Samples"
         BuildProject iot-hub\Samples\service "IoTHub Service Samples"
-        BuildProject iot-hub\Quickstarts "IoTHub Device Quickstarts"
-        BuildProject iot-hub\Tutorials\Routing "IoTHub Tutorials - Routing"
-        BuildProject provisioning\Samples\device "Provisioning Device Samples"
-        BuildProject provisioning\Samples\service "Provisioning Service Samples"
-        BuildProject security\Samples "Security Samples"
     }
 
     if ($run)
     {
-        $sampleRunningTimeInSeconds = 60
+        RunApp iot-hub\Samples\service\CleanupDevicesSample "IoTHub\Service\CleanupDevicesSample" "-c ""$env:IOTHUB_CONNECTION_STRING"" -a ""$env:STORAGE_ACCOUNT_CONNECTION_STRING"" --PathToDevicePrefixForDeletion ""$env:PATH_TO_DEVICE_PREFIX_FOR_DELETION_FILE"""
 
         # Run the iot-hub\service samples
         $deviceId = ($Env:IOTHUB_DEVICE_CONN_STRING.Split(';') | Where-Object {$_ -like "DeviceId=*"}).Split("=")[1]
@@ -116,7 +109,7 @@ try {
         RunApp iot-hub\Samples\service\AzureSasCredentialAuthenticationSample "IoTHub\Service\AzureSasCredentialAuthenticationSample" "-r $iothubHost -d $deviceId -s ""$env:IOT_HUB_SAS_KEY"" -n ""$env:IOT_HUB_SAS_KEY_NAME"""
         
         Write-Warning "Using device $deviceId for the RoleBasedAuthenticationSample."
-        RunApp iot-hub\Samples\service\RoleBasedAuthenticationSample "IoTHub\Service\RoleBasedAuthenticationSample" "-h $iothubHost -d $deviceId --clientId ""$env:IOTHUB_CLIENT_ID"" --tenantId ""$env:MSFT_TENANT_ID"" --clientSecret ""$env:IOTHUB_CLIENT_SECRET"""
+        RunApp iot-hub\Samples\service\RoleBasedAuthenticationSample "IoTHub\Service\RoleBasedAuthenticationSample" "-h $iothubHost -d $deviceId --ClientId ""$env:IOTHUB_CLIENT_ID"" --TenantId ""$env:MSFT_TENANT_ID"" --ClientSecret ""$env:IOTHUB_CLIENT_SECRET"""
 
         Write-Warning "Using device $deviceId for the ServiceClientSample."
         RunApp iot-hub\Samples\service\ServiceClientSample "IoTHub\Service\ServiceClientSample" "-c ""$env:IOTHUB_CONNECTION_STRING"" -d $deviceId -r $sampleRunningTimeInSeconds"
