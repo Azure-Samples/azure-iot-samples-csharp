@@ -92,30 +92,18 @@ $errorMessage = ""
 try {
     if ($build)
     {
-        <#
         BuildProject iot-hub\Samples\device "IoTHub Device Samples"
         BuildProject iot-hub\Samples\module "IoTHub Module Samples"
-        #>
         BuildProject iot-hub\Samples\service "IoTHub Service Samples"
-        <#
         BuildProject iot-hub\Quickstarts "IoTHub Device Quickstarts"
         BuildProject iot-hub\Tutorials\Routing "IoTHub Tutorials - Routing"
         BuildProject provisioning\Samples\device "Provisioning Device Samples"
         BuildProject provisioning\Samples\service "Provisioning Service Samples"
         BuildProject security\Samples "Security Samples"
-        #>
     }
 
     if ($run)
     {
-        # Run the iot-hub\service samples
-        $deviceId = ($Env:IOTHUB_DEVICE_CONN_STRING.Split(';') | Where-Object {$_ -like "DeviceId=*"}).Split("=")[1]
-        $iothubHost = ($Env:IOTHUB_CONNECTION_STRING.Split(';') | Where-Object {$_ -like "HostName=*"}).Split("=")[1]
-
-        Write-Warning "Using device $deviceId for the RoleBasedAuthenticationSample."
-        RunApp iot-hub\Samples\service\RoleBasedAuthenticationSample "IoTHub\Service\RoleBasedAuthenticationSample" "-h $iothubHost -d $deviceId --ClientId ""$env:IOTHUB_CLIENT_ID"" --TenantId ""$env:MSFT_TENANT_ID"" --ClientSecret ""$env:IOTHUB_CLIENT_SECRET"""
-
-        <#
         $sampleRunningTimeInSeconds = 60
 
         # Run cleanup first so the samples don't get overloaded with old devices
@@ -150,9 +138,8 @@ try {
         RunApp iot-hub\Samples\service\JobsSample "IoTHub\Service\JobsSample"
         RunApp iot-hub\Samples\service\RegistryManagerSample "IoTHub\Service\RegistryManagerSample" "-c ""$env:IOTHUB_CONNECTION_STRING"" -p ""$env:IOTHUB_PFX_X509_THUMBPRINT"""
 
-        $clientSecret = $env:IOTHUB_CLIENT_SECRET
         Write-Warning "Using device $deviceId for the RoleBasedAuthenticationSample."
-        RunApp iot-hub\Samples\service\RoleBasedAuthenticationSample "IoTHub\Service\RoleBasedAuthenticationSample" "-h $iothubHost -d $deviceId --ClientId ""$env:IOTHUB_CLIENT_ID"" --TenantId ""$env:MSFT_TENANT_ID"" --ClientSecret ""$clientSecret"""
+        RunApp iot-hub\Samples\service\RoleBasedAuthenticationSample "IoTHub\Service\RoleBasedAuthenticationSample" "-h $iothubHost -d $deviceId --ClientId ""$env:IOTHUB_CLIENT_ID"" --TenantId ""$env:MSFT_TENANT_ID"" --ClientSecret ""$env:IOTHUB_CLIENT_SECRET"""
 
         Write-Warning "Using device $deviceId for the ServiceClientSample."
         RunApp iot-hub\Samples\service\ServiceClientSample "IoTHub\Service\ServiceClientSample" "-c ""$env:IOTHUB_CONNECTION_STRING"" -d $deviceId -r $sampleRunningTimeInSeconds"
@@ -198,7 +185,6 @@ try {
         # Ignore: provisioning\Samples\device\X509Sample - requires the X509 certificate to be placed in the sample execution folder.
 
         # Ignore: provisioning\Samples\service\EnrollmentGroupSample - needs to be refactored to accept command-line parameters.
-        #>
     }
 
     $buildFailed = $false
