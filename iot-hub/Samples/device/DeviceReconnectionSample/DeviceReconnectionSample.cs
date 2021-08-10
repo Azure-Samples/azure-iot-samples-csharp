@@ -245,7 +245,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
         private async Task ReceiveMessagesAsync(CancellationToken cancellationToken)
         {
             TimeSpan clientOperationTimeout = TimeSpan.FromMilliseconds(s_deviceClient.OperationTimeoutInMilliseconds);
-            TimeSpan maxWaitTimeout = clientOperationTimeout + TimeSpan.FromSeconds(10);
+            TimeSpan receiveAsyncTimeout = TimeSpan.FromSeconds(10);
+            TimeSpan maxWaitTimeout = receiveAsyncTimeout + TimeSpan.FromSeconds(10);
             var runningTimeList = new List<TimeSpan>();
 
             var sw = new Stopwatch();
@@ -260,18 +261,19 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     continue;
                 }
 
-                // Create a task that is set to complete after maxWaitTimeout (4+ minutes).
+                // Create a task that is set to complete after maxWaitTimeout.
                 Task maxWaitTimeoutTask = Task.Delay(maxWaitTimeout);
                 _logger.LogDebug($"s_deviceClient.OperationTimeoutInMilliseconds = {clientOperationTimeout}.");
+                _logger.LogDebug($"receiveAsyncTimeout = {receiveAsyncTimeout}.");
                 _logger.LogDebug($"maxWaitTimeout = {maxWaitTimeout}.");
 
                 try
                 {
                     _logger.LogDebug($"ReceiveAsync() {++count} initiated.");
 
-                    // Initiate a ReceiveAsync() operation that is set to time out as per s_deviceClient.OperationTimeoutInMilliseconds.
+                    // Initiate a ReceiveAsync() operation that is set to time out as per receiveAsyncTimeout.
                     sw.Start();
-                    Task<Message> receiveMessageTask = s_deviceClient.ReceiveAsync();
+                    Task<Message> receiveMessageTask = s_deviceClient.ReceiveAsync(receiveAsyncTimeout);
 
                     // Wait until the first of the receive operation task or the maximum timeout delay task completes.
                     // If the task that first completes is the receive operation, then process the result as desired.
