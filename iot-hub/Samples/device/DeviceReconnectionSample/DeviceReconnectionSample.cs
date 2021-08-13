@@ -246,7 +246,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         {
             TimeSpan clientOperationTimeout = TimeSpan.FromMilliseconds(s_deviceClient.OperationTimeoutInMilliseconds);
             TimeSpan receiveAsyncTimeout = TimeSpan.FromSeconds(10);
-            TimeSpan maxWaitTimeout = receiveAsyncTimeout + TimeSpan.FromSeconds(10);
+            TimeSpan maxWaitTimeout = receiveAsyncTimeout + TimeSpan.FromSeconds(30);
             var runningTimeList = new List<TimeSpan>();
 
             var sw = new Stopwatch();

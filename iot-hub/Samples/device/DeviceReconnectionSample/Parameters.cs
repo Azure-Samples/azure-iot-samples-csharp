@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 
 namespace Microsoft.Azure.Devices.Client.Samples
@@ -36,6 +37,14 @@ namespace Microsoft.Azure.Devices.Client.Samples
             Required = false,
             HelpText = "The running time for this console application. Leave it unassigned to run the application until it is explicitly canceled using Control+C.")]
         public double? ApplicationRunningTime { get; set; }
+
+        [Option(
+            'l',
+            "Log level",
+            Default = LogLevel.Debug,
+            Required = false,
+            HelpText = "The level of logs to be written to console. The SDK logs are set at Trace level while the application logs are set to Debug and higher.")]
+        public LogLevel ApplicationLogLevel { get; set; }
 
         public List<string> GetConnectionStrings()
         {
