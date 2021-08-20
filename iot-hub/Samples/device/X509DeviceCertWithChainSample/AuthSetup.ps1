@@ -48,6 +48,8 @@ Write-Host "Creating $rootCertPath rootCACert"
 $rootCACert = New-SelfSignedCertificate `
     -DnsName "$rootCommonName" `
     -KeyUsage CertSign `
+    -KeyAlgorithm "ECDSA_nistP256" `
+    -CurveExport "CurveName" `
     -TextExtension @("2.5.29.19={text}ca=TRUE&pathlength=12") `
     -CertStoreLocation "Cert:\LocalMachine\My" `
     -NotAfter (Get-Date).AddYears(2)
@@ -59,6 +61,8 @@ Write-Host "Creating $intermediate1CertPath signed by rootCACert"
 $intermediateCert1 = New-SelfSignedCertificate `
     -DnsName "$intermediateCert1CommonName" `
     -KeyUsage CertSign `
+    -KeyAlgorithm "ECDSA_nistP256" `
+    -CurveExport "CurveName" `
     -TextExtension @("2.5.29.19={text}ca=TRUE&pathlength=12") `
     -CertStoreLocation "Cert:\LocalMachine\My" `
     -NotAfter (Get-Date).AddYears(2) `
@@ -71,6 +75,8 @@ Write-Host "Creating $intermediate2CertPath signed by intermediateCert1"
 $intermediateCert2 = New-SelfSignedCertificate `
     -DnsName "$intermediateCert2CommonName" `
     -KeyUsage CertSign `
+    -KeyAlgorithm "ECDSA_nistP256" `
+    -CurveExport "CurveName" `
     -TextExtension @("2.5.29.19={text}ca=TRUE&pathlength=12") `
     -CertStoreLocation "Cert:\LocalMachine\My" `
     -NotAfter (Get-Date).AddYears(2) `
@@ -82,8 +88,9 @@ $devicePfxPath = "$certFolder/$iotHubCertChainDeviceCommonName.pfx"
 Write-Host "Creating $devicePfxPath signed by intermediateCert2"
 $deviceCert = New-SelfSignedCertificate `
     -DnsName "$iotHubCertChainDeviceCommonName" `
-    -KeySpec Signature `
+    -KeyAlgorithm "ECDSA_nistP256" `
     -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.2") `
+    -CurveExport "CurveName" `
     -CertStoreLocation "Cert:\LocalMachine\My" `
     -NotAfter (Get-Date).AddYears(2) `
     -Signer $intermediateCert2
