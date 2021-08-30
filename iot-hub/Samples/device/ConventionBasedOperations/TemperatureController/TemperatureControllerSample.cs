@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         {
             // Set handler to receive and respond to writable property update requests.
             _logger.LogDebug("Subscribe to writable property updates.");
-            await _deviceClient.SubscribeToWritablePropertiesEventAsync(HandlePropertyUpdatesAsync, null, cancellationToken);
+            await _deviceClient.SubscribeToWritablePropertyUpdateRequestsAsync(HandlePropertyUpdatesAsync, null, cancellationToken);
 
             // Set handler to receive and respond to commands.
             _logger.LogDebug($"Subscribe to commands.");
@@ -102,14 +102,15 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     case Thermostat1:
                     case Thermostat2:
                         const string targetTemperatureProperty = "targetTemperature";
-                        if (writableProperties.TryGetValue(writableProperty.Key, targetTemperatureProperty, out double targetTemperatureRequested))
+                        string componentName = writableProperty.Key;
+                        if (writableProperties.TryGetValue(componentName, targetTemperatureProperty, out WritableClientProperty targetTemperatureRequested))
                         {
-                            await HandleTargetTemperatureUpdateRequestAsync(writableProperty.Key, targetTemperatureRequested, writableProperties.Version, userContext);
+                            await HandleTargetTemperatureUpdateRequestAsync(componentName, targetTemperatureRequested, userContext);
                             break;
                         }
                         else
                         {
-                            _logger.LogWarning($"Property: Received an unrecognized property update from service for component {writableProperty.Key}:" +
+                            _logger.LogWarning($"Property: Received an unrecognized property update from service for component {componentName}:" +
                                         $"\n[ {writableProperty.Value} ].");
                             break;
                         }
@@ -123,19 +124,16 @@ namespace Microsoft.Azure.Devices.Client.Samples
         }
 
         // The callback to handle target temperature property update requests for a component.
-        private async Task HandleTargetTemperatureUpdateRequestAsync(string componentName, double targetTemperature, long version, object userContext)
+        private async Task HandleTargetTemperatureUpdateRequestAsync(string componentName, WritableClientProperty targetTemperatureUpdateRequest, object userContext)
         {
             const string targetTemperatureProperty = "targetTemperature";
-            _logger.LogDebug($"Property: Received - component=\"{componentName}\", [ \"{targetTemperatureProperty}\": {targetTemperature}°C ].");
+            double targetTemperatureValue = SystemTextJsonPayloadSerializer.Instance.ConvertFromObject<double>(targetTemperatureUpdateRequest.Value);
+            _logger.LogDebug($"Property: Received - component=\"{componentName}\", [ \"{targetTemperatureProperty}\": {targetTemperatureValue}°C ].");
 
-            _temperature[componentName] = targetTemperature;
-            IWritablePropertyResponse writableResponse = _deviceClient
-                .PayloadConvention
-                .PayloadSerializer
-                .CreateWritablePropertyResponse(_temperature[componentName], CommonClientResponseCodes.OK, version, "Successfully updated target temperature.");
+            _temperature[componentName] = targetTemperatureValue;
 
             var reportedProperty = new ClientPropertyCollection();
-            reportedProperty.AddComponentProperty(componentName, targetTemperatureProperty, writableResponse);
+            reportedProperty.AddComponentProperty(componentName, targetTemperatureProperty, targetTemperatureUpdateRequest.AcknowledgeWith(CommonClientResponseCodes.OK));
 
             ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(reportedProperty);
 
@@ -331,7 +329,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             // Retrieve the device's properties.
             ClientProperties properties = await _deviceClient.GetClientPropertiesAsync(cancellationToken);
 
-            if (!properties.TryGetValue(serialNumber, out string serialNumberReported)
+            if (!properties.ReportedFromClient.TryGetValue(serialNumber, out string serialNumberReported)
                 || serialNumberReported != currentSerialNumber)
             {
                 var reportedProperties = new ClientPropertyCollection();
