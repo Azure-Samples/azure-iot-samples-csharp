@@ -38,7 +38,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         {
             // Set handler to receive and respond to writable property update requests.
             _logger.LogDebug($"Subscribe to writable property updates.");
-            await _deviceClient.SubscribeToWritablePropertiesEventAsync(HandlePropertyUpdatesAsync, null, cancellationToken);
+            await _deviceClient.SubscribeToWritablePropertyUpdateRequestsAsync(HandlePropertyUpdatesAsync, null, cancellationToken);
 
             // Set handler to receive and respond to commands.
             _logger.LogDebug($"Subscribe to commands.");
@@ -73,22 +73,22 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 {
                     case "targetTemperature":
                         const string targetTemperatureProperty = "targetTemperature";
-                        double targetTemperatureRequested = Convert.ToDouble(writableProperty.Value);
-                        _logger.LogDebug($"Property: Received - [ \"{targetTemperatureProperty}\": {targetTemperatureRequested}°C ].");
 
-                        _temperature = targetTemperatureRequested;
-                        IWritablePropertyResponse writableResponse = _deviceClient
-                            .PayloadConvention
-                            .PayloadSerializer
-                            .CreateWritablePropertyResponse(_temperature, CommonClientResponseCodes.OK, writableProperties.Version, "Successfully updated target temperature");
+                        if (writableProperties.TryGetValue(targetTemperatureProperty, out WritableClientProperty targetTemperatureRequested))
+                        {
+                            double targetTemperatureValue = Convert.ToDouble(targetTemperatureRequested.Value);
+                            _logger.LogDebug($"Property: Received - [ \"{targetTemperatureProperty}\": {targetTemperatureRequested}°C ].");
 
-                        var reportedProperty = new ClientPropertyCollection();
-                        reportedProperty.AddRootProperty(targetTemperatureProperty, writableResponse);
+                            _temperature = targetTemperatureValue;
 
-                        ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(reportedProperty);
+                            var reportedProperty = new ClientPropertyCollection();
+                            reportedProperty.AddRootProperty(targetTemperatureProperty, targetTemperatureRequested.AcknowledgeWith(CommonClientResponseCodes.OK));
 
-                        _logger.LogDebug($"Property: Update - {reportedProperty.GetSerializedString()} is {nameof(CommonClientResponseCodes.OK)} " +
-                            $"with a version of {updateResponse.Version}.");
+                            ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(reportedProperty);
+
+                            _logger.LogDebug($"Property: Update - {reportedProperty.GetSerializedString()} is {nameof(CommonClientResponseCodes.OK)} " +
+                                $"with a version of {updateResponse.Version}.");
+                        }
 
                         break;
 

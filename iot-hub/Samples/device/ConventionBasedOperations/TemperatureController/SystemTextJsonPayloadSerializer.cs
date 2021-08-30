@@ -50,10 +50,29 @@ namespace Microsoft.Azure.Devices.Client.Samples
             {
                 return false;
             }
-            if (((JsonElement)nestedObject).TryGetProperty(propertyName, out JsonElement element))
+
+            try
             {
-                outValue = DeserializeToType<T>(element.GetRawText());
-                return true;
+                // The supplied nested object is either a JsonElement or the string representation of a JsonElement.
+                JsonElement nestedObjectAsJElement;
+                if (nestedObject.GetType() == typeof(string))
+                {
+                    nestedObjectAsJElement = DeserializeToType<JsonElement>((string)nestedObject);
+                }
+                else
+                {
+                    nestedObjectAsJElement = (JsonElement)nestedObject;
+                }
+
+                if (nestedObjectAsJElement.TryGetProperty(propertyName, out JsonElement element))
+                {
+                    outValue = DeserializeToType<T>(element.GetRawText());
+                    return true;
+                }
+            }
+            catch
+            {
+                // Catch and ignore any exceptions caught
             }
             return false;
         }
