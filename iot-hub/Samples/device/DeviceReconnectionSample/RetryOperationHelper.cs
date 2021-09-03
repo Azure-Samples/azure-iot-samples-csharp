@@ -25,41 +25,38 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
 
             int counter = 0;
-            bool shouldRetry;
-            Exception lastException;
-            do
+            bool shouldRetry = false;
+            TimeSpan retryInterval = TimeSpan.Zero;
             {
                 try
                 {
                     await asyncOperation().ConfigureAwait(false);
-                    break;
                 }
                 catch (Exception ex)
                 {
-                    lastException = ex;
-                    if (lastException is IotHubException iotHubException && iotHubException.IsTransient)
+                    if (ex is IotHubException iotHubException && iotHubException.IsTransient)
                     {
-                        logger.LogWarning($"An IotHubException was caught, but will try to recover and retry: {lastException}");
+                        logger.LogWarning($"An IotHubException was caught, but will try to recover and retry: {ex}");
                     }
-                    else if (ExceptionHelper.IsNetworkExceptionChain(lastException))
+                    else if (ExceptionHelper.IsNetworkExceptionChain(ex))
                     {
-                        logger.LogWarning($"A network related exception was caught, but will try to recover and retry: {lastException}");
+                        logger.LogWarning($"A network related exception was caught, but will try to recover and retry: {ex}");
                     }
-                    else if (exceptionsToBeIgnored != null && exceptionsToBeIgnored.ContainsKey(lastException.GetType()))
+                    else if (exceptionsToBeIgnored != null && exceptionsToBeIgnored.ContainsKey(ex.GetType()))
                     {
-                        string exceptionLoggerMessage = exceptionsToBeIgnored[lastException.GetType()];
-                        logger.LogWarning($"{exceptionLoggerMessage}, ignoring : {lastException}");
+                        string exceptionLoggerMessage = exceptionsToBeIgnored[ex.GetType()];
+                        logger.LogWarning($"{exceptionLoggerMessage}, ignoring : {ex}");
                     }
                     else
                     {
                         throw;
                     }
+
+                    shouldRetry = retryPolicy.ShouldRetry(++counter, ex, out retryInterval);
+                    logger.LogWarning($"Attempt {counter}: request not accepted: {ex}");
                 }
 
-                shouldRetry = retryPolicy.ShouldRetry(++counter, lastException, out TimeSpan retryInterval);
-                logger.LogWarning($"Attempt {counter}: request not accepted: {lastException}");
-
-                if (shouldRetry)
+                if (shouldRetry && retryInterval != TimeSpan.Zero)
                 {
                     logger.LogInformation($"Will retry operation in {retryInterval}.");
                     await Task.Delay(retryInterval).ConfigureAwait(false);
