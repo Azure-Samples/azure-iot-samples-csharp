@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Azure.Devices.Client.Exceptions;
+using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -69,6 +70,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             try
             {
                 await InitializeAndOpenClientAsync();
+                await SubscribeToTwinUpdateNotificationsAsync(cts.Token);
                 await Task.WhenAll(SendMessagesAsync(cts.Token), ReceiveMessagesAsync(cts.Token));
             }
             catch (Exception ex)
@@ -197,6 +199,42 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
+        private async Task SubscribeToTwinUpdateNotificationsAsync(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                if (IsDeviceConnected)
+                {
+                    await s_deviceClient.SetDesiredPropertyUpdateCallbackAsync(HandleTwinUpdateNotificationsAsync, cancellationToken);
+                    break;
+                }
+
+                await Task.Delay(s_sleepDuration);
+            }
+        }
+
+        private async Task HandleTwinUpdateNotificationsAsync(TwinCollection twinUpdateRequest, object userContext)
+        {
+            CancellationToken cancellationToken = (CancellationToken)userContext;
+
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                var reportedProperties = new TwinCollection();
+
+                Console.WriteLine("\nTwin properties update requested:");
+                Console.WriteLine($"\t{twinUpdateRequest.ToJson()}");
+
+                // For the purpose of this sample, we'll blindly accept all twin property write requests.
+                foreach (KeyValuePair<string, object> desiredProperty in twinUpdateRequest)
+                {
+                    Console.WriteLine($"Setting {desiredProperty.Key} to {desiredProperty.Value}.");
+                    reportedProperties[desiredProperty.Key] = desiredProperty.Value;
+                }
+
+                await s_deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken);
+            }
+        }
+
         private async Task SendMessagesAsync(CancellationToken cancellationToken)
         {
             int messageCount = 0;
@@ -208,32 +246,13 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     _logger.LogInformation($"\nDevice sending message {++messageCount} to IoT hub...");
 
                     (Message message, string payload) = PrepareMessage(messageCount);
-                    while (true)
-                    {
-                        try
+                    await RetryOperationHelper.RetryTransientExceptionsAsync(
+                        async () =>
                         {
                             await s_deviceClient.SendEventAsync(message);
-                            _logger.LogInformation($"Sent message {messageCount} of {payload}\n");
-                            message.Dispose();
-                            break;
-                        }
-                        catch (IotHubException ex) when (ex.IsTransient)
-                        {
-                            // Inspect the exception to figure out if operation should be retried, or if user-input is required.
-                            _logger.LogWarning($"An IotHubException was caught, but will try to recover and retry: {ex}");
-                        }
-                        catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
-                        {
-                            _logger.LogWarning($"A network related exception was caught, but will try to recover and retry: {ex}");
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError($"Unexpected error {ex}");
-                        }
-
-                        // wait and retry
-                        await Task.Delay(s_sleepDuration);
-                    }
+                        },
+                        _logger);
+                    message.Dispose();
                 }
 
                 await Task.Delay(s_sleepDuration);
@@ -252,7 +271,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 else if (_transportType == TransportType.Http1)
                 {
                     // The call to ReceiveAsync over HTTP completes immediately, rather than waiting up to the specified
-                    // time or when a cancellation token is signalled, so if we want it to poll at the same rate, we need
+                    // time or when a cancellation token is signaled, so if we want it to poll at the same rate, we need
                     // to add an explicit delay here.
                     await Task.Delay(s_sleepDuration);
                 }
@@ -260,41 +279,14 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 _logger.LogInformation($"\nDevice waiting for C2D messages from the hub for {s_sleepDuration}...");
                 _logger.LogInformation("Use the IoT Hub Azure Portal or Azure IoT Explorer to send a message to this device.\n");
 
-                try
-                {
-                    await ReceiveMessageAndCompleteAsync();
-                }
-                catch (DeviceMessageLockLostException ex)
-                {
-                    _logger.LogWarning($"Attempted to complete a received message whose lock token has expired; ignoring: {ex}");
-                }
-                catch (IotHubException ex) when (ex.IsTransient)
-                {
-                    // Inspect the exception to figure out if operation should be retried, or if user-input is required.
-                    _logger.LogError($"An IotHubException was caught, but will try to recover and retry explicitly: {ex}");
-                }
-                catch (Exception ex) when (ExceptionHelper.IsNetworkExceptionChain(ex))
-                {
-                    _logger.LogError($"A network related exception was caught, but will try to recover and retry explicitly: {ex}");
-                }
+                await RetryOperationHelper.RetryTransientExceptionsAsync(
+                        async () =>
+                        {
+                            await ReceiveMessageAndCompleteAsync();
+                        },
+                        _logger,
+                        new Dictionary<Type, string> { { typeof(DeviceMessageLockLostException), "Attempted to complete a received message whose lock token has expired" } });
             }
-        }
-
-        private (Message, string) PrepareMessage(int messageId)
-        {
-            var temperature = s_randomGenerator.Next(20, 35);
-            var humidity = s_randomGenerator.Next(60, 80);
-            string messagePayload = $"{{\"temperature\":{temperature},\"humidity\":{humidity}}}";
-
-            var eventMessage = new Message(Encoding.UTF8.GetBytes(messagePayload))
-            {
-                MessageId = messageId.ToString(),
-                ContentEncoding = Encoding.UTF8.ToString(),
-                ContentType = "application/json",
-            };
-            eventMessage.Properties.Add("temperatureAlert", (temperature > TemperatureThreshold) ? "true" : "false");
-
-            return (eventMessage, messagePayload);
         }
 
         private async Task ReceiveMessageAndCompleteAsync()
@@ -343,6 +335,23 @@ namespace Microsoft.Azure.Devices.Client.Samples
             {
                 receivedMessage.Dispose();
             }
+        }
+
+        private (Message, string) PrepareMessage(int messageId)
+        {
+            var temperature = s_randomGenerator.Next(20, 35);
+            var humidity = s_randomGenerator.Next(60, 80);
+            string messagePayload = $"{{\"temperature\":{temperature},\"humidity\":{humidity}}}";
+
+            var eventMessage = new Message(Encoding.UTF8.GetBytes(messagePayload))
+            {
+                MessageId = messageId.ToString(),
+                ContentEncoding = Encoding.UTF8.ToString(),
+                ContentType = "application/json",
+            };
+            eventMessage.Properties.Add("temperatureAlert", (temperature > TemperatureThreshold) ? "true" : "false");
+
+            return (eventMessage, messagePayload);
         }
 
         // If the client reports Connected status, it is already in operational state.
