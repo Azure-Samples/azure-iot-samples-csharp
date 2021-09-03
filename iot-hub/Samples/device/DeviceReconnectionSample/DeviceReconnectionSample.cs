@@ -249,7 +249,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     await RetryOperationHelper.RetryTransientExceptionsAsync(
                         async () =>
                         {
-                            await s_deviceClient.SendEventAsync(message);
+                            if (IsDeviceConnected)
+                            {
+                                await s_deviceClient.SendEventAsync(message);
+                            }
                         },
                         _logger);
                     message.Dispose();
@@ -282,7 +285,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 await RetryOperationHelper.RetryTransientExceptionsAsync(
                         async () =>
                         {
-                            await ReceiveMessageAndCompleteAsync();
+                            if (IsDeviceConnected)
+                            {
+                                await ReceiveMessageAndCompleteAsync();
+                            }
                         },
                         _logger,
                         new Dictionary<Type, string> { { typeof(DeviceMessageLockLostException), "Attempted to complete a received message whose lock token has expired" } });
