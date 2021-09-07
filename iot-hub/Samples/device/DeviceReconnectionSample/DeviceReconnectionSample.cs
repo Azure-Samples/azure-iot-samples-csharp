@@ -68,8 +68,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
             try
             {
-                await InitializeAndOpenClientAsync();
-                await SubscribeToTwinUpdateNotificationsAsync(cts.Token);
+                await InitializeAndSetupClientAsync(cts.Token);
                 await Task.WhenAll(SendMessagesAsync(cts.Token), ReceiveMessagesAsync(cts.Token));
             }
             catch (Exception ex)
@@ -80,7 +79,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             _initSemaphore.Dispose();
         }
 
-        private async Task InitializeAndOpenClientAsync()
+        private async Task InitializeAndSetupClientAsync(CancellationToken cancellationToken = default)
         {
             if (ShouldClientBeInitialized(s_connectionStatus))
             {
@@ -103,7 +102,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                     s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionStrings.First(), _transportType, _clientOptions);
                     s_deviceClient.SetConnectionStatusChangesHandler(ConnectionStatusChangeHandler);
-                    _logger.LogDebug($"Initialized the client instance.");
+                    _logger.LogDebug("Initialized the client instance.");
                 }
                 finally
                 {
@@ -114,8 +113,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 {
                     // Force connection now.
                     // OpenAsync() is an idempotent call, it has the same effect if called once or multiple times on the same client.
-                    await s_deviceClient.OpenAsync();
-                    _logger.LogDebug($"Opened the client instance.");
+                    await s_deviceClient.OpenAsync(cancellationToken);
+                    _logger.LogDebug("Opened the client instance.");
+
+                    await SubscribeToTwinUpdateNotificationsAsync(cancellationToken);
+                    _logger.LogDebug("Subscribed to desired property update notifications");
                 }
                 catch (UnauthorizedException)
                 {
@@ -158,7 +160,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             if (_deviceConnectionStrings.Any())
                             {
                                 _logger.LogWarning($"The current connection string is invalid. Trying another.");
-                                await InitializeAndOpenClientAsync();
+                                await InitializeAndSetupClientAsync();
                                 break;
                             }
 
@@ -174,14 +176,14 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             _logger.LogWarning("### The DeviceClient has been disconnected because the retry policy expired." +
                                 "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
 
-                            await InitializeAndOpenClientAsync();
+                            await InitializeAndSetupClientAsync();
                             break;
 
                         case ConnectionStatusChangeReason.Communication_Error:
                             _logger.LogWarning("### The DeviceClient has been disconnected due to a non-retry-able exception. Inspect the exception for details." +
                                 "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
 
-                            await InitializeAndOpenClientAsync();
+                            await InitializeAndSetupClientAsync();
                             break;
 
                         default:
@@ -220,13 +222,12 @@ namespace Microsoft.Azure.Devices.Client.Samples
             {
                 var reportedProperties = new TwinCollection();
 
-                Console.WriteLine("\nTwin properties update requested:");
-                Console.WriteLine($"\t{twinUpdateRequest.ToJson()}");
+                _logger.LogInformation($"Twin properties update requested: \n{twinUpdateRequest.ToJson()}");
 
                 // For the purpose of this sample, we'll blindly accept all twin property write requests.
                 foreach (KeyValuePair<string, object> desiredProperty in twinUpdateRequest)
                 {
-                    Console.WriteLine($"Setting {desiredProperty.Key} to {desiredProperty.Value}.");
+                    _logger.LogInformation($"Setting property {desiredProperty.Key} to {desiredProperty.Value}.");
                     reportedProperties[desiredProperty.Key] = desiredProperty.Value;
                 }
 
@@ -276,8 +277,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     await Task.Delay(s_sleepDuration);
                 }
 
-                _logger.LogInformation($"\nDevice waiting for C2D messages from the hub for {s_sleepDuration}...");
-                _logger.LogInformation("Use the IoT Hub Azure Portal or Azure IoT Explorer to send a message to this device.\n");
+                _logger.LogInformation($"Device waiting for C2D messages from the hub for {s_sleepDuration}." +
+                    $"\nUse the IoT Hub Azure Portal or Azure IoT Explorer to send a message to this device.");
 
                 await RetryOperationHelper.RetryTransientExceptionsAsync(
                         async () =>
@@ -321,11 +322,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
             try
             {
                 string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
-                var formattedMessage = new StringBuilder($"Received message: [{messageData}]\n");
+                var formattedMessage = new StringBuilder($"Received message: [{messageData}]");
 
                 foreach (var prop in receivedMessage.Properties)
                 {
-                    formattedMessage.AppendLine($"\tProperty: key={prop.Key}, value={prop.Value}");
+                    formattedMessage.AppendLine($"\n\tProperty: key={prop.Key}, value={prop.Value}");
                 }
                 _logger.LogInformation(formattedMessage.ToString());
 
