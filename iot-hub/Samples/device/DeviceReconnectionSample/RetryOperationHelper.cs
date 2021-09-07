@@ -28,7 +28,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             bool shouldRetry;
             do
             {
-                Exception lastException = new Exception();
+                Exception lastException = new IotHubCommunicationException("Client is currently reconnecting internally, attempt the operation after some time.");
                 try
                 {
                     if (isClientConnected())
@@ -41,7 +41,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 {
                     if (ex is IotHubException iotHubException && iotHubException.IsTransient)
                     {
-                        logger.LogWarning($"An IotHubException was caught, but will try to recover and retry: {ex}");
+                        logger.LogWarning($"A transient IotHubException was caught, but will try to recover and retry: {ex}");
                     }
                     else if (ExceptionHelper.IsNetworkExceptionChain(ex))
                     {
