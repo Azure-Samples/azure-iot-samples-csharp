@@ -52,7 +52,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             _logger.LogInformation($"Using {_transportType} transport.");
         }
 
-        internal bool IsDeviceConnected => s_connectionStatus == ConnectionStatus.Connected;
+        private bool IsDeviceConnected => s_connectionStatus == ConnectionStatus.Connected;
 
         public async Task RunSampleAsync(TimeSpan sampleRunningTime)
         {
