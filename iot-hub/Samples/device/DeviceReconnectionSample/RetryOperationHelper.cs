@@ -17,7 +17,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             maxBackoff: TimeSpan.FromSeconds(10),
             deltaBackoff: TimeSpan.FromMilliseconds(100));
 
-        public static async Task RetryTransientExceptionsAsync(Func<Task> asyncOperation, ILogger logger, IDictionary<Type, string> exceptionsToBeIgnored = null, IRetryPolicy retryPolicy = default)
+        public static async Task RetryTransientExceptionsAsync(Func<Task> asyncOperation, Func<bool> isClientConnected, ILogger logger, IDictionary<Type, string> exceptionsToBeIgnored = null, IRetryPolicy retryPolicy = default)
         {
             if (retryPolicy == null)
             {
@@ -25,12 +25,17 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
 
             int counter = 0;
-            bool shouldRetry = false;
-            TimeSpan retryInterval = TimeSpan.Zero;
+            bool shouldRetry;
+            do
             {
+                Exception lastException = new Exception();
                 try
                 {
-                    await asyncOperation().ConfigureAwait(false);
+                    if (isClientConnected())
+                    {
+                        await asyncOperation().ConfigureAwait(false);
+                        break;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -52,13 +57,14 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         throw;
                     }
 
-                    shouldRetry = retryPolicy.ShouldRetry(++counter, ex, out retryInterval);
-                    logger.LogWarning($"Attempt {counter}: request not accepted: {ex}");
+                    lastException = ex;
                 }
 
-                if (shouldRetry && retryInterval != TimeSpan.Zero)
+                shouldRetry = retryPolicy.ShouldRetry(++counter, lastException, out TimeSpan retryInterval);
+
+                if (shouldRetry && retryInterval != default)
                 {
-                    logger.LogInformation($"Will retry operation in {retryInterval}.");
+                    logger.LogInformation($"Will retry operation in {retryInterval}, attempt {counter}.");
                     await Task.Delay(retryInterval).ConfigureAwait(false);
                 }
             }

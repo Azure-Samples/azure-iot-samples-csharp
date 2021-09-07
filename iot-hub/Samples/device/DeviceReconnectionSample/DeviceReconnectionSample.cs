@@ -15,16 +15,15 @@ namespace Microsoft.Azure.Devices.Client.Samples
 {
     public class DeviceReconnectionSample
     {
+        private const int TemperatureThreshold = 30;
         private static readonly TransportType[] _amqpTransports = new[] { TransportType.Amqp, TransportType.Amqp_Tcp_Only, TransportType.Amqp_WebSocket_Only };
         private static readonly Random s_randomGenerator = new Random();
-        private const int TemperatureThreshold = 30;
-
         private static readonly TimeSpan s_sleepDuration = TimeSpan.FromSeconds(5);
 
         private readonly SemaphoreSlim _initSemaphore = new SemaphoreSlim(1, 1);
         private readonly List<string> _deviceConnectionStrings;
         private readonly TransportType _transportType;
-        private readonly ClientOptions _clientOptions = new ClientOptions { SdkAssignsMessageId = Shared.SdkAssignsMessageId.WhenUnset };
+        private readonly ClientOptions _clientOptions = new ClientOptions { SdkAssignsMessageId = SdkAssignsMessageId.WhenUnset };
 
         private readonly ILogger _logger;
 
@@ -53,7 +52,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             _logger.LogInformation($"Using {_transportType} transport.");
         }
 
-        private bool IsDeviceConnected => s_connectionStatus == ConnectionStatus.Connected;
+        internal bool IsDeviceConnected => s_connectionStatus == ConnectionStatus.Connected;
 
         public async Task RunSampleAsync(TimeSpan sampleRunningTime)
         {
@@ -243,17 +242,15 @@ namespace Microsoft.Azure.Devices.Client.Samples
             {
                 if (IsDeviceConnected)
                 {
-                    _logger.LogInformation($"\nDevice sending message {++messageCount} to IoT hub...");
+                    _logger.LogInformation($"Device sending message {++messageCount} to IoT hub...");
 
                     (Message message, string payload) = PrepareMessage(messageCount);
                     await RetryOperationHelper.RetryTransientExceptionsAsync(
                         async () =>
                         {
-                            if (IsDeviceConnected)
-                            {
-                                await s_deviceClient.SendEventAsync(message);
-                            }
+                            await s_deviceClient.SendEventAsync(message);
                         },
+                        () => IsDeviceConnected,
                         _logger);
                     message.Dispose();
                 }
@@ -285,11 +282,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 await RetryOperationHelper.RetryTransientExceptionsAsync(
                         async () =>
                         {
-                            if (IsDeviceConnected)
-                            {
-                                await ReceiveMessageAndCompleteAsync();
-                            }
+                            await ReceiveMessageAndCompleteAsync();
                         },
+                        () => IsDeviceConnected,
                         _logger,
                         new Dictionary<Type, string> { { typeof(DeviceMessageLockLostException), "Attempted to complete a received message whose lock token has expired" } });
             }
