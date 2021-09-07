@@ -112,12 +112,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 try
                 {
                     // Force connection now.
-                    // OpenAsync() is an idempotent call, it has the same effect if called once or multiple times on the same client.
-                    await s_deviceClient.OpenAsync(cancellationToken);
-                    _logger.LogDebug("Opened the client instance.");
-
+                    // Client operations have implicit open enabled.
                     await SubscribeToTwinUpdateNotificationsAsync(cancellationToken);
-                    _logger.LogDebug("Subscribed to desired property update notifications");
+                    _logger.LogDebug("Opened the client connection and subscribed to desired property update notifications");
                 }
                 catch (UnauthorizedException)
                 {
@@ -222,7 +219,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             {
                 var reportedProperties = new TwinCollection();
 
-                _logger.LogInformation($"Twin properties update requested: \n{twinUpdateRequest.ToJson()}");
+                _logger.LogInformation($"Twin property update requested: \n{twinUpdateRequest.ToJson()}");
 
                 // For the purpose of this sample, we'll blindly accept all twin property write requests.
                 foreach (KeyValuePair<string, object> desiredProperty in twinUpdateRequest)
