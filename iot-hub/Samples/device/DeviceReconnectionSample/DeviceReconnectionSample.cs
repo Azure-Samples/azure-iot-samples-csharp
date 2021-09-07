@@ -231,7 +231,13 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     reportedProperties[desiredProperty.Key] = desiredProperty.Value;
                 }
 
-                await s_deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken);
+                await RetryOperationHelper.RetryTransientExceptionsAsync(
+                        async () =>
+                        {
+                            await s_deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken);
+                        },
+                        () => IsDeviceConnected,
+                        _logger);
             }
         }
 
