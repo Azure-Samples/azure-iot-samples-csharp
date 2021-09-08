@@ -17,7 +17,12 @@ namespace Microsoft.Azure.Devices.Client.Samples
             maxBackoff: TimeSpan.FromSeconds(10),
             deltaBackoff: TimeSpan.FromMilliseconds(100));
 
-        public static async Task RetryTransientExceptionsAsync(Func<Task> asyncOperation, Func<bool> isClientConnected, ILogger logger, IDictionary<Type, string> exceptionsToBeIgnored = null, IRetryPolicy retryPolicy = default)
+        public static async Task RetryTransientExceptionsAsync(
+            Func<Task> asyncOperation,
+            Func<bool> isClientConnected,
+            ILogger logger,
+            IDictionary<Type, string> exceptionsToBeIgnored = default,
+            IRetryPolicy retryPolicy = default)
         {
             if (retryPolicy == null)
             {
@@ -62,10 +67,14 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                 shouldRetry = retryPolicy.ShouldRetry(++counter, lastException, out TimeSpan retryInterval);
 
-                if (shouldRetry && retryInterval != default)
+                if (shouldRetry)
                 {
                     logger.LogInformation($"Will retry operation in {retryInterval}, attempt {counter}.");
                     await Task.Delay(retryInterval).ConfigureAwait(false);
+                }
+                else
+                {
+                    logger.LogWarning($"Retry policy determined that the operation should no longer be retried, stopping retries.");
                 }
             }
             while (shouldRetry);
