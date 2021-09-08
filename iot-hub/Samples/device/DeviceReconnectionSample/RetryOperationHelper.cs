@@ -44,12 +44,14 @@ namespace Microsoft.Azure.Devices.Client.Samples
             bool shouldRetry;
             do
             {
-                Exception lastException = new IotHubCommunicationException("Client is currently reconnecting internally, attempt the operation after some time.");
+                Exception lastException = new IotHubCommunicationException("Client is currently reconnecting internally; attempt the operation after some time.");
+
                 try
                 {
                     if (isClientConnected())
                     {
-                        await asyncOperation().ConfigureAwait(false);
+                        await asyncOperation();
+
                         break;
                     }
                 }
@@ -81,7 +83,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 if (shouldRetry)
                 {
                     logger.LogInformation($"Will retry operation in {retryInterval}, attempt {counter}.");
-                    await Task.Delay(retryInterval).ConfigureAwait(false);
+                    await Task.Delay(retryInterval);
+
                 }
                 else
                 {
