@@ -248,7 +248,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 {
                     _logger.LogInformation($"Device sending message {++messageCount} to IoT hub...");
 
-                    (Message message, string payload) = PrepareMessage(messageCount);
+                    using Message message = PrepareMessage(messageCount);
                     await RetryOperationHelper.RetryTransientExceptionsAsync(
                         async () =>
                         {
@@ -256,7 +256,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         },
                         () => IsDeviceConnected,
                         _logger);
-                    message.Dispose();
                 }
 
                 await Task.Delay(s_sleepDuration);
@@ -342,7 +341,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
-        private (Message, string) PrepareMessage(int messageId)
+        private Message PrepareMessage(int messageId)
         {
             var temperature = s_randomGenerator.Next(20, 35);
             var humidity = s_randomGenerator.Next(60, 80);
@@ -356,7 +355,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             };
             eventMessage.Properties.Add("temperatureAlert", (temperature > TemperatureThreshold) ? "true" : "false");
 
-            return (eventMessage, messagePayload);
+            return eventMessage;
         }
 
         // If the client reports Connected status, it is already in operational state.

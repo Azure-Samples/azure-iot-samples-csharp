@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Devices.Client.Samples
 {
+    /// <summary>
+    /// A helper class with methods that aid in retrying operations.
+    /// </summary>
     internal class RetryOperationHelper
     {
         private static readonly IRetryPolicy s_exponentialBackoffRetryStrategy = new ExponentialBackoff(
@@ -17,7 +20,16 @@ namespace Microsoft.Azure.Devices.Client.Samples
             maxBackoff: TimeSpan.FromSeconds(10),
             deltaBackoff: TimeSpan.FromMilliseconds(100));
 
-        public static async Task RetryTransientExceptionsAsync(
+        /// <summary>
+        /// Retry an async operation based on the retry strategy supplied.
+        /// </summary>
+        /// <param name="asyncOperation">The async operation to be retried.</param>
+        /// <param name="isClientConnected">A function that determines if the client is currently connected. Operations are retried only when the client is connected.</param>
+        /// <param name="logger">The <see cref="ILogger"/> instance to be used.</param>
+        /// <param name="exceptionsToBeIgnored">The list of exceptions that can be ignored.</param>
+        /// <param name="retryPolicy">The retry policy to be applied.</param>
+        /// <returns></returns>
+        internal static async Task RetryTransientExceptionsAsync(
             Func<Task> asyncOperation,
             Func<bool> isClientConnected,
             ILogger logger,
