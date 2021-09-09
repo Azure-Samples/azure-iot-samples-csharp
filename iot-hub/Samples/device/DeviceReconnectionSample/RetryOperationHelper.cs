@@ -29,6 +29,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         /// <param name="logger">The <see cref="ILogger"/> instance to be used.</param>
         /// <param name="exceptionsToBeIgnored">The list of exceptions that can be ignored.</param>
         /// <param name="retryPolicy">The retry policy to be applied.</param>
+        /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
         internal static async Task RetryTransientExceptionsAsync(
             Func<Task> asyncOperation,
             Func<bool> isClientConnected,
