@@ -112,9 +112,25 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 try
                 {
                     // Force connection now.
-                    // Client operations have implicit open enabled.
-                    await SubscribeToTwinUpdateNotificationsAsync(cancellationToken);
-                    _logger.LogDebug("Opened the client connection and subscribed to desired property update notifications");
+                    // OpenAsync() is an idempotent call, it has the same effect if called once or multiple times on the same client.
+                    await RetryOperationHelper.RetryTransientExceptionsAsync(
+                        async () =>
+                        {
+                            await s_deviceClient.OpenAsync(cancellationToken);
+                        },
+                        () => true,
+                        _logger);
+                    _logger.LogDebug($"The client instance has been opened.");
+
+                    // You will need to subscribe to the client callbacks any time the client is initialized.
+                    await RetryOperationHelper.RetryTransientExceptionsAsync(
+                        async () =>
+                        {
+                            await s_deviceClient.SetDesiredPropertyUpdateCallbackAsync(HandleTwinUpdateNotificationsAsync, cancellationToken);
+                        },
+                        () => IsDeviceConnected,
+                        _logger);
+                    _logger.LogDebug("The client has subscribed to desired property update notifications.");
                 }
                 catch (UnauthorizedException)
                 {
@@ -197,20 +213,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
-        private async Task SubscribeToTwinUpdateNotificationsAsync(CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                if (IsDeviceConnected)
-                {
-                    await s_deviceClient.SetDesiredPropertyUpdateCallbackAsync(HandleTwinUpdateNotificationsAsync, cancellationToken);
-                    break;
-                }
-
-                await Task.Delay(s_sleepDuration);
-            }
-        }
-
         private async Task HandleTwinUpdateNotificationsAsync(TwinCollection twinUpdateRequest, object userContext)
         {
             CancellationToken cancellationToken = (CancellationToken)userContext;
@@ -231,6 +233,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 await RetryOperationHelper.RetryTransientExceptionsAsync(
                         async () =>
                         {
+                            // For the purpose of this sample, we'll blindly accept all twin property write requests.
                             await s_deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken);
                         },
                         () => IsDeviceConnected,

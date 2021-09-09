@@ -51,7 +51,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     if (isClientConnected())
                     {
                         await asyncOperation();
-
                         break;
                     }
                 }
