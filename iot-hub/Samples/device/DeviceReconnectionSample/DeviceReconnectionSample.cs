@@ -119,7 +119,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             await s_deviceClient.OpenAsync(cancellationToken);
                         },
                         () => true,
-                        _logger);
+                        _logger,
+                        cancellationToken: cancellationToken);
                     _logger.LogDebug($"The client instance has been opened.");
 
                     // You will need to subscribe to the client callbacks any time the client is initialized.
@@ -129,7 +130,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             await s_deviceClient.SetDesiredPropertyUpdateCallbackAsync(HandleTwinUpdateNotificationsAsync, cancellationToken);
                         },
                         () => IsDeviceConnected,
-                        _logger);
+                        _logger,
+                        cancellationToken: cancellationToken);
                     _logger.LogDebug("The client has subscribed to desired property update notifications.");
                 }
                 catch (UnauthorizedException)
@@ -237,7 +239,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             await s_deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken);
                         },
                         () => IsDeviceConnected,
-                        _logger);
+                        _logger,
+                        cancellationToken: cancellationToken);
             }
         }
 
@@ -258,7 +261,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             await s_deviceClient.SendEventAsync(message);
                         },
                         () => IsDeviceConnected,
-                        _logger);
+                        _logger,
+                        cancellationToken: cancellationToken);
                 }
 
                 await Task.Delay(s_sleepDuration);
@@ -292,7 +296,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         },
                         () => IsDeviceConnected,
                         _logger,
-                        new Dictionary<Type, string> { { typeof(DeviceMessageLockLostException), "Attempted to complete a received message whose lock token has expired" } });
+                        new Dictionary<Type, string> { { typeof(DeviceMessageLockLostException), "Attempted to complete a received message whose lock token has expired" } },
+                        cancellationToken: cancellationToken);
             }
         }
 

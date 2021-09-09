@@ -5,6 +5,7 @@ using Microsoft.Azure.Devices.Client.Exceptions;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Devices.Client.Samples
@@ -33,7 +34,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
             Func<bool> isClientConnected,
             ILogger logger,
             IDictionary<Type, string> exceptionsToBeIgnored = default,
-            IRetryPolicy retryPolicy = default)
+            IRetryPolicy retryPolicy = default,
+            CancellationToken cancellationToken = default)
         {
             if (retryPolicy == null)
             {
@@ -90,7 +92,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     logger.LogWarning($"Retry policy determined that the operation should no longer be retried, stopping retries.");
                 }
             }
-            while (shouldRetry);
+            while (shouldRetry && !cancellationToken.IsCancellationRequested);
         }
     }
 }
