@@ -25,14 +25,15 @@ namespace Microsoft.Azure.Devices.Client.Samples
         /// Retry an async operation based on the retry strategy supplied.
         /// </summary>
         /// <param name="asyncOperation">The async operation to be retried.</param>
-        /// <param name="isClientConnected">A function that determines if the client is currently connected. Operations are retried only when the client is connected.</param>
+        /// <param name="shouldExecuteOperation">A function that determines if the operation should be executed.
+        /// Eg.: for scenarios when we want to execute the operation only if the client is connected, this would be a function that returns if the client is currently connected.</param>
         /// <param name="logger">The <see cref="ILogger"/> instance to be used.</param>
         /// <param name="exceptionsToBeIgnored">The list of exceptions that can be ignored.</param>
         /// <param name="retryPolicy">The retry policy to be applied.</param>
         /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
         internal static async Task RetryTransientExceptionsAsync(
             Func<Task> asyncOperation,
-            Func<bool> isClientConnected,
+            Func<bool> shouldExecuteOperation,
             ILogger logger,
             IDictionary<Type, string> exceptionsToBeIgnored = default,
             IRetryPolicy retryPolicy = default,
@@ -51,7 +52,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                 try
                 {
-                    if (isClientConnected())
+                    if (shouldExecuteOperation())
                     {
                         await asyncOperation();
                         break;
