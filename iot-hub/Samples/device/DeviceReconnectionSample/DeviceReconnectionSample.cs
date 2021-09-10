@@ -30,6 +30,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         // Mark these fields as volatile so that their latest values are referenced.
         private static volatile DeviceClient s_deviceClient;
         private static volatile ConnectionStatus s_connectionStatus = ConnectionStatus.Disconnected;
+        private static volatile CancellationTokenSource s_retryOperationCancellationTokenSource;
 
         public DeviceReconnectionSample(List<string> deviceConnectionStrings, TransportType transportType, ILogger logger)
         {
@@ -97,6 +98,13 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             await s_deviceClient.CloseAsync();
                             s_deviceClient.Dispose();
                             s_deviceClient = null;
+
+                            s_retryOperationCancellationTokenSource.Cancel();
+                        }
+
+                        if (s_retryOperationCancellationTokenSource.IsCancellationRequested)
+                        {
+                            s_retryOperationCancellationTokenSource = new CancellationTokenSource();
                         }
 
                         s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionStrings.First(), _transportType, _clientOptions);
@@ -113,7 +121,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                                 },
                                 () => true,
                                 _logger,
-                                cancellationToken: cancellationToken);
+                                cancellationToken: s_retryOperationCancellationTokenSource.Token);
                             _logger.LogDebug($"The client instance has been opened.");
 
                             // You will need to subscribe to the client callbacks any time the client is initialized.
@@ -124,7 +132,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                                 },
                                 () => IsDeviceConnected,
                                 _logger,
-                                cancellationToken: cancellationToken);
+                                cancellationToken: s_retryOperationCancellationTokenSource.Token);
                             _logger.LogDebug("The client has subscribed to desired property update notifications.");
                         }
                         catch (UnauthorizedException)
@@ -239,7 +247,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         },
                         () => IsDeviceConnected,
                         _logger,
-                        cancellationToken: cancellationToken);
+                        cancellationToken: s_retryOperationCancellationTokenSource.Token);
             }
         }
 
@@ -261,7 +269,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         },
                         () => IsDeviceConnected,
                         _logger,
-                        cancellationToken: cancellationToken);
+                        cancellationToken: s_retryOperationCancellationTokenSource.Token);
                 }
 
                 await Task.Delay(s_sleepDuration);
@@ -296,7 +304,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         () => IsDeviceConnected,
                         _logger,
                         new Dictionary<Type, string> { { typeof(DeviceMessageLockLostException), "Attempted to complete a received message whose lock token has expired" } },
-                        cancellationToken: cancellationToken);
+                        cancellationToken: s_retryOperationCancellationTokenSource.Token);
             }
         }
 
