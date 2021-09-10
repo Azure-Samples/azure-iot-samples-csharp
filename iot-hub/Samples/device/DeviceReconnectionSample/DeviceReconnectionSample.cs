@@ -98,45 +98,44 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             s_deviceClient.Dispose();
                             s_deviceClient = null;
                         }
-                    }
 
-                    s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionStrings.First(), _transportType, _clientOptions);
-                    s_deviceClient.SetConnectionStatusChangesHandler(ConnectionStatusChangeHandler);
-                    _logger.LogDebug("Initialized the client instance.");
+                        s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionStrings.First(), _transportType, _clientOptions);
+                        s_deviceClient.SetConnectionStatusChangesHandler(ConnectionStatusChangeHandler);
+                        _logger.LogDebug("Initialized the client instance.");
+
+                        try
+                        {
+                            // Force connection now.
+                            await RetryOperationHelper.RetryTransientExceptionsAsync(
+                                async () =>
+                                {
+                                    await s_deviceClient.OpenAsync(cancellationToken);
+                                },
+                                () => true,
+                                _logger,
+                                cancellationToken: cancellationToken);
+                            _logger.LogDebug($"The client instance has been opened.");
+
+                            // You will need to subscribe to the client callbacks any time the client is initialized.
+                            await RetryOperationHelper.RetryTransientExceptionsAsync(
+                                async () =>
+                                {
+                                    await s_deviceClient.SetDesiredPropertyUpdateCallbackAsync(HandleTwinUpdateNotificationsAsync, cancellationToken);
+                                },
+                                () => IsDeviceConnected,
+                                _logger,
+                                cancellationToken: cancellationToken);
+                            _logger.LogDebug("The client has subscribed to desired property update notifications.");
+                        }
+                        catch (UnauthorizedException)
+                        {
+                            // Handled by the ConnectionStatusChangeHandler
+                        }
+                    }
                 }
                 finally
                 {
                     _initSemaphore.Release();
-                }
-
-                try
-                {
-                    // Force connection now.
-                    // OpenAsync() is an idempotent call, it has the same effect if called once or multiple times on the same client.
-                    await RetryOperationHelper.RetryTransientExceptionsAsync(
-                        async () =>
-                        {
-                            await s_deviceClient.OpenAsync(cancellationToken);
-                        },
-                        () => true,
-                        _logger,
-                        cancellationToken: cancellationToken);
-                    _logger.LogDebug($"The client instance has been opened.");
-
-                    // You will need to subscribe to the client callbacks any time the client is initialized.
-                    await RetryOperationHelper.RetryTransientExceptionsAsync(
-                        async () =>
-                        {
-                            await s_deviceClient.SetDesiredPropertyUpdateCallbackAsync(HandleTwinUpdateNotificationsAsync, cancellationToken);
-                        },
-                        () => IsDeviceConnected,
-                        _logger,
-                        cancellationToken: cancellationToken);
-                    _logger.LogDebug("The client has subscribed to desired property update notifications.");
-                }
-                catch (UnauthorizedException)
-                {
-                    // Handled by the ConnectionStatusChangeHandler
                 }
             }
         }
