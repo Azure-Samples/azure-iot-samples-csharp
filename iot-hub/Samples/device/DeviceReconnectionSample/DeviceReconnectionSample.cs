@@ -108,12 +108,14 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         try
                         {
                             // Force connection now.
+                            // We have set the "shouldExecuteOperation" function to always try to open the connection.
+                            // OpenAsync() is an idempotent call, it has the same effect if called once or multiple times on the same client.
                             await RetryOperationHelper.RetryTransientExceptionsAsync(
                                 async () =>
                                 {
                                     await s_deviceClient.OpenAsync(cancellationToken);
                                 },
-                                () => !IsDeviceConnected,
+                                () => true,
                                 _logger,
                                 cancellationToken: cancellationToken);
                             _logger.LogDebug($"The client instance has been opened.");
