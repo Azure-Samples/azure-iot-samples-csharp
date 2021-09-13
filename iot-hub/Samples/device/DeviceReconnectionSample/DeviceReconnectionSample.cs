@@ -30,6 +30,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         // Mark these fields as volatile so that their latest values are referenced.
         private static volatile DeviceClient s_deviceClient;
         private static volatile ConnectionStatus s_connectionStatus = ConnectionStatus.Disconnected;
+        private static volatile CancellationTokenSource s_cancellationTokenSource;
 
         public DeviceReconnectionSample(List<string> deviceConnectionStrings, TransportType transportType, ILogger logger)
         {
@@ -56,11 +57,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         public async Task RunSampleAsync(TimeSpan sampleRunningTime)
         {
-            using var cts = new CancellationTokenSource(sampleRunningTime);
+            s_cancellationTokenSource = new CancellationTokenSource(sampleRunningTime);
             Console.CancelKeyPress += (sender, eventArgs) =>
             {
                 eventArgs.Cancel = true;
-                cts.Cancel();
+                s_cancellationTokenSource.Cancel();
                 _logger.LogInformation("Sample execution cancellation requested; will exit.");
             };
 
@@ -68,8 +69,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
             try
             {
-                await InitializeAndSetupClientAsync(cts.Token);
-                await Task.WhenAll(SendMessagesAsync(cts.Token), ReceiveMessagesAsync(cts.Token));
+                await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
+                await Task.WhenAll(SendMessagesAsync(s_cancellationTokenSource.Token), ReceiveMessagesAsync(s_cancellationTokenSource.Token));
             }
             catch (Exception ex)
             {
@@ -77,9 +78,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
 
             _initSemaphore.Dispose();
+            s_cancellationTokenSource.Dispose();
         }
 
-        private async Task InitializeAndSetupClientAsync(CancellationToken cancellationToken = default)
+        private async Task InitializeAndSetupClientAsync(CancellationToken cancellationToken)
         {
             if (ShouldClientBeInitialized(s_connectionStatus))
             {
@@ -174,7 +176,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             if (_deviceConnectionStrings.Any())
                             {
                                 _logger.LogWarning($"The current connection string is invalid. Trying another.");
-                                await InitializeAndSetupClientAsync();
+                                await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
                                 break;
                             }
 
@@ -190,14 +192,14 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             _logger.LogWarning("### The DeviceClient has been disconnected because the retry policy expired." +
                                 "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
 
-                            await InitializeAndSetupClientAsync();
+                            await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
                             break;
 
                         case ConnectionStatusChangeReason.Communication_Error:
                             _logger.LogWarning("### The DeviceClient has been disconnected due to a non-retry-able exception. Inspect the exception for details." +
                                 "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
 
-                            await InitializeAndSetupClientAsync();
+                            await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
                             break;
 
                         default:
@@ -296,7 +298,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         () => IsDeviceConnected,
                         _logger,
                         new Dictionary<Type, string> { { typeof(DeviceMessageLockLostException), "Attempted to complete a received message whose lock token has expired" } },
-                        cancellationToken: cancellationToken);
+                        cancellationToken);
             }
         }
 
