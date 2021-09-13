@@ -75,6 +75,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             catch (Exception ex)
             {
                 _logger.LogError($"Unrecoverable exception caught, user action is required, so exiting...: \n{ex}");
+                s_cancellationTokenSource.Cancel();
             }
 
             _initSemaphore.Dispose();
