@@ -113,7 +113,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                                 {
                                     await s_deviceClient.OpenAsync(cancellationToken);
                                 },
-                                () => true,
+                                () => !IsDeviceConnected,
                                 _logger,
                                 cancellationToken: cancellationToken);
                             _logger.LogDebug($"The client instance has been opened.");
