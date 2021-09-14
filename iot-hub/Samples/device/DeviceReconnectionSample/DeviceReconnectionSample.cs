@@ -255,7 +255,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                     using Message message = PrepareMessage(messageCount);
                     await RetryOperationHelper.RetryTransientExceptionsAsync(
-                        "SendD2CMessage",
+                        $"SendD2CMessage_{messageCount}",
                         async () => await s_deviceClient.SendEventAsync(message),
                         () => IsDeviceConnected,
                         _logger,
