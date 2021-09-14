@@ -110,34 +110,34 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionStrings.First(), _transportType, _clientOptions);
                         s_deviceClient.SetConnectionStatusChangesHandler(ConnectionStatusChangeHandler);
                         _logger.LogDebug("Initialized the client instance.");
-
-                        // Force connection now.
-                        // We have set the "shouldExecuteOperation" function to always try to open the connection.
-                        // OpenAsync() is an idempotent call, it has the same effect if called once or multiple times on the same client.
-                        await RetryOperationHelper.RetryTransientExceptionsAsync(
-                            operationName: "OpenConnection",
-                            asyncOperation: async () => await s_deviceClient.OpenAsync(cancellationToken),
-                            shouldExecuteOperation: () => true,
-                            logger: _logger,
-                            exceptionsToBeIgnored: _exceptionsToBeIgnored,
-                            cancellationToken: cancellationToken);
-                        _logger.LogDebug($"The client instance has been opened.");
-
-                        // You will need to subscribe to the client callbacks any time the client is initialized.
-                        await RetryOperationHelper.RetryTransientExceptionsAsync(
-                            operationName: "SubscribeTwinUpdates",
-                            asyncOperation: async () => await s_deviceClient.SetDesiredPropertyUpdateCallbackAsync(HandleTwinUpdateNotificationsAsync, cancellationToken),
-                            shouldExecuteOperation: () => IsDeviceConnected,
-                            logger: _logger,
-                            exceptionsToBeIgnored: _exceptionsToBeIgnored,
-                            cancellationToken: cancellationToken);
-                        _logger.LogDebug("The client has subscribed to desired property update notifications.");
                     }
                 }
                 finally
                 {
                     _initSemaphore.Release();
                 }
+
+                // Force connection now.
+                // We have set the "shouldExecuteOperation" function to always try to open the connection.
+                // OpenAsync() is an idempotent call, it has the same effect if called once or multiple times on the same client.
+                await RetryOperationHelper.RetryTransientExceptionsAsync(
+                    operationName: "OpenConnection",
+                    asyncOperation: async () => await s_deviceClient.OpenAsync(cancellationToken),
+                    shouldExecuteOperation: () => true,
+                    logger: _logger,
+                    exceptionsToBeIgnored: _exceptionsToBeIgnored,
+                    cancellationToken: cancellationToken);
+                _logger.LogDebug($"The client instance has been opened.");
+
+                // You will need to subscribe to the client callbacks any time the client is initialized.
+                await RetryOperationHelper.RetryTransientExceptionsAsync(
+                    operationName: "SubscribeTwinUpdates",
+                    asyncOperation: async () => await s_deviceClient.SetDesiredPropertyUpdateCallbackAsync(HandleTwinUpdateNotificationsAsync, cancellationToken),
+                    shouldExecuteOperation: () => IsDeviceConnected,
+                    logger: _logger,
+                    exceptionsToBeIgnored: _exceptionsToBeIgnored,
+                    cancellationToken: cancellationToken);
+                _logger.LogDebug("The client has subscribed to desired property update notifications.");
             }
         }
 
