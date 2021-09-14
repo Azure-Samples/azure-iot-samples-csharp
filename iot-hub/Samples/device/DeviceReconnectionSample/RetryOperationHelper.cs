@@ -48,13 +48,14 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 }
                 catch (Exception ex)
                 {
+                    logger.LogWarning($"Encountered an exception while processing the request: {ex}");
                     lastException = ex;
                 }
 
                 shouldRetry = retryPolicy.ShouldRetry(++counter, lastException, out TimeSpan retryInterval);
                 if (shouldRetry)
                 {
-                    logger.LogInformation($"A transient recoverable exception was caught, will retry operation in {retryInterval}, attempt {counter}.");
+                    logger.LogInformation($"A recoverable exception was caught, will retry operation in {retryInterval}, attempt {counter}.");
                     await Task.Delay(retryInterval);
 
                 }
