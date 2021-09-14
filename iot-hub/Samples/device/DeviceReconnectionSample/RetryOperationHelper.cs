@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 {
                     if (shouldExecuteOperation())
                     {
-                        logger.LogInformation(FormatRetryOperationLogMessage(operationName, attempt, "executing"));
+                        logger.LogInformation(FormatRetryOperationLogMessage(operationName, attempt, "executing."));
 
                         await asyncOperation();
                         break;
