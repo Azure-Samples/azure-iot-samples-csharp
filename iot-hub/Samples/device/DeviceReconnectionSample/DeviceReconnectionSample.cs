@@ -283,11 +283,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     $"\nUse the IoT Hub Azure Portal or Azure IoT Explorer to send a message to this device.");
 
                 await RetryOperationHelper.RetryTransientExceptionsAsync(
-                        async () => await ReceiveMessageAndCompleteAsync(),
-                        () => IsDeviceConnected,
-                        _logger,
-                        new Dictionary<Type, string> { { typeof(DeviceMessageLockLostException), "Attempted to complete a received message whose lock token has expired" } },
-                        cancellationToken);
+                    async () => await ReceiveMessageAndCompleteAsync(),
+                    () => IsDeviceConnected,
+                    _logger,
+                    new Dictionary<Type, string> { { typeof(DeviceMessageLockLostException), "Attempted to complete a received message whose lock token has expired" } },
+                    cancellationToken);
             }
         }
 
