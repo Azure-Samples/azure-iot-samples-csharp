@@ -76,7 +76,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Unrecoverable exception caught, user action is required, so exiting...: \n{ex}");
+                _logger.LogError($"Unrecoverable exception caught, user action is required, so exiting: \n{ex}");
                 cts.Cancel();
             }
 
@@ -113,6 +113,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             // We have set the "shouldExecuteOperation" function to always try to open the connection.
                             // OpenAsync() is an idempotent call, it has the same effect if called once or multiple times on the same client.
                             await RetryOperationHelper.RetryTransientExceptionsAsync(
+                                "OpenConnection",
                                 async () => await s_deviceClient.OpenAsync(cancellationToken),
                                 () => true,
                                 _logger,
@@ -121,6 +122,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                             // You will need to subscribe to the client callbacks any time the client is initialized.
                             await RetryOperationHelper.RetryTransientExceptionsAsync(
+                                "SubscribeTwinUpdates",
                                 async () => await s_deviceClient.SetDesiredPropertyUpdateCallbackAsync(HandleTwinUpdateNotificationsAsync, cancellationToken),
                                 () => IsDeviceConnected,
                                 _logger,
@@ -146,7 +148,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         // before attempting to initialize or dispose the device client instance.
         private async void ConnectionStatusChangeHandler(ConnectionStatus status, ConnectionStatusChangeReason reason)
         {
-            _logger.LogInformation($"Connection status changed: status={status}, reason={reason}");
+            _logger.LogDebug($"Connection status changed: status={status}, reason={reason}");
             s_connectionStatus = status;
 
             switch (status)
@@ -233,6 +235,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                 // For the purpose of this sample, we'll blindly accept all twin property write requests.
                 await RetryOperationHelper.RetryTransientExceptionsAsync(
+                    "UpdateReportedProperties",
                     async () => await s_deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken),
                     () => IsDeviceConnected,
                     _logger,
@@ -248,14 +251,17 @@ namespace Microsoft.Azure.Devices.Client.Samples
             {
                 if (IsDeviceConnected)
                 {
-                    _logger.LogInformation($"Device sending message {++messageCount} to IoT hub...");
+                    _logger.LogInformation($"Device sending message {++messageCount} to IoT hub.");
 
                     using Message message = PrepareMessage(messageCount);
                     await RetryOperationHelper.RetryTransientExceptionsAsync(
+                        "SendD2CMessage",
                         async () => await s_deviceClient.SendEventAsync(message),
                         () => IsDeviceConnected,
                         _logger,
                         cancellationToken: cancellationToken);
+
+                    _logger.LogInformation($"Device sent message {messageCount} to IoT hub.");
                 }
 
                 await Task.Delay(s_sleepDuration);
@@ -283,6 +289,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     $"\nUse the IoT Hub Azure Portal or Azure IoT Explorer to send a message to this device.");
 
                 await RetryOperationHelper.RetryTransientExceptionsAsync(
+                    "ReceiveAndCompleteC2DMessage",
                     async () => await ReceiveMessageAndCompleteAsync(),
                     () => IsDeviceConnected,
                     _logger,
