@@ -30,7 +30,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
         // Mark these fields as volatile so that their latest values are referenced.
         private static volatile DeviceClient s_deviceClient;
         private static volatile ConnectionStatus s_connectionStatus = ConnectionStatus.Disconnected;
-        private static volatile CancellationTokenSource s_cancellationTokenSource;
+
+        private static CancellationToken _cancellationToken;
 
         public DeviceReconnectionSample(List<string> deviceConnectionStrings, TransportType transportType, ILogger logger)
         {
@@ -57,29 +58,29 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         public async Task RunSampleAsync(TimeSpan sampleRunningTime)
         {
-            s_cancellationTokenSource = new CancellationTokenSource(sampleRunningTime);
+            using var cts = new CancellationTokenSource(sampleRunningTime);
             Console.CancelKeyPress += (sender, eventArgs) =>
             {
                 eventArgs.Cancel = true;
-                s_cancellationTokenSource.Cancel();
+                cts.Cancel();
                 _logger.LogInformation("Sample execution cancellation requested; will exit.");
             };
+            _cancellationToken = cts.Token;
 
             _logger.LogInformation($"Sample execution started, press Control+C to quit the sample.");
 
             try
             {
-                await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
-                await Task.WhenAll(SendMessagesAsync(s_cancellationTokenSource.Token), ReceiveMessagesAsync(s_cancellationTokenSource.Token));
+                await InitializeAndSetupClientAsync(_cancellationToken);
+                await Task.WhenAll(SendMessagesAsync(_cancellationToken), ReceiveMessagesAsync(_cancellationToken));
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Unrecoverable exception caught, user action is required, so exiting...: \n{ex}");
-                s_cancellationTokenSource.Cancel();
+                cts.Cancel();
             }
 
             _initSemaphore.Dispose();
-            s_cancellationTokenSource.Dispose();
         }
 
         private async Task InitializeAndSetupClientAsync(CancellationToken cancellationToken)
@@ -112,10 +113,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             // We have set the "shouldExecuteOperation" function to always try to open the connection.
                             // OpenAsync() is an idempotent call, it has the same effect if called once or multiple times on the same client.
                             await RetryOperationHelper.RetryTransientExceptionsAsync(
-                                async () =>
-                                {
-                                    await s_deviceClient.OpenAsync(cancellationToken);
-                                },
+                                async () => await s_deviceClient.OpenAsync(cancellationToken),
                                 () => true,
                                 _logger,
                                 cancellationToken: cancellationToken);
@@ -123,10 +121,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                             // You will need to subscribe to the client callbacks any time the client is initialized.
                             await RetryOperationHelper.RetryTransientExceptionsAsync(
-                                async () =>
-                                {
-                                    await s_deviceClient.SetDesiredPropertyUpdateCallbackAsync(HandleTwinUpdateNotificationsAsync, cancellationToken);
-                                },
+                                async () => await s_deviceClient.SetDesiredPropertyUpdateCallbackAsync(HandleTwinUpdateNotificationsAsync, cancellationToken),
                                 () => IsDeviceConnected,
                                 _logger,
                                 cancellationToken: cancellationToken);
@@ -179,7 +174,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             if (_deviceConnectionStrings.Any())
                             {
                                 _logger.LogWarning($"The current connection string is invalid. Trying another.");
-                                await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
+                                await InitializeAndSetupClientAsync(_cancellationToken);
                                 break;
                             }
 
@@ -195,14 +190,14 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             _logger.LogWarning("### The DeviceClient has been disconnected because the retry policy expired." +
                                 "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
 
-                            await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
+                            await InitializeAndSetupClientAsync(_cancellationToken);
                             break;
 
                         case ConnectionStatusChangeReason.Communication_Error:
                             _logger.LogWarning("### The DeviceClient has been disconnected due to a non-retry-able exception. Inspect the exception for details." +
                                 "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
 
-                            await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
+                            await InitializeAndSetupClientAsync(_cancellationToken);
                             break;
 
                         default:
@@ -236,15 +231,12 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     reportedProperties[desiredProperty.Key] = desiredProperty.Value;
                 }
 
+                // For the purpose of this sample, we'll blindly accept all twin property write requests.
                 await RetryOperationHelper.RetryTransientExceptionsAsync(
-                        async () =>
-                        {
-                            // For the purpose of this sample, we'll blindly accept all twin property write requests.
-                            await s_deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken);
-                        },
-                        () => IsDeviceConnected,
-                        _logger,
-                        cancellationToken: cancellationToken);
+                    async () => await s_deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken),
+                    () => IsDeviceConnected,
+                    _logger,
+                    cancellationToken: cancellationToken);
             }
         }
 
@@ -260,10 +252,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                     using Message message = PrepareMessage(messageCount);
                     await RetryOperationHelper.RetryTransientExceptionsAsync(
-                        async () =>
-                        {
-                            await s_deviceClient.SendEventAsync(message);
-                        },
+                        async () => await s_deviceClient.SendEventAsync(message),
                         () => IsDeviceConnected,
                         _logger,
                         cancellationToken: cancellationToken);
@@ -294,10 +283,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     $"\nUse the IoT Hub Azure Portal or Azure IoT Explorer to send a message to this device.");
 
                 await RetryOperationHelper.RetryTransientExceptionsAsync(
-                        async () =>
-                        {
-                            await ReceiveMessageAndCompleteAsync();
-                        },
+                        async () => await ReceiveMessageAndCompleteAsync(),
                         () => IsDeviceConnected,
                         _logger,
                         new Dictionary<Type, string> { { typeof(DeviceMessageLockLostException), "Attempted to complete a received message whose lock token has expired" } },
