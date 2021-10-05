@@ -128,19 +128,20 @@ $endpointType = "servicebusqueue"
 $routeName = "ContosoSBQueueRoute"
 $condition = 'level="critical"'
 
-#
 # If you experience problems while running this command,
 #   it might be because it didn't have time to finish before
 #   running the next line. To fix this, include this pause for 90 
 #   seconds before continuing. This gives it enough time to finish.
-# This will pause for 90 seconds and then start again. 
+
 # The IoT Hub team could change this to make the prior command
-#   loops and checks to see if it's finished before it continues (like the create-iot-hub cmdlet does), 
+#   loop and check to see if it's finished before it continues (like the create-iot-hub cmdlet does), 
 #    but in case they don't fix it, putting the Start-Sleep command in here makes sure it works. 
    Start-Sleep -Seconds 90
+
 # This command is the one that sometimes doesn't work. It's as if it doesn't have time to
 #   finish before it moves to the next line.
 # The error from Add-AzIotHubRoutingEndpoint is "Operation returned an invalid status code 'BadRequest'".
+
 # This command adds the routing endpoint, using the connection string property from the key. 
 # This will definitely work if you do the Sleep command first.
 Add-AzIotHubRoutingEndpoint `
