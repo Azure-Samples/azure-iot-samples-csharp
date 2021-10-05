@@ -128,24 +128,16 @@ $endpointType = "servicebusqueue"
 $routeName = "ContosoSBQueueRoute"
 $condition = 'level="critical"'
 
-# if this script fails on the next statement (Add-AzIotHubRoutingEndpoint),
-# put the pause in and run it again. Note that if you're running it
-# interactively, you can just stop it and then run the rest, because
-# you have already set the variables before you get to this point.
 #
-# Pause for 90 seconds to allow previous steps to complete.
-# You can report it to the IoT team here: 
-# https://github.com/Azure/azure-powershell/issues.
-# This will pause for 90 seconds and then start again. 
 # If you experience problems while running this command,
 #   it might be because it didn't have time to finish before
 #   running the next line. To fix this, include this pause for 90 
 #   seconds before continuing. This gives it enough time to finish.
-# The IoT Hub team could change this to make sure the prior command
+# This will pause for 90 seconds and then start again. 
+# The IoT Hub team could change this to make the prior command
 #   loops and checks to see if it's finished before it continues (like the create-iot-hub cmdlet does), 
 #    but in case they don't fix it, putting the Start-Sleep command in here makes sure it works. 
    Start-Sleep -Seconds 90
-#
 # This command is the one that sometimes doesn't work. It's as if it doesn't have time to
 #   finish before it moves to the next line.
 # The error from Add-AzIotHubRoutingEndpoint is "Operation returned an invalid status code 'BadRequest'".
