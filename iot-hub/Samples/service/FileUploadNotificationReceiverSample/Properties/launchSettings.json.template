@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "FileUploadNotificationReceiverSample": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "IOTHUB_CONNECTION_STRING": "<yourIoTHubConnectionString>"
+      }
+    }
+  }
+}

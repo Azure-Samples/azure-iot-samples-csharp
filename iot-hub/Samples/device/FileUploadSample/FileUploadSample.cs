@@ -7,6 +7,7 @@ using Microsoft.Azure.Devices.Client.Transport;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Devices.Client.Samples
@@ -22,15 +23,62 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         public async Task RunSampleAsync()
         {
-            const string filePath = "TestPayload.txt";
+            int index = 0;
+            while (true)
+            {
+                string filePath = $"TestPayload{index}.txt";
+                createFile(filePath);
+                await RunSampleAsync(filePath);
+                deleteFile(filePath);
+                index++;
+                await Task.Delay(1000);
+            }
+        }
 
+        public static void deleteFile(string fileName)
+        {
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
+        }
+
+        public static void createFile(string fileName)
+        {
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
+
+            using (FileStream fs = File.Create(fileName))
+            {
+                // Add some text to file    
+                Byte[] title = new UTF8Encoding(true).GetBytes("New Text File");
+                fs.Write(title, 0, title.Length);
+                byte[] author = new UTF8Encoding(true).GetBytes("Mahesh Chand");
+                fs.Write(author, 0, author.Length);
+            }
+
+            // Open the stream and read it back.    
+            using (StreamReader sr = File.OpenText(fileName))
+            {
+                string s = "";
+                while ((s = sr.ReadLine()) != null)
+                {
+                    Console.WriteLine(s);
+                }
+            }
+        }
+
+        public async Task RunSampleAsync(string filePath)
+        {
             using var fileStreamSource = new FileStream(filePath, FileMode.Open);
             var fileName = Path.GetFileName(fileStreamSource.Name);
 
             Console.WriteLine($"Uploading file {fileName}");
 
             var fileUploadTime = Stopwatch.StartNew();
-            
+
             var fileUploadSasUriRequest = new FileUploadSasUriRequest
             {
                 BlobName = fileName
