@@ -4,6 +4,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Azure.Devices.Common.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Devices.Samples
@@ -47,8 +48,12 @@ namespace Microsoft.Azure.Devices.Samples
         private async Task ReceiveFileUploadNotifications(CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Listening for file upload notifications from the service.");
+
             FileNotificationReceiver<FileNotification> notificationReceiver = _serviceClient.GetFileNotificationReceiver();
+
             int totalNotificationsReceived = 0;
+            int totalNotificationsCompleted = 0;
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
@@ -73,16 +78,26 @@ namespace Microsoft.Azure.Devices.Samples
 
                     await notificationReceiver.CompleteAsync(fileUploadNotification);
 
+                    totalNotificationsCompleted++;
+
                     _logger.LogInformation($"Successfully marked the notification for device {fileUploadNotification.DeviceId} as completed.");
                 }
-                catch (Exception e)
+                catch (Exception e) when ((e is IotHubException) || (e is DeviceMessageLockLostException))
                 {
-                    _logger.LogInformation($"Caught an exception: {e.Message} - {e}");
+                    _logger.LogWarning($"Caught a recoverable exception, will retry: {e.Message} - {e}");
+                }
+                catch (Exception)
+                {
+                    // An exception was caught that was not recoverable, the exception will be thrown to be handled by the caller of the method.
+                    throw;
                 }
             }
 
             _logger.LogInformation($"Total Notifications Received: {totalNotificationsReceived}.");
+            _logger.LogInformation($"Total Notifications Marked as Completed: {totalNotificationsCompleted}.");
+
             _logger.LogInformation($"Closing the service client.");
+
             await _serviceClient.CloseAsync();
         }
 
