@@ -92,11 +92,6 @@ namespace Microsoft.Azure.Devices.Samples
                 {
                     _logger.LogWarning($"Caught a recoverable exception, will retry: {e.Message} - {e}");
                 }
-                catch (Exception)
-                {
-                    // An exception was caught that was not recoverable, the exception will be thrown to be handled by the caller of the method.
-                    throw;
-                }
             }
 
             _logger.LogInformation($"Total Notifications Received: {totalNotificationsReceived}.");
