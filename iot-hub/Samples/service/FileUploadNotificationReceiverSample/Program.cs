@@ -51,7 +51,7 @@ namespace Microsoft.Azure.Devices.Samples
                 : Timeout.InfiniteTimeSpan;
 
             var sample = new FileUploadNotificationReceiverSample(parameters.IoTHubConnectionString, parameters.TransportType, logger);
-            await sample.RunSampleAsync(runningTime);
+            await sample.RunSampleAsync(parameters.DeviceId, runningTime);
 
             Console.WriteLine("Done.");
             return 0;
