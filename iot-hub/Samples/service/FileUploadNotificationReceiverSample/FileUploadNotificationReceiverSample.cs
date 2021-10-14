@@ -29,7 +29,12 @@ namespace Microsoft.Azure.Devices.Samples
             _logger = logger;
         }
 
-        public async Task RunSampleAsync(TimeSpan runningTime)
+        /// <summary>
+        /// Listens on file upload notifications on the IoT Hub.
+        /// </summary>
+        /// <param name="targetDeviceId">Device Id used to filter which notifications to complete. Use null to complete all notifications.</param>
+        /// <param name="runningTime">Amount of time the method will listen for notifications.</param>
+        public async Task RunSampleAsync(string targetDeviceId, TimeSpan runningTime)
         {
             using var cts = new CancellationTokenSource(runningTime);
             Console.CancelKeyPress += (sender, eventArgs) =>
@@ -42,22 +47,33 @@ namespace Microsoft.Azure.Devices.Samples
             try
             {
                 await InitializeServiceClientAsync();
-                await ReceiveFileUploadNotifications(cts.Token);
+                await ReceiveFileUploadNotifications(targetDeviceId, cts.Token);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Unrecoverable exception caught, user action is required, exiting...: \n{ex}");
             }
+            finally
+            {
+                _logger.LogInformation($"Closing the service client.");
+                await _serviceClient.CloseAsync();
+            }
         }
 
-        private async Task ReceiveFileUploadNotifications(CancellationToken cancellationToken)
+        private async Task ReceiveFileUploadNotifications(string targetDeviceId, CancellationToken cancellationToken)
         {
+            if (!string.IsNullOrWhiteSpace(targetDeviceId))
+            {
+                _logger.LogInformation($"Target device is specified, will only complete matching notifications.");
+            }
+
             _logger.LogInformation($"Listening for file upload notifications from the service.");
 
             FileNotificationReceiver<FileNotification> notificationReceiver = _serviceClient.GetFileNotificationReceiver();
 
             int totalNotificationsReceived = 0;
             int totalNotificationsCompleted = 0;
+            int totalNotificationsAbandoned = 0;
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -79,14 +95,27 @@ namespace Microsoft.Azure.Devices.Samples
                     _logger.LogInformation($"\tEnqueueTimeUTC: {fileUploadNotification.EnqueuedTimeUtc}.");
                     _logger.LogInformation($"\tBlobSizeInBytes: {fileUploadNotification.BlobSizeInBytes}.");
 
-                    _logger.LogInformation($"Marking notification for {fileUploadNotification.DeviceId} as complete.");
+                    // If the targetDeviceId is set and does not match the notification's origin, ignore it by abandoning the notification.
+                    if (!string.IsNullOrWhiteSpace(targetDeviceId)
+                        && !string.Equals(fileUploadNotification.DeviceId, targetDeviceId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogInformation($"Marking notification for {fileUploadNotification.DeviceId} as Abandoned.");
 
-                    // Mark the notification as completed.
-                    await notificationReceiver.CompleteAsync(fileUploadNotification);
+                        await notificationReceiver.AbandonAsync(fileUploadNotification);
 
-                    totalNotificationsCompleted++;
+                        _logger.LogInformation($"Successfully marked the notification for device {fileUploadNotification.DeviceId} as Abandoned.");
+                        totalNotificationsAbandoned++;
+                    }
+                    else
+                    {
+                        _logger.LogInformation($"Marking notification for {fileUploadNotification.DeviceId} as Completed.");
 
-                    _logger.LogInformation($"Successfully marked the notification for device {fileUploadNotification.DeviceId} as completed.");
+                        await notificationReceiver.CompleteAsync(fileUploadNotification);
+
+                        _logger.LogInformation($"Successfully marked the notification for device {fileUploadNotification.DeviceId} as Completed.");
+                        totalNotificationsCompleted++;
+                    }
+
                 }
                 catch (Exception e) when ((e is IotHubException) || (e is DeviceMessageLockLostException))
                 {
@@ -96,10 +125,7 @@ namespace Microsoft.Azure.Devices.Samples
 
             _logger.LogInformation($"Total Notifications Received: {totalNotificationsReceived}.");
             _logger.LogInformation($"Total Notifications Marked as Completed: {totalNotificationsCompleted}.");
-
-            _logger.LogInformation($"Closing the service client.");
-
-            await _serviceClient.CloseAsync();
+            _logger.LogInformation($"Total Notifications Marked as Abandoned: {totalNotificationsAbandoned}.");
         }
 
         private async Task InitializeServiceClientAsync()

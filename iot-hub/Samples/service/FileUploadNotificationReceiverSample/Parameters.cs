@@ -31,5 +31,12 @@ namespace Microsoft.Azure.Devices.Samples
             Required = false,
             HelpText = "The running time for this console application. Leave it unassigned to run the application until it is explicitly canceled using Control+C.")]
         public double? ApplicationRunningTime { get; set; }
+
+        [Option(
+            'd',
+            "Device Id",
+            Required = false,
+            HelpText = "The sample will only complete incoming notifications when the Device Id matches the origin of the notification. Do not set to complete all incoming notifications.")]
+        public string DeviceId { get; set; }
     }
 }
