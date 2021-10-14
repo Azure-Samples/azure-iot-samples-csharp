@@ -9,6 +9,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Devices.Samples
 {
+    /// <summary>
+    /// This sample connects to the IoT hub using a connection string and listens on file upload notifications.
+    /// After inspecting the notification, the sample will mark it as completed.
+    /// The sample will run indefinitely unless specified otherwise using the -r parameter or interrupted by Ctrl+C.
+    /// </summary>
     public class FileUploadNotificationReceiverSample
     {
         private readonly string _iotHubConnectionString;
@@ -76,6 +81,7 @@ namespace Microsoft.Azure.Devices.Samples
 
                     _logger.LogInformation($"Marking notification for {fileUploadNotification.DeviceId} as complete.");
 
+                    // Mark the notification as completed.
                     await notificationReceiver.CompleteAsync(fileUploadNotification);
 
                     totalNotificationsCompleted++;
