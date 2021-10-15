@@ -96,6 +96,9 @@ namespace Microsoft.Azure.Devices.Samples
                     _logger.LogInformation($"\tBlobSizeInBytes: {fileUploadNotification.BlobSizeInBytes}.");
 
                     // If the targetDeviceId is set and does not match the notification's origin, ignore it by abandoning the notification.
+                    // Completing a notification will remove that notification from the service's queue so it won't be delivered to any other receiver again.
+                    // Abandoning a notification will put it back on the queue to be re-delivered to receivers. This is mostly used when multiple receivers
+                    // are configured and each receiver is only interested in notifications from a particular device/s.
                     if (!string.IsNullOrWhiteSpace(targetDeviceId)
                         && !string.Equals(fileUploadNotification.DeviceId, targetDeviceId, StringComparison.OrdinalIgnoreCase))
                     {
