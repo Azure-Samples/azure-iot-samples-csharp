@@ -3,6 +3,7 @@
 
 using Microsoft.Extensions.Logging;
 using System;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,7 +42,10 @@ namespace Microsoft.Azure.Devices.Samples
             try
             {
                 await InitializeServiceClientAsync();
-                await SendC2dMessagesAsync(cts.Token);
+                Task sendTask = SendC2dMessagesAsync(cts.Token);
+                Task receiveTask = ReceiveMessageFeedbacksAsync(cts.Token);
+
+                await Task.WhenAll(sendTask, receiveTask);
             }
             catch (Exception ex)
             {
@@ -50,13 +54,50 @@ namespace Microsoft.Azure.Devices.Samples
 
         }
 
+        private async Task ReceiveMessageFeedbacksAsync(CancellationToken token)
+        {
+            _logger.LogInformation("Starting to listen to feedback messages");
+
+            while (!token.IsCancellationRequested)
+            {
+                var rec = _serviceClient.GetFeedbackReceiver();
+
+                try
+                {
+                    FeedbackBatch messages = await rec.ReceiveAsync();
+                    if (messages != null)
+                    {
+                        _logger.LogInformation("New Feedback received:");
+                        _logger.LogInformation($"\tEnqueue Time: {messages.EnqueuedTime}");
+                        _logger.LogInformation($"\tNumber of messages in the batch: {messages.Records.Count()}");
+                        foreach (FeedbackRecord record in messages.Records)
+                        {
+                            _logger.LogInformation($"\tDevice {record.DeviceId} acted on message: {record.OriginalMessageId} with status: {record.StatusCode}");
+                        }
+
+                        await rec.CompleteAsync(messages);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError($"Unexpected error, will need to reinitialize the client: {e}");
+                    await InitializeServiceClientAsync();
+                }
+            }
+        }
+
         private async Task SendC2dMessagesAsync(CancellationToken cancellationToken)
         {
             int messageCount = 0;
             while (!cancellationToken.IsCancellationRequested)
             {
                 var str = $"Hello, Cloud! - Message {++messageCount }";
-                var message = new Message(Encoding.ASCII.GetBytes(str));
+                var message = new Message(Encoding.ASCII.GetBytes(str))
+                {
+                    // An acknowledgment is sent on delivery success or failure.
+                    Ack = DeliveryAcknowledgement.Full
+                };
+
                 _logger.LogInformation($"Sending C2D message {messageCount} with Id {message.MessageId} to {_deviceId}.");
 
                 while (!cancellationToken.IsCancellationRequested)
