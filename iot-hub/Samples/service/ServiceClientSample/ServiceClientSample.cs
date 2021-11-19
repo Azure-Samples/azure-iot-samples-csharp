@@ -70,9 +70,9 @@ namespace Microsoft.Azure.Devices.Samples
                         _logger.LogInformation("New Feedback received:");
                         _logger.LogInformation($"\tEnqueue Time: {feedbackMessages.EnqueuedTime}");
                         _logger.LogInformation($"\tNumber of messages in the batch: {feedbackMessages.Records.Count()}");
-                        foreach (FeedbackRecord record in feedbackMessages.Records)
+                        foreach (FeedbackRecord feedbackRecord in feedbackMessages.Records)
                         {
-                            _logger.LogInformation($"\tDevice {record.DeviceId} acted on message: {record.OriginalMessageId} with status: {record.StatusCode}");
+                            _logger.LogInformation($"\tDevice {feedbackRecord.DeviceId} acted on message: {feedbackRecord.OriginalMessageId} with status: {feedbackRecord.StatusCode}");
                         }
 
                         await feedbackReceiver.CompleteAsync(feedbackMessages);
