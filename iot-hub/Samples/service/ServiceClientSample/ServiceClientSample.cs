@@ -56,12 +56,13 @@ namespace Microsoft.Azure.Devices.Samples
 
         private async Task ReceiveMessageFeedbacksAsync(CancellationToken token)
         {
+            // It is important to note that receiver only gets feedback messages when the device is actively running and acting on messages.
             _logger.LogInformation("Starting to listen to feedback messages");
+
+            var feedbackReceiver = _serviceClient.GetFeedbackReceiver();
 
             while (!token.IsCancellationRequested)
             {
-                var feedbackReceiver = _serviceClient.GetFeedbackReceiver();
-
                 try
                 {
                     FeedbackBatch feedbackMessages = await feedbackReceiver.ReceiveAsync();
@@ -77,11 +78,18 @@ namespace Microsoft.Azure.Devices.Samples
 
                         await feedbackReceiver.CompleteAsync(feedbackMessages);
                     }
+
+                    await Task.Delay(s_sleepDuration);
+                }
+                catch (Exception e) when (ExceptionHelper.IsNetwork(e))
+                {
+                    _logger.LogError($"Transient Exception occurred, will retry: {e}");
                 }
                 catch (Exception e)
                 {
                     _logger.LogError($"Unexpected error, will need to reinitialize the client: {e}");
                     await InitializeServiceClientAsync();
+                    feedbackReceiver = _serviceClient.GetFeedbackReceiver();
                 }
             }
         }
