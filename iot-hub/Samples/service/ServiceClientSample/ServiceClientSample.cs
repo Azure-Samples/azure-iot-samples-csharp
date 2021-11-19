@@ -83,7 +83,8 @@ namespace Microsoft.Azure.Devices.Samples
                 }
                 catch (Exception e) when (ExceptionHelper.IsNetwork(e))
                 {
-                    _logger.LogError($"Transient Exception occurred, will retry: {e}");
+                    _logger.LogError($"Transient Exception occurred; will retry: {e}");
+
                 }
                 catch (Exception e)
                 {
