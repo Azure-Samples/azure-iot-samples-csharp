@@ -60,22 +60,22 @@ namespace Microsoft.Azure.Devices.Samples
 
             while (!token.IsCancellationRequested)
             {
-                var rec = _serviceClient.GetFeedbackReceiver();
+                var feedbackReceiver = _serviceClient.GetFeedbackReceiver();
 
                 try
                 {
-                    FeedbackBatch messages = await rec.ReceiveAsync();
-                    if (messages != null)
+                    FeedbackBatch feedbackMessages = await feedbackReceiver.ReceiveAsync();
+                    if (feedbackMessages != null)
                     {
                         _logger.LogInformation("New Feedback received:");
-                        _logger.LogInformation($"\tEnqueue Time: {messages.EnqueuedTime}");
-                        _logger.LogInformation($"\tNumber of messages in the batch: {messages.Records.Count()}");
-                        foreach (FeedbackRecord record in messages.Records)
+                        _logger.LogInformation($"\tEnqueue Time: {feedbackMessages.EnqueuedTime}");
+                        _logger.LogInformation($"\tNumber of messages in the batch: {feedbackMessages.Records.Count()}");
+                        foreach (FeedbackRecord record in feedbackMessages.Records)
                         {
                             _logger.LogInformation($"\tDevice {record.DeviceId} acted on message: {record.OriginalMessageId} with status: {record.StatusCode}");
                         }
 
-                        await rec.CompleteAsync(messages);
+                        await feedbackReceiver.CompleteAsync(feedbackMessages);
                     }
                 }
                 catch (Exception e)
