@@ -12,6 +12,8 @@
     <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.38.1-preview-001" />
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Client" Version="1.18.0-preview-002" />
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Mqtt" Version="1.16.0-preview-002" />
+    <!-- We will need to keep this reference to DotNetty.Common until the next release of DotNetty (and subsequently, our SDK) includes this dependency -->
+    <PackageReference Include="DotNetty.Common" Version="0.7.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.8" />
   </ItemGroup>
 </Project>
