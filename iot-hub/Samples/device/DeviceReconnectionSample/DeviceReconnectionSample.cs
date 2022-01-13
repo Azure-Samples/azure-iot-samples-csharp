@@ -76,6 +76,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
                 await Task.WhenAll(SendMessagesAsync(s_cancellationTokenSource.Token), ReceiveMessagesAsync(s_cancellationTokenSource.Token));
             }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning($"Sample execution cancellation requested; will exit.");
+            }
             catch (Exception ex)
             {
                 _logger.LogError($"Unrecoverable exception caught, user action is required, so exiting: \n{ex}");
@@ -205,7 +209,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         default:
                             _logger.LogError("### This combination of ConnectionStatus and ConnectionStatusChangeReason is not expected, contact the client library team with logs.");
                             break;
-
                     }
 
                     break;
