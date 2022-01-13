@@ -78,7 +78,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
             catch (OperationCanceledException)
             {
-                _logger.LogWarning($"Sample execution cancellation requested; will exit.");
+                // User canceled the operation. Nothing to do here.
             }
             catch (Exception ex)
             {
