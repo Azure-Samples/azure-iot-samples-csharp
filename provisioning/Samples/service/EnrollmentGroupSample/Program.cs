@@ -30,8 +30,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
                     Environment.Exit(1);
                 });
 
-            if (string.IsNullOrWhiteSpace(parameters.CertificatePath)
-                || string.IsNullOrWhiteSpace(parameters.ProvisioningConnectionString))
+            if (string.IsNullOrWhiteSpace(parameters.ProvisioningConnectionString))
             {
                 Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null));
                 Environment.Exit(1);
