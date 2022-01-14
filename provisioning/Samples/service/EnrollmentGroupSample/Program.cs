@@ -7,15 +7,15 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
 {
-    /// <summary>
-    /// A sample to manage enrollment groups in device provisioning service.
-    /// </summary>
-    /// <param name="args">
-    /// Run with `--help` to see a list of required and optional parameters.
-    /// </param>
+
     public class Program
     {
-
+        /// <summary>
+        /// A sample to manage enrollment groups in device provisioning service.
+        /// </summary>
+        /// <param name="args">
+        /// Run with `--help` to see a list of required and optional parameters.
+        /// </param>
         public static int Main(string[] args)
         {
             // Parse application parameters
