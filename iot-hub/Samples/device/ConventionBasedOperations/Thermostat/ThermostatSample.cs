@@ -38,11 +38,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
         {
             // Set handler to receive and respond to writable property update requests.
             _logger.LogDebug($"Subscribe to writable property updates.");
-            await _deviceClient.SubscribeToWritablePropertyUpdateRequestsAsync(HandlePropertyUpdatesAsync, null, cancellationToken);
+            await _deviceClient.SubscribeToWritablePropertyUpdateRequestsAsync(HandlePropertyUpdatesAsync, cancellationToken);
 
             // Set handler to receive and respond to commands.
             _logger.LogDebug($"Subscribe to commands.");
-            await _deviceClient.SubscribeToCommandsAsync(HandleCommandsAsync, null, cancellationToken);
+            await _deviceClient.SubscribeToCommandsAsync(HandleCommandsAsync, cancellationToken);
 
             bool temperatureReset = true;
 
@@ -65,7 +65,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         }
 
         // The callback to handle property update requests.
-        private async Task HandlePropertyUpdatesAsync(ClientPropertyCollection writableProperties, object userContext)
+        private async Task HandlePropertyUpdatesAsync(ClientPropertyCollection writableProperties)
         {
             foreach (KeyValuePair<string, object> writableProperty in writableProperties)
             {
@@ -100,7 +100,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         }
 
         // The callback to handle command invocation requests.
-        private Task<CommandResponse> HandleCommandsAsync(CommandRequest commandRequest, object userContext)
+        private Task<CommandResponse> HandleCommandsAsync(CommandRequest commandRequest)
         {
             // In this approach, we'll switch through the command name returned and handle each top-level command.
             switch (commandRequest.CommandName)
@@ -108,7 +108,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 case "getMaxMinReport":
                     try
                     {
-                        DateTimeOffset sinceInUtc = commandRequest.GetData<DateTimeOffset>();
+                        DateTimeOffset sinceInUtc = commandRequest.GetPayload<DateTimeOffset>();
                         _logger.LogDebug($"Command: Received - Generating max, min and avg temperature report since " +
                             $"{sinceInUtc.LocalDateTime}.");
 

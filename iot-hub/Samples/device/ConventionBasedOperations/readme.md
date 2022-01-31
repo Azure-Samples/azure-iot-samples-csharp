@@ -135,13 +135,13 @@ await _deviceClient.SendEventAsync(message, cancellationToken);
 ```csharp
 // Send telemetry "temperature" under component "thermostat1".
 double temperature = 70.0D;
-using var telemtryMessage = new TelemetryMessage("thermostat1")
+using var telemetryMessage = new TelemetryMessage("thermostat1")
 {
     MessageId = Guid.NewGuid().ToString(),
     Telemetry = { ["temperature"] = temperature },
 };
 
-await _deviceClient.SendTelemetryAsync(telemtryMessage, cancellationToken);
+await _deviceClient.SendTelemetryAsync(telemetryMessage, cancellationToken);
 ```
 
 ## Commands
@@ -179,7 +179,7 @@ await _deviceClient.SetMethodHandlerAsync(
 ```csharp
 // Subscribe and respond to command "reboot".
 await _deviceClient.SubscribeToCommandsAsync(
-    async (commandRequest, userContext) =>
+    async (commandRequest) =>
     {
         // This API does not support setting command-level callbacks.
         // For this reason we'll need to inspect the commandRequest.CommandName for the request command and perform the actions accordingly.
@@ -188,25 +188,24 @@ await _deviceClient.SubscribeToCommandsAsync(
         if (commandRequest.CommandName == "reboot")
         {
             try
-                {
-                    int delay = commandRequest.GetData<int>();
-                    await Task.Delay(delay * 1000);
+            {
+                int delay = commandRequest.GetPayload<int>();
+                await Task.Delay(delay * 1000);
 
-                    // Application code ...
+                // Application code ...
 
-                    return new CommandResponse(CommonClientResponseCodes.OK);
-                }
-                catch (JsonReaderException)
-                {
-                    return new CommandResponse(CommonClientResponseCodes.BadRequest);
-                }
+                return new CommandResponse(CommonClientResponseCodes.OK);
+            }
+            catch (JsonReaderException)
+            {
+                return new CommandResponse(CommonClientResponseCodes.BadRequest);
+            }
         }
         else
         {
             return new CommandResponse(CommonClientResponseCodes.NotFound);
         }
     },
-    null,
     cancellationToken);
 ```
 
@@ -247,7 +246,7 @@ await _deviceClient.SetMethodHandlerAsync(
 ```csharp
 // Subscribe and respond to command "getMaxMinReport" under component "thermostat1".
 await _deviceClient.SubscribeToCommandsAsync(
-    (commandRequest, userContext) =>
+    (commandRequest) =>
     {
         // This API does not support setting command-level callbacks.
         // For this reason we'll need to inspect both commandRequest.ComponentName and commandRequest.CommandName, and perform the actions accordingly.
@@ -258,7 +257,7 @@ await _deviceClient.SubscribeToCommandsAsync(
         {
             try
             {
-                DateTimeOffset sinceInUtc = commandRequest.GetData<DateTimeOffset>();
+                DateTimeOffset sinceInUtc = commandRequest.GetPayload<DateTimeOffset>();
 
                 // Application code ...
                 Report report = GetMaxMinReport(sinceInUtc);
@@ -274,8 +273,8 @@ await _deviceClient.SubscribeToCommandsAsync(
         {
             return Task.FromResult(new CommandResponse(CommonClientResponseCodes.NotFound));
         }
-    }
-);
+    },
+    cancellationToken);
 ```
 
 ## Properties
@@ -456,7 +455,7 @@ await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(
 // Subscribe and respond to event for writable property "targetTemperature".
 // This writable property update response should follow the format specified here: https://docs.microsoft.com/azure/iot-pnp/concepts-convention#writable-properties.
 await _deviceClient.SubscribeToWritablePropertyUpdateRequestsAsync(
-    async (writableProperties, userContext) =>
+    async (writableProperties) =>
     {
         if (writableProperties.TryGetValue("targetTemperature", out WritableClientProperty targetTemperatureRequested))
         {
@@ -468,7 +467,6 @@ await _deviceClient.SubscribeToWritablePropertyUpdateRequestsAsync(
             ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(propertiesToBeUpdated, cancellationToken);
         }
     },
-    null,
     cancellationToken);
 ```
 
@@ -523,7 +521,7 @@ await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(
 // under component "thermostat1".
 // This writable property update response should follow the format specified here: https://docs.microsoft.com/azure/iot-pnp/concepts-convention#writable-properties.
 await _deviceClient.SubscribeToWritablePropertyUpdateRequestsAsync(
-    async (writableProperties, userContext) =>
+    async (writableProperties) =>
     {
         if (writableProperties.TryGetValue("thermostat1", "targetTemperature", out WritableClientProperty targetTemperatureRequested))
         {
@@ -536,7 +534,6 @@ await _deviceClient.SubscribeToWritablePropertyUpdateRequestsAsync(
             ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(propertiesToBeUpdated, cancellationToken);
         }
     },
-    null,
     cancellationToken);
 ```
 

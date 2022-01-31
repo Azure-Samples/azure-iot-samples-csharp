@@ -47,11 +47,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
         {
             // Set handler to receive and respond to writable property update requests.
             _logger.LogDebug("Subscribe to writable property updates.");
-            await _deviceClient.SubscribeToWritablePropertyUpdateRequestsAsync(HandlePropertyUpdatesAsync, null, cancellationToken);
+            await _deviceClient.SubscribeToWritablePropertyUpdateRequestsAsync(HandlePropertyUpdatesAsync, cancellationToken);
 
             // Set handler to receive and respond to commands.
             _logger.LogDebug($"Subscribe to commands.");
-            await _deviceClient.SubscribeToCommandsAsync(HandleCommandsAsync, null, cancellationToken);
+            await _deviceClient.SubscribeToCommandsAsync(HandleCommandsAsync, cancellationToken);
 
             // Report device information on "deviceInformation" component.
             // This is a component-level property update call.
@@ -92,7 +92,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         }
 
         // The callback to handle property update requests.
-        private async Task HandlePropertyUpdatesAsync(ClientPropertyCollection writableProperties, object userContext)
+        private async Task HandlePropertyUpdatesAsync(ClientPropertyCollection writableProperties)
         {
             foreach (KeyValuePair<string, object> writableProperty in writableProperties)
             {
@@ -105,7 +105,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         string componentName = writableProperty.Key;
                         if (writableProperties.TryGetValue(componentName, targetTemperatureProperty, out WritableClientProperty targetTemperatureRequested))
                         {
-                            await HandleTargetTemperatureUpdateRequestAsync(componentName, targetTemperatureRequested, userContext);
+                            await HandleTargetTemperatureUpdateRequestAsync(componentName, targetTemperatureRequested);
                             break;
                         }
                         else
@@ -124,7 +124,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         }
 
         // The callback to handle target temperature property update requests for a component.
-        private async Task HandleTargetTemperatureUpdateRequestAsync(string componentName, WritableClientProperty targetTemperatureUpdateRequest, object userContext)
+        private async Task HandleTargetTemperatureUpdateRequestAsync(string componentName, WritableClientProperty targetTemperatureUpdateRequest)
         {
             const string targetTemperatureProperty = "targetTemperature";
             double targetTemperatureValue = SystemTextJsonPayloadSerializer.Instance.ConvertFromObject<double>(targetTemperatureUpdateRequest.Value);
@@ -142,7 +142,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         }
 
         // The callback to handle command invocation requests.
-        private Task<CommandResponse> HandleCommandsAsync(CommandRequest commandRequest, object userContext)
+        private Task<CommandResponse> HandleCommandsAsync(CommandRequest commandRequest)
         {
             // In this approach, we'll first switch through the component name returned and handle each component-level command.
             // For the "default" case, we'll first check if the component name is null.
@@ -158,7 +158,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     switch (commandRequest.CommandName)
                     {
                         case "getMaxMinReport":
-                            return HandleMaxMinReportCommandAsync(commandRequest, userContext);
+                            return HandleMaxMinReportCommandAsync(commandRequest);
 
                         default:
                             _logger.LogWarning($"Received a command request that isn't" +
@@ -176,7 +176,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         switch (commandRequest.CommandName)
                         {
                             case "reboot":
-                                return HandleRebootCommandAsync(commandRequest, userContext);
+                                return HandleRebootCommandAsync(commandRequest);
 
                             default:
                                 _logger.LogWarning($"Received a command request that isn't" +
@@ -197,11 +197,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         // The callback to handle top-level "reboot" command.
         // This method will send a temperature update (of 0°C) over telemetry for both associated components.
-        private async Task<CommandResponse> HandleRebootCommandAsync(CommandRequest commandRequest, object userContext)
+        private async Task<CommandResponse> HandleRebootCommandAsync(CommandRequest commandRequest)
         {
             try
             {
-                int delay = commandRequest.GetData<int>();
+                int delay = commandRequest.GetPayload<int>();
 
                 _logger.LogDebug($"Command: Received - Rebooting thermostat (resetting temperature reading to 0°C after {delay} seconds).");
                 await Task.Delay(delay * 1000);
@@ -223,11 +223,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         // The callback to handle component-level "getMaxMinReport" command.
         // This method will returns the max, min and average temperature from the specified time to the current time.
-        private Task<CommandResponse> HandleMaxMinReportCommandAsync(CommandRequest commandRequest, object userContext)
+        private Task<CommandResponse> HandleMaxMinReportCommandAsync(CommandRequest commandRequest)
         {
             try
             {
-                DateTimeOffset sinceInUtc = commandRequest.GetData<DateTimeOffset>();
+                DateTimeOffset sinceInUtc = commandRequest.GetPayload<DateTimeOffset>();
                 _logger.LogDebug($"Command: Received - Generating max, min and avg temperature report since " +
                     $"{sinceInUtc.LocalDateTime}.");
 
