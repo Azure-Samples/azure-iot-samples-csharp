@@ -1,7 +1,4 @@
 ﻿using CommandLine;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ProvisioningAzureSasCredentialSample
 {
@@ -25,7 +22,7 @@ namespace ProvisioningAzureSasCredentialSample
         public string SharedAccessKey { get; set; }
 
         [Option(
-            'n'
+            'n',
             "SharedAccessKeyName",
             Required = true,
             HelpText = "The shared access key name for the access key supplied. Eg. provisioningserviceowner")]
