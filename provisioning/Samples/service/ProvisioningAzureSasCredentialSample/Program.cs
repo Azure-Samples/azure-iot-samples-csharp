@@ -1,6 +1,6 @@
 ﻿using Azure;
-using Microsoft.Azure.Devices.Provisioning.Service;
 using CommandLine;
+using Microsoft.Azure.Devices.Provisioning.Service;
 using System;
 using System.Globalization;
 using System.Net;

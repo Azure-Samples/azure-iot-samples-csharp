@@ -1,7 +1,5 @@
 ﻿using Microsoft.Azure.Devices.Provisioning.Service;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace ProvisioningAzureSasCredentialSample
