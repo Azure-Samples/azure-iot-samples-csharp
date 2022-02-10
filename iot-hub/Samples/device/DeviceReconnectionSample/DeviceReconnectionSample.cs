@@ -35,6 +35,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         private static volatile ConnectionStatus s_connectionStatus = ConnectionStatus.Disconnected;
 
         private static CancellationTokenSource s_cancellationTokenSource;
+        private static long s_latestDesiredVersion;
 
         public DeviceReconnectionSample(List<string> deviceConnectionStrings, TransportType transportType, ILogger logger)
         {
@@ -74,7 +75,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             try
             {
                 await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
-                await Task.WhenAll(SendMessagesAsync(s_cancellationTokenSource.Token), ReceiveMessagesAsync(s_cancellationTokenSource.Token));
+                await Task.WhenAll(GetTwinUpdateAsync(s_cancellationTokenSource.Token), SendMessagesAsync(s_cancellationTokenSource.Token), ReceiveMessagesAsync(s_cancellationTokenSource.Token));
             }
             catch (OperationCanceledException)
             {
@@ -131,6 +132,16 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     exceptionsToBeIgnored: _exceptionsToBeIgnored,
                     cancellationToken: cancellationToken);
                 _logger.LogDebug($"The client instance has been opened.");
+
+                // The client retrieves twin values when it is initialized.
+                await RetryOperationHelper.RetryTransientExceptionsAsync(
+                    operationName: "GetTwin",
+                    asyncOperation: async () => await RetrieveTwinAsync(cancellationToken),
+                    shouldExecuteOperation: () => IsDeviceConnected,
+                    logger: _logger,
+                    exceptionsToBeIgnored: _exceptionsToBeIgnored,
+                    cancellationToken: cancellationToken);
+                _logger.LogDebug("The client has received twin values for the first time. ");
 
                 // You will need to subscribe to the client callbacks any time the client is initialized.
                 await RetryOperationHelper.RetryTransientExceptionsAsync(
@@ -219,32 +230,106 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
+        private async Task RetrieveTwinAsync (CancellationToken cancellationToken)
+        { 
+            if (!cancellationToken.IsCancellationRequested)
+            { 
+                if (IsDeviceConnected)
+                {
+                    try
+                    { 
+                        Twin twin = await s_deviceClient.GetTwinAsync();
+                        _logger.LogInformation($"Device retrieving twin values: {twin.ToJson()}");
+
+                        s_latestDesiredVersion = twin.Properties.Desired.Version;
+                    }
+                    catch (Exception ex)
+                    { 
+                        _logger.LogError($"Unexpected error {ex}");
+                    }
+                }
+            }
+        }
+
+        // The client validates if the version of desired properties is outdated.
+        // If so, the client will "actively" get twin updates from the server.
+        private async Task GetTwinUpdateAsync (CancellationToken cancellationToken)
+        {
+            Twin twin = null;
+
+            while (!cancellationToken.IsCancellationRequested)
+            { 
+                if (IsDeviceConnected)
+                {
+                    try
+                    { 
+                        twin = await s_deviceClient.GetTwinAsync();   
+                    }
+                    catch (Exception ex)
+                    { 
+                        _logger.LogError($"Unexpected error {ex}");
+                    }
+
+                    TwinCollection twinCollection = twin.Properties.Desired;
+                    long currentDesiredVersion = twinCollection.Version;
+
+                    if (currentDesiredVersion > s_latestDesiredVersion)
+                    {
+                        await RetryOperationHelper.RetryTransientExceptionsAsync(
+                            operationName: "GetTwinUpdateActively",
+                            asyncOperation: async () => await HandlePropertiesAsync(twinCollection, cancellationToken),
+                            shouldExecuteOperation: () => IsDeviceConnected,
+                            logger: _logger,
+                            exceptionsToBeIgnored: _exceptionsToBeIgnored,
+                            cancellationToken: cancellationToken);
+                    }
+
+                    await Task.Delay(s_sleepDuration, cancellationToken);
+                }
+            }
+        }
+
+        // The client has subscribed to desired property update notifications, so it will "passively" get twin updates
+        // via callback.  
         private async Task HandleTwinUpdateNotificationsAsync(TwinCollection twinUpdateRequest, object userContext)
         {
             CancellationToken cancellationToken = (CancellationToken)userContext;
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                var reportedProperties = new TwinCollection();
-
-                _logger.LogInformation($"Twin property update requested: \n{twinUpdateRequest.ToJson()}");
-
-                // For the purpose of this sample, we'll blindly accept all twin property write requests.
-                foreach (KeyValuePair<string, object> desiredProperty in twinUpdateRequest)
-                {
-                    _logger.LogInformation($"Setting property {desiredProperty.Key} to {desiredProperty.Value}.");
-                    reportedProperties[desiredProperty.Key] = desiredProperty.Value;
-                }
-
-                // For the purpose of this sample, we'll blindly accept all twin property write requests.
                 await RetryOperationHelper.RetryTransientExceptionsAsync(
-                    operationName: "UpdateReportedProperties",
-                    asyncOperation: async () => await s_deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken),
+                    operationName: "GetTwinUpdatePassively",
+                    asyncOperation: async () => await HandlePropertiesAsync(twinUpdateRequest, cancellationToken),
                     shouldExecuteOperation: () => IsDeviceConnected,
                     logger: _logger,
                     exceptionsToBeIgnored: _exceptionsToBeIgnored,
                     cancellationToken: cancellationToken);
             }
+        }
+
+        private async Task HandlePropertiesAsync(TwinCollection twinCollection, CancellationToken cancellationToken)
+        { 
+            var reportedProperties = new TwinCollection();
+
+            _logger.LogInformation($"Twin property update requested: \n{twinCollection.ToJson()}");
+
+            // For the purpose of this sample, we'll blindly accept all twin property write requests.
+            foreach (KeyValuePair<string, object> desiredProperty in twinCollection)
+            {
+                _logger.LogInformation($"Setting property {desiredProperty.Key} to {desiredProperty.Value}.");
+                reportedProperties[desiredProperty.Key] = desiredProperty.Value;
+            }
+
+            s_latestDesiredVersion = twinCollection.Version;
+
+            // For the purpose of this sample, we'll blindly accept all twin property write requests.
+            await RetryOperationHelper.RetryTransientExceptionsAsync(
+                operationName: "UpdateReportedProperties",
+                asyncOperation: async () => await s_deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken),
+                shouldExecuteOperation: () => IsDeviceConnected,
+                logger: _logger,
+                exceptionsToBeIgnored: _exceptionsToBeIgnored,
+                cancellationToken: cancellationToken);
         }
 
         private async Task SendMessagesAsync(CancellationToken cancellationToken)
