@@ -273,8 +273,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     TwinCollection twinCollection = twin.Properties.Desired;
                     long currentDesiredVersion = twinCollection.Version;
 
+                    // Validation of outdated version happens here.
                     if (currentDesiredVersion > s_latestDesiredVersion)
                     {
+                        _logger.LogDebug($"The desired property version was changed from {s_latestDesiredVersion} to {currentDesiredVersion}.");
+
                         await RetryOperationHelper.RetryTransientExceptionsAsync(
                             operationName: "GetTwinUpdateActively",
                             asyncOperation: async () => await HandlePropertiesAsync(twinCollection, cancellationToken),
