@@ -162,8 +162,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     cancellationToken: cancellationToken);
                 _logger.LogInformation($"Device retrieving twin values: {twin.ToJson()}");
                 _logger.LogDebug("The client has retrieved the twin state after establishing connection to IoT hub. ");
-                
-                
 
                 // You will need to subscribe to the client callbacks any time the client is initialized.
                 await RetryOperationHelper<Task>.RetryTransientExceptionsAsync(
