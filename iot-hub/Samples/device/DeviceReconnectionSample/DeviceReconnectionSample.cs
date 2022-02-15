@@ -35,6 +35,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
         private static volatile ConnectionStatus s_connectionStatus = ConnectionStatus.Disconnected;
 
         private static CancellationTokenSource s_cancellationTokenSource;
+        // A safe initial value for caching the twin desired properties version is 1, so the client
+        // will process all previous property change requests and initialize the device application
+        // after which this version will be updated to that, so we have a high water mark of which version number
+        // has been processed.
         private static long s_localDesiredPropertyVersion = 1;
 
         public DeviceReconnectionSample(List<string> deviceConnectionStrings, TransportType transportType, ILogger logger)
