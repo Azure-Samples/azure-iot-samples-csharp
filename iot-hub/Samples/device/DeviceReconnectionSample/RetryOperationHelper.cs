@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
     /// <summary>
     /// A helper class with methods that aid in retrying operations.
     /// </summary>
-    internal class RetryOperationHelper<T>
+    internal class RetryOperationHelper
     {
         /// <summary>
         /// Retry an async operation on encountering a transient operation. The retry strategy followed is an exponential backoff strategy.
@@ -27,7 +27,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
         internal static async Task RetryTransientExceptionsAsync(
             string operationName,
-            Func<Task<T>> asyncOperation,
+            Func<Task> asyncOperation,
             Func<bool> shouldExecuteOperation,
             ILogger logger,
             IDictionary<Type, string> exceptionsToBeIgnored = default,

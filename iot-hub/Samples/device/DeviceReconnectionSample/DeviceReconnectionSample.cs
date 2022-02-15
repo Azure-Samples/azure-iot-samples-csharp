@@ -124,13 +124,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 // Force connection now.
                 // We have set the "shouldExecuteOperation" function to always try to open the connection.
                 // OpenAsync() is an idempotent call, it has the same effect if called once or multiple times on the same client.
-                await RetryOperationHelper<Task>.RetryTransientExceptionsAsync(
+                await RetryOperationHelper.RetryTransientExceptionsAsync(
                     operationName: "OpenConnection",
-                    asyncOperation: async () => 
-                    {
-                        await s_deviceClient.OpenAsync(cancellationToken);
-                        return Task.FromResult(true);
-                    },
+                    asyncOperation: async () => await s_deviceClient.OpenAsync(cancellationToken),
                     shouldExecuteOperation: () => true,
                     logger: _logger,
                     exceptionsToBeIgnored: _exceptionsToBeIgnored,
@@ -139,7 +135,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                 // The client retrieves twin values when it is initialized.
                 Twin twin = null;
-                await RetryOperationHelper<Twin>.RetryTransientExceptionsAsync(
+                await RetryOperationHelper.RetryTransientExceptionsAsync(
                     operationName: "GetTwin",
                     asyncOperation: async () => 
                     {
@@ -153,8 +149,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             _logger.LogDebug($"The desired property version was changed from {s_localDesiredPropertyVersion} to {serverDesiredPropertyVersion}.");
                             await HandleTwinUpdateNotificationsAsync(twinCollection, cancellationToken);
                         }
-
-                        return twin;
                     },
                     shouldExecuteOperation: () => IsDeviceConnected,
                     logger: _logger,
@@ -164,13 +158,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 _logger.LogDebug("The client has retrieved the twin state after establishing connection to IoT hub. ");
 
                 // You will need to subscribe to the client callbacks any time the client is initialized.
-                await RetryOperationHelper<Task>.RetryTransientExceptionsAsync(
+                await RetryOperationHelper.RetryTransientExceptionsAsync(
                     operationName: "SubscribeTwinUpdates",
-                    asyncOperation: async () => 
-                    {
-                        await s_deviceClient.SetDesiredPropertyUpdateCallbackAsync(HandleTwinUpdateNotificationsAsync, cancellationToken);
-                        return Task.FromResult(true);
-                    },
+                    asyncOperation: async () => await s_deviceClient.SetDesiredPropertyUpdateCallbackAsync(HandleTwinUpdateNotificationsAsync, cancellationToken),
                     shouldExecuteOperation: () => IsDeviceConnected,
                     logger: _logger,
                     exceptionsToBeIgnored: _exceptionsToBeIgnored,
@@ -272,16 +262,12 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 }
 
                 s_localDesiredPropertyVersion = twinUpdateRequest.Version;
-                _logger.LogDebug($"The desried property version on local is currently {s_localDesiredPropertyVersion}.");
+                _logger.LogDebug($"The desired property version on local is currently {s_localDesiredPropertyVersion}.");
 
                 // For the purpose of this sample, we'll blindly accept all twin property write requests.
-                await RetryOperationHelper<Task>.RetryTransientExceptionsAsync(
+                await RetryOperationHelper.RetryTransientExceptionsAsync(
                     operationName: "UpdateReportedProperties",
-                    asyncOperation: async () =>
-                    {
-                        await s_deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken);
-                        return Task.FromResult(true);
-                    },
+                    asyncOperation: async () => await s_deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken),
                     shouldExecuteOperation: () => IsDeviceConnected,
                     logger: _logger,
                     exceptionsToBeIgnored: _exceptionsToBeIgnored,
@@ -300,13 +286,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     _logger.LogInformation($"Device sending message {++messageCount} to IoT hub.");
 
                     using Message message = PrepareMessage(messageCount);
-                    await RetryOperationHelper<Task>.RetryTransientExceptionsAsync(
+                    await RetryOperationHelper.RetryTransientExceptionsAsync(
                         operationName: $"SendD2CMessage_{messageCount}",
-                        asyncOperation: async () =>
-                        {
-                            await s_deviceClient.SendEventAsync(message);
-                            return Task.FromResult(true);
-                        },
+                        asyncOperation: async () => await s_deviceClient.SendEventAsync(message),
                         shouldExecuteOperation: () => IsDeviceConnected,
                         logger: _logger,
                         exceptionsToBeIgnored: _exceptionsToBeIgnored,
@@ -344,13 +326,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 _logger.LogInformation($"Device waiting for C2D messages from the hub for {s_sleepDuration}." +
                     $"\nUse the IoT Hub Azure Portal or Azure IoT Explorer to send a message to this device.");
 
-                await RetryOperationHelper<Task>.RetryTransientExceptionsAsync(
+                await RetryOperationHelper.RetryTransientExceptionsAsync(
                     operationName: "ReceiveAndCompleteC2DMessage",
-                    asyncOperation: async () =>
-                    {
-                        await ReceiveMessageAndCompleteAsync();
-                        return Task.FromResult(true);
-                    },
+                    asyncOperation: async () => await ReceiveMessageAndCompleteAsync(),
                     shouldExecuteOperation: () => IsDeviceConnected,
                     logger: _logger,
                     exceptionsToBeIgnored: c2dReceiveExceptionsToBeIgnored,
