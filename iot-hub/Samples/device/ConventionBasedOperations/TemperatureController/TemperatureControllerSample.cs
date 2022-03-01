@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.Devices.Client.Samples
 {
@@ -37,6 +38,12 @@ namespace Microsoft.Azure.Devices.Client.Samples
         // Dictionary to hold the max temperature since last reboot, for each "Thermostat" component.
         private readonly Dictionary<string, double> _maxTemp = new Dictionary<string, double>();
 
+        // A safe initial value for caching the writable properties version is 1, so the client
+        // will process all previous property change requests and initialize the device application
+        // after which this version will be updated to that, so we have a high water mark of which version number
+        // has been processed.
+        private static long s_localWritableProperties = 1;
+
         public TemperatureControllerSample(DeviceClient deviceClient, ILogger logger)
         {
             _deviceClient = deviceClient ?? throw new ArgumentNullException($"{nameof(deviceClient)} cannot be null.");
@@ -45,6 +52,19 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         public async Task PerformOperationsAsync(CancellationToken cancellationToken)
         {
+            // Set handler to receive and respond to connection status changes.
+            _deviceClient.SetConnectionStatusChangesHandler(async (status, reason) =>
+            {
+                _logger.LogDebug($"Connection status change registered - status={status}, reason={reason}.");
+
+                // Call GetWritablePropertiesAndHandleChangesAsync() to get writable properties from the server once the connection status changes into Connected.
+                // This can get back "lost" property updates in a device reconnection from status like Disconnected_Retrying or Disconnected.
+                if (status == ConnectionStatus.Connected)
+                {
+                    await GetWritablePropertiesAndHandleChangesAsync();
+                }
+            });
+
             // Set handler to receive and respond to writable property update requests.
             _logger.LogDebug("Subscribe to writable property updates.");
             await _deviceClient.SubscribeToWritablePropertyUpdateRequestsAsync(HandlePropertyUpdatesAsync, null, cancellationToken);
@@ -91,6 +111,66 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
+        private async Task GetWritablePropertiesAndHandleChangesAsync()
+        {
+            ClientProperties properties = await _deviceClient.GetClientPropertiesAsync();
+            ClientPropertyCollection writableProperties = properties.WritablePropertyRequests;
+            long serverWritableProperties = writableProperties.Version;
+
+            // Check if the writable property version is outdated on the local side.
+            // For the purpose of this sample, we'll only check the writable property versions between local and server
+            // side without comparing the property values.
+            if (serverWritableProperties > s_localWritableProperties)
+            {
+                _logger.LogDebug($"The writable property version cached on local is changing from {s_localWritableProperties} to {serverWritableProperties}.");
+
+                foreach (KeyValuePair<string, object> writableProperty in writableProperties)
+                {
+                    switch (writableProperty.Key)
+                    {
+                        case Thermostat1:
+                        case Thermostat2:
+                            const string targetTemperatureProperty = "targetTemperature";
+                            string componentName = writableProperty.Key;
+
+                            if (writableProperties.TryGetValue(componentName, targetTemperatureProperty, out double targetTemperatureValue))
+                            { 
+                                _logger.LogDebug($"Property: Received - component=\"{componentName}\", [ \"{targetTemperatureProperty}\": {targetTemperatureValue}°C ].");
+
+                                _temperature[componentName] = targetTemperatureValue;
+
+                                string propertyValueString = $"{{ \"value\": {_temperature[componentName]}, \"ac\": {CommonClientResponseCodes.OK}, \"av\": {serverWritableProperties} }}";
+                                var propertyValue = SystemTextJsonPayloadSerializer.Instance.DeserializeToType<object>(propertyValueString);
+
+                                var reportedProperty = new ClientPropertyCollection();
+                                reportedProperty.AddComponentProperty(componentName, targetTemperatureProperty, propertyValue);
+
+                                ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(reportedProperty);
+
+                                _logger.LogDebug($"Property: Update - component=\"{componentName}\", {reportedProperty.GetSerializedString()} is {nameof(CommonClientResponseCodes.OK)} " +
+                                    $"with a version of {updateResponse.Version}.");
+
+                                break;
+                            }
+                            else
+                            {
+                                _logger.LogWarning($"Property: Received an unrecognized property update from service for component {componentName}:" +
+                                            $"\n[ {writableProperty.Value} ].");
+                                break;
+                            }
+
+                        default:
+                            _logger.LogWarning($"Property: Received an unrecognized property update from service:" +
+                                            $"\n[ {writableProperty.Key}: {writableProperty.Value} ].");
+                            break;
+                    }
+                }
+
+                s_localWritableProperties = writableProperties.Version;
+                _logger.LogDebug($"The writable property version on local is currently {s_localWritableProperties}.");
+            }
+        }
+
         // The callback to handle property update requests.
         private async Task HandlePropertyUpdatesAsync(ClientPropertyCollection writableProperties, object userContext)
         {
@@ -121,6 +201,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         break;
                 }
             }
+
+            s_localWritableProperties = writableProperties.Version;
+            _logger.LogDebug($"The writable property version on local is currently {s_localWritableProperties}.");
         }
 
         // The callback to handle target temperature property update requests for a component.

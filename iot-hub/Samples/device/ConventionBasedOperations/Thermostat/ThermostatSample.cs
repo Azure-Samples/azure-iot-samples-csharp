@@ -91,6 +91,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
             long serverWritableProperties = writableProperties.Version;
 
             // Check if the writable property version is outdated on the local side.
+            // For the purpose of this sample, we'll only check the writable property versions between local and server
+            // side without comparing the property values.
             if (serverWritableProperties > s_localWritableProperties)
             {            
                 _logger.LogDebug($"The writable property version cached on local is changing from {s_localWritableProperties} to {serverWritableProperties}.");

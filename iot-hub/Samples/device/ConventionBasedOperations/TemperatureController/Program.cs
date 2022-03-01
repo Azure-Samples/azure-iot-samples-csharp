@@ -136,10 +136,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
             };
 
             DeviceClient deviceClient = DeviceClient.CreateFromConnectionString(deviceConnectionString, TransportType.Mqtt, options);
-            deviceClient.SetConnectionStatusChangesHandler((status, reason) =>
-            {
-                s_logger.LogDebug($"Connection status change registered - status={status}, reason={reason}.");
-            });
 
             return deviceClient;
         }
@@ -154,10 +150,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
             };
 
             DeviceClient deviceClient = DeviceClient.Create(hostname, authenticationMethod, TransportType.Mqtt, options);
-            deviceClient.SetConnectionStatusChangesHandler((status, reason) =>
-            {
-                s_logger.LogDebug($"Connection status change registered - status={status}, reason={reason}.");
-            });
 
             return deviceClient;
         }
