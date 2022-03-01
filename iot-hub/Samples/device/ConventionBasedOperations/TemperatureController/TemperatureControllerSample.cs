@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.Devices.Client.Samples
 {
@@ -42,7 +41,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         // will process all previous property change requests and initialize the device application
         // after which this version will be updated to that, so we have a high water mark of which version number
         // has been processed.
-        private static long s_localWritableProperties = 1;
+        private static long s_localWritablePropertiesVersion = 1;
 
         public TemperatureControllerSample(DeviceClient deviceClient, ILogger logger)
         {
@@ -58,7 +57,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 _logger.LogDebug($"Connection status change registered - status={status}, reason={reason}.");
 
                 // Call GetWritablePropertiesAndHandleChangesAsync() to get writable properties from the server once the connection status changes into Connected.
-                // This can get back "lost" property updates in a device reconnection from status like Disconnected_Retrying or Disconnected.
+                // This can get back "lost" property updates in a device reconnection from status Disconnected_Retrying or Disconnected.
                 if (status == ConnectionStatus.Connected)
                 {
                     await GetWritablePropertiesAndHandleChangesAsync();
@@ -115,14 +114,14 @@ namespace Microsoft.Azure.Devices.Client.Samples
         {
             ClientProperties properties = await _deviceClient.GetClientPropertiesAsync();
             ClientPropertyCollection writableProperties = properties.WritablePropertyRequests;
-            long serverWritableProperties = writableProperties.Version;
+            long serverWritablePropertiesVersion = writableProperties.Version;
 
             // Check if the writable property version is outdated on the local side.
             // For the purpose of this sample, we'll only check the writable property versions between local and server
             // side without comparing the property values.
-            if (serverWritableProperties > s_localWritableProperties)
+            if (serverWritablePropertiesVersion > s_localWritablePropertiesVersion)
             {
-                _logger.LogDebug($"The writable property version cached on local is changing from {s_localWritableProperties} to {serverWritableProperties}.");
+                _logger.LogDebug($"The writable property version cached on local is changing from {s_localWritablePropertiesVersion} to {serverWritablePropertiesVersion}.");
 
                 foreach (KeyValuePair<string, object> writableProperty in writableProperties)
                 {
@@ -139,8 +138,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                                 _temperature[componentName] = targetTemperatureValue;
 
-                                string propertyValueString = $"{{ \"value\": {_temperature[componentName]}, \"ac\": {CommonClientResponseCodes.OK}, \"av\": {serverWritableProperties} }}";
-                                var propertyValue = SystemTextJsonPayloadSerializer.Instance.DeserializeToType<object>(propertyValueString);
+                                var propertyValue = SystemTextJsonPayloadSerializer.Instance.CreateWritablePropertyResponse(_temperature[componentName], CommonClientResponseCodes.OK, serverWritablePropertiesVersion);
 
                                 var reportedProperty = new ClientPropertyCollection();
                                 reportedProperty.AddComponentProperty(componentName, targetTemperatureProperty, propertyValue);
@@ -155,19 +153,19 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             else
                             {
                                 _logger.LogWarning($"Property: Received an unrecognized property update from service for component {componentName}:" +
-                                            $"\n[ {writableProperty.Value} ].");
+                                    $"\n[ {writableProperty.Value} ].");
                                 break;
                             }
 
                         default:
                             _logger.LogWarning($"Property: Received an unrecognized property update from service:" +
-                                            $"\n[ {writableProperty.Key}: {writableProperty.Value} ].");
+                                $"\n[ {writableProperty.Key}: {writableProperty.Value} ].");
                             break;
                     }
                 }
 
-                s_localWritableProperties = writableProperties.Version;
-                _logger.LogDebug($"The writable property version on local is currently {s_localWritableProperties}.");
+                s_localWritablePropertiesVersion = writableProperties.Version;
+                _logger.LogDebug($"The writable property version on local is currently {s_localWritablePropertiesVersion}.");
             }
         }
 
@@ -191,19 +189,19 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         else
                         {
                             _logger.LogWarning($"Property: Received an unrecognized property update from service for component {componentName}:" +
-                                        $"\n[ {writableProperty.Value} ].");
+                                $"\n[ {writableProperty.Value} ].");
                             break;
                         }
 
                     default:
                         _logger.LogWarning($"Property: Received an unrecognized property update from service:" +
-                                        $"\n[ {writableProperty.Key}: {writableProperty.Value} ].");
+                            $"\n[ {writableProperty.Key}: {writableProperty.Value} ].");
                         break;
                 }
             }
 
-            s_localWritableProperties = writableProperties.Version;
-            _logger.LogDebug($"The writable property version on local is currently {s_localWritableProperties}.");
+            s_localWritablePropertiesVersion = writableProperties.Version;
+            _logger.LogDebug($"The writable property version on local is currently {s_localWritablePropertiesVersion}.");
         }
 
         // The callback to handle target temperature property update requests for a component.
