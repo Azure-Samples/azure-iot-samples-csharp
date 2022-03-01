@@ -102,19 +102,21 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         case "targetTemperature":
                             const string targetTemperatureProperty = "targetTemperature";
 
-                            double targetTemperatureValue = Convert.ToDouble(writableProperty.Value);
-                            _logger.LogDebug($"Property: Received - [ \"{targetTemperatureProperty}\": {writableProperty}°C ].");
+                            if (writableProperties.TryGetValue(targetTemperatureProperty, out double targetTemperatureValue))
+                            {
+                                _logger.LogDebug($"Property: Received - [ \"{targetTemperatureProperty}\": {writableProperty}°C ].");
 
-                            _temperature = targetTemperatureValue;
+                                _temperature = targetTemperatureValue;
 
-                            string propertyValue = $"{{ \"value\": {_temperature}, \"ac\": {CommonClientResponseCodes.OK}, \"av\": {serverWritableProperties} }}";
-                            var reportedProperty = new ClientPropertyCollection();
-                            reportedProperty.AddRootProperty(targetTemperatureProperty, JObject.Parse(propertyValue));
+                                string propertyValue = $"{{ \"value\": {_temperature}, \"ac\": {CommonClientResponseCodes.OK}, \"av\": {serverWritableProperties} }}";
+                                var reportedProperty = new ClientPropertyCollection();
+                                reportedProperty.AddRootProperty(targetTemperatureProperty, JObject.Parse(propertyValue));
 
-                            ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(reportedProperty);
+                                ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(reportedProperty);
 
-                            _logger.LogDebug($"Property: Update - {reportedProperty.GetSerializedString()} is {nameof(CommonClientResponseCodes.OK)} " +
-                                $"with a version of {updateResponse.Version}.");
+                                _logger.LogDebug($"Property: Update - {reportedProperty.GetSerializedString()} is {nameof(CommonClientResponseCodes.OK)} " +
+                                    $"with a version of {updateResponse.Version}.");
+                            }
 
                             break;
 
