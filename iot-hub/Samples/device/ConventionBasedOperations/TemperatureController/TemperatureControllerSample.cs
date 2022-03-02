@@ -132,7 +132,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             const string targetTemperatureProperty = "targetTemperature";
                             string componentName = writableProperty.Key;
 
-                            // Comparing here with Line188, the writableProperties variable is obtained by manually calling GetClientPropertiesAsync()
+                            // Comparing here with Line189, the writableProperties variable is obtained by manually calling GetClientPropertiesAsync()
                             // rather than using property update requests callback, so we are not getting a WritableClientProperty out here.
                             if (writableProperties.TryGetValue(componentName, targetTemperatureProperty, out double targetTemperatureValue))
                             { 
