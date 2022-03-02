@@ -102,8 +102,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     {
                         const string targetTemperatureProperty = "targetTemperature";
 
-                        // Comparing here with Line148, the writableProperties variable is obtained by manually calling GetClientPropertiesAsync()
-                        // rather than using property update requests callback, so we are not getting a WritableClientProperty out here.
+                        // The SubscribeToWritablePropertyUpdateRequestsAsync callback makes the writable property requests available as a
+                        // WritableClientProperty, which provides convenience methods for acknowledging the requests. Since property
+                        // update requests that were potentially lost during reconnection can be retrieved only as a collection of property
+                        // values, and not as a collection of WritableClientProperty, we will need to create the property response ack by ourselves.
                         if (writableProperties.TryGetValue(targetTemperatureProperty, out double targetTemperatureValue))
                         {
                             _logger.LogDebug($"Property: Received - [ \"{targetTemperatureProperty}\": {writableProperty}°C ].");
