@@ -112,7 +112,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                             _temperature = targetTemperatureValue;
 
-                            var propertyValue = NewtonsoftJsonPayloadSerializer.Instance.CreateWritablePropertyResponse(
+                            // The serailizer used by the client can be used to format the writable property update response according
+                            // to the format specified by IoT plug and play conventions.
+                            var propertyValue = _deviceClient.PayloadConvention.PayloadSerializer.CreateWritablePropertyResponse(
                                 _temperature, 
                                 CommonClientResponseCodes.OK, 
                                 serverWritablePropertiesVersion);
