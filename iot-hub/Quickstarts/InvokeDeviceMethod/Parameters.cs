@@ -1,4 +1,5 @@
 using CommandLine;
+using System;
 
 namespace InvokeDeviceMethod
 {
@@ -9,16 +10,17 @@ namespace InvokeDeviceMethod
     {
         [Option(
             's',
-            "ServiceConnectionString",
-            Required = false,
-            HelpText = "The connection string for the IoT hub.")]
-        public string ServiceConnectionString { get; set; }
+            "HubConnectionString",
+            HelpText = "The IoT Hub connection string. This is available under the \"Shared access policies\" in the Azure portal." +
+            "\nDefaults to value of environment variable IOTHUB_CONNECTION_STRING.")]
+        public string HubConnectionString { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_CONNECTION_STRING");
 
         [Option(
-            'n',
-            "DeviceName",
+            'i',
+            "DeviceId",
             Required = false,
-            HelpText = "Name of the device to receive the direct method.")]
-        public string DeviceName { get; set; }
+            HelpText = "The Id of the device to receive the direct method." +
+            "\nDefaults to \"MyDotnetDevice\".")]
+        public string DeviceId { get; set; } = "MyDotnetDevice";
     }
 }

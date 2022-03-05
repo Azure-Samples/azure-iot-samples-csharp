@@ -19,15 +19,6 @@ namespace InvokeDeviceMethod
     {
         private static ServiceClient s_serviceClient;
         
-        // Connection string for your IoT Hub
-        // az iot hub connection-string show --policy-name service --hub-name {YourIoTHubName}
-        // Override by passing service connection string as first parameter in command line
-        private static string s_connectionString = "{Your service connection string here}";
-
-        // Default device name is `MyDotnetDevice`
-        // Override by passing custom name as second parameter in command line
-        private static string s_deviceName = "MyDotnetDevice";
-
         private static async Task Main(string[] args)
         {
             Console.WriteLine("IoT Hub Quickstarts - InvokeDeviceMethod application.");
@@ -44,21 +35,13 @@ namespace InvokeDeviceMethod
                     Environment.Exit(1);
                 });
 
-            s_connectionString = parameters.ServiceConnectionString != null
-                ? parameters.ServiceConnectionString
-                : s_connectionString;
-
-            s_deviceName = parameters.DeviceName != null
-                ? parameters.DeviceName
-                : s_deviceName;
-            
             // This sample accepts the service connection string as a parameter, if present
-            ValidateConnectionString();
+            ValidateConnectionString(parameters.HubConnectionString);
 
             // Create a ServiceClient to communicate with service-facing endpoint on your hub.
-            s_serviceClient = ServiceClient.CreateFromConnectionString(s_connectionString);
+            s_serviceClient = ServiceClient.CreateFromConnectionString(parameters.HubConnectionString);
 
-            await InvokeMethodAsync();
+            await InvokeMethodAsync(parameters.DeviceId);
 
             s_serviceClient.Dispose();
 
@@ -67,7 +50,7 @@ namespace InvokeDeviceMethod
         }
 
         // Invoke the direct method on the device, passing the payload
-        private static async Task InvokeMethodAsync()
+        private static async Task InvokeMethodAsync(string deviceId)
         {
             var methodInvocation = new CloudToDeviceMethod("SetTelemetryInterval")
             {
@@ -75,24 +58,26 @@ namespace InvokeDeviceMethod
             };
             methodInvocation.SetPayloadJson("10");
 
-            Console.WriteLine($"\nInvoking direct method for device: {s_deviceName}");
+            Console.WriteLine($"\nInvoking direct method for device: {deviceId}");
 
             // Invoke the direct method asynchronously and get the response from the simulated device.
-            var response = await s_serviceClient.InvokeDeviceMethodAsync(s_deviceName, methodInvocation);
+            var response = await s_serviceClient.InvokeDeviceMethodAsync(deviceId, methodInvocation);
 
             Console.WriteLine($"\nResponse status: {response.Status}, payload:\n\t{response.GetPayloadAsJson()}");
 
         }
 
-        private static void ValidateConnectionString()
+        private static void ValidateConnectionString(string hubConnectionString)
         {
             try
             {
-                _ = IotHubConnectionStringBuilder.Create(s_connectionString);
+                _ = IotHubConnectionStringBuilder.Create(hubConnectionString);
             }
             catch (Exception)
             {
-                Console.WriteLine("This sample needs an IoT Hub connection string to run. Program.cs can be edited to specify it, or it can be included on the command-line with the -s flag.");
+                Console.WriteLine("An IoT Hub connection string needs to be specified, " +
+                    "please set the environment variable \"IOTHUB_CONNECTION_STRING\" " +
+                    "or pass in \"-s | --HubConnectionString\" through command line.");
                 Environment.Exit(1);
             }
         }
