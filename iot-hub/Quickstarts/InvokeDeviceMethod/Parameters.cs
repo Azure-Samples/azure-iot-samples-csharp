@@ -9,14 +9,14 @@ namespace InvokeDeviceMethod
     internal class Parameters
     {
         [Option(
-            's',
+            'c',
             "HubConnectionString",
             HelpText = "The IoT Hub connection string. This is available under the \"Shared access policies\" in the Azure portal." +
             "\nDefaults to value of environment variable IOTHUB_CONNECTION_STRING.")]
         public string HubConnectionString { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_CONNECTION_STRING");
 
         [Option(
-            'i',
+            'd',
             "DeviceId",
             Required = false,
             HelpText = "The Id of the device to receive the direct method." +
