@@ -36,8 +36,7 @@ namespace ProvisioningRoleBasedAuthenticationSample
             // For more info see https://docs.microsoft.com/en-us/dotnet/api/azure.identity?view=azure-dotnet.
             TokenCredential tokenCredential = new DefaultAzureCredential();
 
-            //ProvisioningServiceClient provisioningServiceClient = ProvisioningServiceClient.Create(parameters.HostName, tokenCredential);
-            ProvisioningServiceClient provisioningServiceClient = null;
+            ProvisioningServiceClient provisioningServiceClient = ProvisioningServiceClient.Create(parameters.HostName, tokenCredential);
 
             var sample = new ProvisioningRoleBasedAuthenticationSample(provisioningServiceClient);
             await sample.RunSampleAsync();
