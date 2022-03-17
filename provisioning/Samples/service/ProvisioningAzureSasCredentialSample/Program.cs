@@ -42,8 +42,7 @@ namespace ProvisioningAzureSasCredentialSample
             string updatedSasToken = GenerateSasToken(parameters.HostName, parameters.SharedAccessKey, parameters.SharedAccessKeyName, newExpiresOn);
             sasCredential.Update(updatedSasToken);
 
-            //using var provisioningServiceClient = ProvisioningServiceClient.Create(parameters.HostName, sasCredential);
-            using var provisioningServiceClient = ProvisioningServiceClient.CreateFromConnectionString(null);
+            ProvisioningServiceClient provisioningServiceClient = ProvisioningServiceClient.Create(parameters.HostName, sasCredential);
 
             var sample = new ProvisioningAzureSasCredentialSample(provisioningServiceClient);
             await sample.RunSampleAsync();
