@@ -149,9 +149,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     {
                         case Thermostat1:
                         case Thermostat2:
+                            // This will be called when a device client gets initialized and the _temperature dictionary is still empty.
                             if (!_temperature.TryGetValue(componentName, out double value))
                             { 
-                                _temperature[componentName] = 0d;
+                                _temperature[componentName] = 21d; // The default temperature value is 21°C.
                             }
                             await TargetTemperatureUpdateCallbackAsync(twinCollection, componentName);
                             break;
