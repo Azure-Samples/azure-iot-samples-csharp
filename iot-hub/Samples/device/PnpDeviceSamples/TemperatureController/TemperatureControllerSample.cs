@@ -139,7 +139,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
             // side without comparing the property values.
             if (serverWritablePropertiesVersion > s_localWritablePropertiesVersion)
             {
-                _logger.LogDebug($"The writable property version cached on local is changing from {s_localWritablePropertiesVersion} to {serverWritablePropertiesVersion}.");
+                _logger.LogInformation($"The writable property version cached on local is changing " +
+                    $"from {s_localWritablePropertiesVersion} to {serverWritablePropertiesVersion}.");
 
                 foreach (KeyValuePair<string, object> propertyUpdate in twinCollection)
                 {
@@ -162,7 +163,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     }
                 }
 
-                _logger.LogDebug($"The writable property version on local is currently {s_localWritablePropertiesVersion}.");
+                _logger.LogInformation($"The writable property version on local is currently {s_localWritablePropertiesVersion}.");
             }
         }
 

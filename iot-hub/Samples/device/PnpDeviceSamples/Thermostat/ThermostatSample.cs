@@ -103,7 +103,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
             // side without comparing the property values.
             if (serverWritablePropertiesVersion > s_localWritablePropertiesVersion)
             {
-                _logger.LogDebug($"The writable property version cached on local is changing from {s_localWritablePropertiesVersion} to {serverWritablePropertiesVersion}.");
+                _logger.LogInformation($"The writable property version cached on local is changing " +
+                    $"from {s_localWritablePropertiesVersion} to {serverWritablePropertiesVersion}.");
 
                 foreach (KeyValuePair<string, object> propertyUpdate in twinCollection)
                 {
@@ -114,11 +115,12 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     }
                     else
                     {
-                        _logger.LogWarning($"Property: Received an unrecognized property update from service:\n[ {propertyUpdate.Key}: {propertyUpdate.Value} ].");
+                        _logger.LogWarning($"Property: Received an unrecognized property update from service:" +
+                            $"\n[ {propertyUpdate.Key}: {propertyUpdate.Value} ].");
                     }
                 }
 
-                _logger.LogDebug($"The writable property version on local is currently {s_localWritablePropertiesVersion}.");
+                _logger.LogInformation($"The writable property version on local is currently {s_localWritablePropertiesVersion}.");
             }
         }
 
