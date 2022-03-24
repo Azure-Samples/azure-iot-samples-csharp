@@ -27,7 +27,7 @@ namespace ProvisioningAzureSasCredentialSample
                 });
 
             // Initialize SAS token credentials
-            Console.WriteLine("Creating sas credential.");
+            Console.WriteLine("Creating SAS credential.");
 
             TimeSpan timeToLive = TimeSpan.FromHours(1);
             DateTime expiresOn = DateTime.UtcNow.Add(timeToLive);

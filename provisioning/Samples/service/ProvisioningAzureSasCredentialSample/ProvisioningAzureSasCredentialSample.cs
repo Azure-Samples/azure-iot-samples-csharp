@@ -35,15 +35,15 @@ namespace ProvisioningAzureSasCredentialSample
         {
             Console.WriteLine("\nCreating a query for enrollments...");
             QuerySpecification querySpecification = new QuerySpecification("SELECT * FROM enrollments");
-            using (Query query = _provisioningServiceClient.CreateIndividualEnrollmentQuery(querySpecification))
+
+            using Query query = _provisioningServiceClient.CreateIndividualEnrollmentQuery(querySpecification);
+            while (query.HasNext())
             {
-                while (query.HasNext())
-                {
-                    Console.WriteLine("\nQuerying the next enrollments...");
-                    QueryResult queryResult = await query.NextAsync();
-                    Console.WriteLine(queryResult);
-                }
+                Console.WriteLine("\nQuerying the next enrollments...");
+                QueryResult queryResult = await query.NextAsync();
+                Console.WriteLine(queryResult);
             }
+            
         }
 
         public async Task CreateIndividualEnrollmentAsync()
@@ -51,14 +51,13 @@ namespace ProvisioningAzureSasCredentialSample
             Console.WriteLine("\nCreating a new individualEnrollment...");
             RegistrationId = RegistrationIdPrefix + Guid.NewGuid().ToString();
             Attestation attestation = new TpmAttestation(TpmEndorsementKey);
-            IndividualEnrollment individualEnrollment =
-                    new IndividualEnrollment(
-                            RegistrationId,
-                            attestation);
+            IndividualEnrollment individualEnrollment = new IndividualEnrollment(
+                RegistrationId,
+                attestation);
 
             individualEnrollment.InitialTwinState = new TwinState(
                 null,
-                new TwinCollection()
+                new TwinCollection
                 {
                     ["Brand"] = "Contoso",
                     ["Model"] = "SSC4",
