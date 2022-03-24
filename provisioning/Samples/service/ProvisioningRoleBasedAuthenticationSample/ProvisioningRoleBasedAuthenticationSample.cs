@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Devices.Provisioning.Service;
+using Microsoft.Azure.Devices.Shared;
 using System;
 using System.Threading.Tasks;
 
@@ -6,13 +7,15 @@ namespace ProvisioningRoleBasedAuthenticationSample
 {
     internal class ProvisioningRoleBasedAuthenticationSample
     {
-        private const string RegistrationId = "myvalid-registratioid-csharp";
+        private const string RegistrationIdPrefix = "sampleid-";
         private const string TpmEndorsementKey =
             "AToAAQALAAMAsgAgg3GXZ0SEs/gakMyNRqXXJP1S124GUgtk8qHaGzMUaaoABgCAAEMAEAgAAAAAAAEAxsj2gUS" +
             "cTk1UjuioeTlfGYZrrimExB+bScH75adUMRIi2UOMxG1kw4y+9RW/IVoMl4e620VxZad0ARX2gUqVjYO7KPVt3d" +
             "yKhZS3dkcvfBisBhP1XH9B33VqHG9SHnbnQXdBUaCgKAfxome8UmBKfe+naTsE5fkvjb/do3/dD6l4sGBwFCnKR" +
             "dln4XpM03zLpoHFao8zOwt8l/uP3qUIxmCYv9A7m69Ms+5/pCkTu/rK4mRDsfhZ0QLfbzVI6zQFOKF/rwsfBtFe" +
             "WlWtcuJMKlXdD8TXWElTzgh7JS4qhFzreL0c1mI0GCj+Aws0usZh7dLIVPnlgZcBhgy1SSDQMQ==";
+
+        private string RegistrationId;
 
         ProvisioningServiceClient _provisioningServiceClient;
         public ProvisioningRoleBasedAuthenticationSample(ProvisioningServiceClient provisioningServiceClient)
@@ -47,11 +50,21 @@ namespace ProvisioningRoleBasedAuthenticationSample
         public async Task CreateIndividualEnrollmentAsync()
         {
             Console.WriteLine("\nCreating a new individualEnrollment...");
+            RegistrationId = RegistrationIdPrefix + Guid.NewGuid().ToString();
             Attestation attestation = new TpmAttestation(TpmEndorsementKey);
             IndividualEnrollment individualEnrollment =
                     new IndividualEnrollment(
                             RegistrationId,
                             attestation);
+
+            individualEnrollment.InitialTwinState = new TwinState(
+                null,
+                new TwinCollection()
+                {
+                    ["Brand"] = "Contoso",
+                    ["Model"] = "SSC4",
+                    ["Color"] = "White",
+                });
 
             Console.WriteLine("\nAdding new individualEnrollment...");
             IndividualEnrollment individualEnrollmentResult =
