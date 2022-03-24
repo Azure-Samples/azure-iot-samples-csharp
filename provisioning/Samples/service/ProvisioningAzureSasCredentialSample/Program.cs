@@ -7,15 +7,20 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace ProvisioningAzureSasCredentialSample
 {
     internal class Program
     {
+        private static TimeSpan timeToLive = TimeSpan.FromHours(1);
+        private static string sasToken;
+        private static AzureSasCredential sasCredential;
+        private static Parameters parameters = null;
+
         public static async Task Main(string[] args)
         {
             // Parse application parameters
-            Parameters parameters = null;
             ParserResult<Parameters> parserResult = Parser.Default.ParseArguments<Parameters>(args)
                 .WithParsed(parsedParams =>
                 {
@@ -29,18 +34,18 @@ namespace ProvisioningAzureSasCredentialSample
             // Initialize SAS token credentials
             Console.WriteLine("Creating SAS credential.");
 
-            TimeSpan timeToLive = TimeSpan.FromHours(1);
             DateTime expiresOn = DateTime.UtcNow.Add(timeToLive);
-            string sasToken = GenerateSasToken(parameters.HostName, parameters.SharedAccessKey, parameters.SharedAccessKeyName, expiresOn);
+            sasToken = GenerateSasToken(parameters.HostName, parameters.SharedAccessKey, parameters.SharedAccessKeyName, expiresOn);
             // Note: Pass the generated sasToken and not just the shared access signature when creating the AzureSasCredential.
-            AzureSasCredential sasCredential = new AzureSasCredential(sasToken);
+            sasCredential = new AzureSasCredential(sasToken);
 
-            // This is how the credential can be updated in the AzureSasCredential object whenever necessary.
-            // This sample just shows how to perform the update but it is not necessary to update the token
-            // until the token is close to its expiry.
-            DateTime newExpiresOn = DateTime.UtcNow.Add(timeToLive);
-            string updatedSasToken = GenerateSasToken(parameters.HostName, parameters.SharedAccessKey, parameters.SharedAccessKeyName, newExpiresOn);
-            sasCredential.Update(updatedSasToken);
+            // This is an example of how to create a Timer that will automatically update the SAS credential every hour, to avoid expiry
+            // Since this sample is short, this timer event will not trigger, and thus this section can be ignored/removed
+            Timer updateTimer = new Timer();
+            updateTimer.Interval = 3600000;
+            updateTimer.Elapsed += UpdateToken;
+            updateTimer.AutoReset = true;
+            updateTimer.Enabled = true;
 
             ProvisioningServiceClient provisioningServiceClient = ProvisioningServiceClient.Create(parameters.HostName, sasCredential);
 
@@ -74,6 +79,13 @@ namespace ProvisioningAzureSasCredentialSample
             }
 
             return token;
+        }
+
+        private static void UpdateToken(Object source, ElapsedEventArgs e)
+        {
+            DateTime newExpiresOn = DateTime.UtcNow.Add(timeToLive);
+            string updatedSasToken = GenerateSasToken(parameters.HostName, parameters.SharedAccessKey, parameters.SharedAccessKeyName, newExpiresOn);
+            sasCredential.Update(updatedSasToken);
         }
     }
 }
