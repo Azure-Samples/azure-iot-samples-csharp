@@ -24,11 +24,11 @@ namespace ProvisioningAzureSasCredentialSample
 
         public async Task RunSampleAsync()
         {
-            await QueryIndividualEnrollmentsAsync().ConfigureAwait(false);
+            await QueryIndividualEnrollmentsAsync();
 
-            await CreateIndividualEnrollmentAsync().ConfigureAwait(false);
-            await UpdateIndividualEnrollmentAsync().ConfigureAwait(false);
-            await DeleteIndividualEnrollmentAsync().ConfigureAwait(false);
+            await CreateIndividualEnrollmentAsync();
+            await UpdateIndividualEnrollmentAsync();
+            await DeleteIndividualEnrollmentAsync();
         }
 
         public async Task QueryIndividualEnrollmentsAsync()
@@ -40,7 +40,7 @@ namespace ProvisioningAzureSasCredentialSample
                 while (query.HasNext())
                 {
                     Console.WriteLine("\nQuerying the next enrollments...");
-                    QueryResult queryResult = await query.NextAsync().ConfigureAwait(false);
+                    QueryResult queryResult = await query.NextAsync();
                     Console.WriteLine(queryResult);
                 }
             }
@@ -67,7 +67,7 @@ namespace ProvisioningAzureSasCredentialSample
 
             Console.WriteLine("\nAdding new individualEnrollment...");
             IndividualEnrollment individualEnrollmentResult =
-                await _provisioningServiceClient.CreateOrUpdateIndividualEnrollmentAsync(individualEnrollment).ConfigureAwait(false);
+                await _provisioningServiceClient.CreateOrUpdateIndividualEnrollmentAsync(individualEnrollment);
             Console.WriteLine(individualEnrollmentResult);
         }
 
@@ -75,7 +75,7 @@ namespace ProvisioningAzureSasCredentialSample
         {
             Console.WriteLine("\nGetting the individualEnrollment information...");
             IndividualEnrollment getResult =
-                await _provisioningServiceClient.GetIndividualEnrollmentAsync(RegistrationId).ConfigureAwait(false);
+                await _provisioningServiceClient.GetIndividualEnrollmentAsync(RegistrationId);
             Console.WriteLine(getResult);
 
             return getResult;
@@ -83,18 +83,18 @@ namespace ProvisioningAzureSasCredentialSample
 
         public async Task UpdateIndividualEnrollmentAsync()
         {
-            var individualEnrollment = await GetIndividualEnrollmentInfoAsync().ConfigureAwait(false);
+            var individualEnrollment = await GetIndividualEnrollmentInfoAsync();
             individualEnrollment.InitialTwinState.DesiredProperties["Color"] = "Yellow";
 
             IndividualEnrollment individualEnrollmentResult =
-                await _provisioningServiceClient.CreateOrUpdateIndividualEnrollmentAsync(individualEnrollment).ConfigureAwait(false);
+                await _provisioningServiceClient.CreateOrUpdateIndividualEnrollmentAsync(individualEnrollment);
             Console.WriteLine(individualEnrollmentResult);
         }
 
         public async Task DeleteIndividualEnrollmentAsync()
         {
             Console.WriteLine("\nDeleting the individualEnrollment...");
-            await _provisioningServiceClient.DeleteIndividualEnrollmentAsync(RegistrationId).ConfigureAwait(false);
+            await _provisioningServiceClient.DeleteIndividualEnrollmentAsync(RegistrationId);
         }
     }
 }
