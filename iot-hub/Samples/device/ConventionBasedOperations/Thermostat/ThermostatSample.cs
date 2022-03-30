@@ -14,9 +14,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
 {
     public class ThermostatSample
     {
-        // The default reported "value" and "ad".
+        // The default reported "value".
         private const double defaultPropertyValue = 0d;
-        private const string defaultAckDescription = "Property set from the device without desired";
 
         private static readonly Random s_random = new Random();
         private static readonly TimeSpan s_sleepDuration = TimeSpan.FromSeconds(5);
@@ -295,14 +294,13 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
             // If the writable properties are empty, report the default value with ACK(ac=203, av=0).
             var propertyValue = _deviceClient.PayloadConvention.PayloadSerializer.CreateWritablePropertyResponse(
-                defaultPropertyValue, 203, 
-                0, defaultAckDescription);
+                defaultPropertyValue, 203, 0);
 
             reportedProperties.AddRootProperty(propertyName, propertyValue);
 
             ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(reportedProperties);
 
-            _logger.LogDebug($"Property: Update - {reportedProperties.GetSerializedString()} is {nameof(CommonClientResponseCodes.OK)} " +
+            _logger.LogDebug($"Report the default values.\nProperty: Update - {reportedProperties.GetSerializedString()} is {nameof(CommonClientResponseCodes.OK)} " +
                 $"with a version of {updateResponse.Version}.");
         }
     }
