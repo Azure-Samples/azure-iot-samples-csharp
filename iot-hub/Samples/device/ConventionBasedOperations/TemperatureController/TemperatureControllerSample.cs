@@ -18,6 +18,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
         private const string Thermostat1 = "thermostat1";
         private const string Thermostat2 = "thermostat2";
 
+        // The default reported "value" and "ad" for each "Thermostat" component.
+        private const double defaultPropertyValue = 0d;
+        private const string defaultAckDescription = "Property set from the device without desired";
+
         private static readonly Random s_random = new Random();
         private static readonly TimeSpan s_sleepDuration = TimeSpan.FromSeconds(5);
 
@@ -60,7 +64,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 // This can get back "lost" property updates in a device reconnection from status Disconnected_Retrying or Disconnected.
                 if (status == ConnectionStatus.Connected)
                 {
-                    await GetWritablePropertiesAndHandleChangesAsync();
+                    await GetWritablePropertiesAndHandleChangesAsync(cancellationToken);
                 }
             });
 
@@ -110,11 +114,25 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
-        private async Task GetWritablePropertiesAndHandleChangesAsync()
+        private async Task GetWritablePropertiesAndHandleChangesAsync(CancellationToken cancellationToken)
         {
             ClientProperties properties = await _deviceClient.GetClientPropertiesAsync();
             ClientPropertyCollection writableProperties = properties.WritablePropertyRequests;
             long serverWritablePropertiesVersion = writableProperties.Version;
+
+            if (!writableProperties.Contains(Thermostat1))
+            {
+                // Report the default property "targetTemperature" with ACK for the component "thermostat1" when the writable properties are empty.
+                // This is a component-level property update call.
+                await UpdateReportedPropertiesWhenWritablePropertiesEmptyAsync(Thermostat1, cancellationToken);
+            }
+            
+            if (!writableProperties.Contains(Thermostat2))
+            {
+                // Report the default property "targetTemperature" with ACK for the component "thermostat2" when the writable properties are empty.
+                // This is a component-level property update call.
+                await UpdateReportedPropertiesWhenWritablePropertiesEmptyAsync(Thermostat2, cancellationToken);
+            }
 
             // Check if the writable property version is outdated on the local side.
             // For the purpose of this sample, we'll only check the writable property versions between local and server
@@ -495,6 +513,25 @@ namespace Microsoft.Azure.Devices.Client.Samples
         private static double GenerateTemperatureWithinRange(int max = 50, int min = 0)
         {
             return Math.Round(s_random.NextDouble() * (max - min) + min, 1);
+        }
+
+        private async Task UpdateReportedPropertiesWhenWritablePropertiesEmptyAsync(string componentName, CancellationToken cancellationToken)
+        {
+            const string propertyName = "targetTemperature";
+            
+            var reportedProperties = new ClientPropertyCollection();
+
+            // If the writable properties for the current component are empty, report the default value with ACK(ac=203, av=0).
+            var propertyValue = _deviceClient.PayloadConvention.PayloadSerializer.CreateWritablePropertyResponse(
+                defaultPropertyValue, 203, 
+                0, defaultAckDescription);
+
+            reportedProperties.AddComponentProperty(componentName, propertyName, propertyValue);
+
+            ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(reportedProperties, cancellationToken);
+
+            _logger.LogDebug($"Property: Update - component=\"{componentName}\", {reportedProperties.GetSerializedString()}" +
+                $" in °C is complete with a version of {updateResponse.Version}.");
         }
     }
 }

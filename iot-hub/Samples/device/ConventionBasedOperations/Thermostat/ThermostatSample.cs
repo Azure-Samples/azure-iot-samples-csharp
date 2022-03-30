@@ -14,6 +14,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
 {
     public class ThermostatSample
     {
+        // The default reported "value" and "ad".
+        private const double defaultPropertyValue = 0d;
+        private const string defaultAckDescription = "Property set from the device without desired";
+
         private static readonly Random s_random = new Random();
         private static readonly TimeSpan s_sleepDuration = TimeSpan.FromSeconds(5);
 
@@ -51,7 +55,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 // This can get back "lost" property updates in a device reconnection from status Disconnected_Retrying or Disconnected.
                 if (status == ConnectionStatus.Connected)
                 {
-                    await GetWritablePropertiesAndHandleChangesAsync();
+                    await GetWritablePropertiesAndHandleChangesAsync(cancellationToken);
                 }
             });
 
@@ -83,11 +87,16 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
-        private async Task GetWritablePropertiesAndHandleChangesAsync()
+        private async Task GetWritablePropertiesAndHandleChangesAsync(CancellationToken cancellationToken)
         {
             ClientProperties properties = await _deviceClient.GetClientPropertiesAsync();
             ClientPropertyCollection writableProperties = properties.WritablePropertyRequests;
             long serverWritablePropertiesVersion = writableProperties.Version;
+
+            if (!writableProperties.Contains("targetTemperature"))
+            {
+                await UpdateReportedPropertiesWhenWritablePropertiesEmptyAsync(cancellationToken);
+            }
 
             // Check if the writable property version is outdated on the local side.
             // For the purpose of this sample, we'll only check the writable property versions between local and server
@@ -152,7 +161,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         if (writableProperties.TryGetValue(targetTemperatureProperty, out WritableClientProperty targetTemperatureRequested))
                         {
                             double targetTemperatureValue = Convert.ToDouble(targetTemperatureRequested.Value);
-                            _logger.LogDebug($"Property: Received - [ \"{targetTemperatureProperty}\": {targetTemperatureRequested}°C ].");
+                            _logger.LogDebug($"Property: Received - [ \"{targetTemperatureProperty}\": {targetTemperatureRequested.Value}°C ].");
 
                             _temperature = targetTemperatureValue;
 
@@ -276,6 +285,25 @@ namespace Microsoft.Azure.Devices.Client.Samples
         private static double GenerateTemperatureWithinRange(int max = 50, int min = 0)
         {
             return Math.Round(s_random.NextDouble() * (max - min) + min, 1);
+        }
+
+        private async Task UpdateReportedPropertiesWhenWritablePropertiesEmptyAsync(CancellationToken cancellationToken)
+        {
+            const string propertyName = "targetTemperature";
+
+            var reportedProperties = new ClientPropertyCollection();
+
+            // If the writable properties are empty, report the default value with ACK(ac=203, av=0).
+            var propertyValue = _deviceClient.PayloadConvention.PayloadSerializer.CreateWritablePropertyResponse(
+                defaultPropertyValue, 203, 
+                0, defaultAckDescription);
+
+            reportedProperties.AddRootProperty(propertyName, propertyValue);
+
+            ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(reportedProperties);
+
+            _logger.LogDebug($"Property: Update - {reportedProperties.GetSerializedString()} is {nameof(CommonClientResponseCodes.OK)} " +
+                $"with a version of {updateResponse.Version}.");
         }
     }
 }
