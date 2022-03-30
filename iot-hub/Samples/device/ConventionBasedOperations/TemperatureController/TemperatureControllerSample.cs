@@ -121,14 +121,16 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
             if (!writableProperties.Contains(Thermostat1))
             {
-                // Report the default property "targetTemperature" with ACK for the component "thermostat1" when the writable properties are empty.
+                // Update the reported property "targetTemperature" with the default values and ACK
+                // for the component "thermostat1" when its writable properties are empty.
                 // This is a component-level property update call.
                 await UpdateReportedPropertiesWhenWritablePropertiesEmptyAsync(Thermostat1, cancellationToken);
             }
             
             if (!writableProperties.Contains(Thermostat2))
             {
-                // Report the default property "targetTemperature" with ACK for the component "thermostat2" when the writable properties are empty.
+                // Update the reported property "targetTemperature" with the default values and ACK
+                // for the component "thermostat2" when its writable properties are empty.
                 // This is a component-level property update call.
                 await UpdateReportedPropertiesWhenWritablePropertiesEmptyAsync(Thermostat2, cancellationToken);
             }

@@ -94,6 +94,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
             if (!writableProperties.Contains("targetTemperature"))
             {
+                // Update the reported property "targetTemperature" with the default values and ACK when the writable properties are empty.
                 await UpdateReportedPropertiesWhenWritablePropertiesEmptyAsync(cancellationToken);
             }
 
