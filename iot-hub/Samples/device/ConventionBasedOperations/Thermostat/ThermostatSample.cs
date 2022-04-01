@@ -15,7 +15,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
     public class ThermostatSample
     {
         // The default reported "value".
-        private const double defaultPropertyValue = 0d;
+        private const double DefaultPropertyValue = 0d;
 
         private static readonly Random s_random = new Random();
         private static readonly TimeSpan s_sleepDuration = TimeSpan.FromSeconds(5);
@@ -95,7 +95,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             if (!writableProperties.Contains("targetTemperature"))
             {
                 // Update the reported property "targetTemperature" with the default values and ACK when the writable properties are empty.
-                await UpdateReportedPropertiesWhenWritablePropertiesEmptyAsync(cancellationToken);
+                await UpdateForEmptyWritableProperty(cancellationToken);
             }
 
             // Check if the writable property version is outdated on the local side.
@@ -287,15 +287,16 @@ namespace Microsoft.Azure.Devices.Client.Samples
             return Math.Round(s_random.NextDouble() * (max - min) + min, 1);
         }
 
-        private async Task UpdateReportedPropertiesWhenWritablePropertiesEmptyAsync(CancellationToken cancellationToken)
+        private async Task UpdateForEmptyWritableProperty(CancellationToken cancellationToken)
         {
             const string propertyName = "targetTemperature";
 
             var reportedProperties = new ClientPropertyCollection();
 
-            // If the writable properties are empty, report the default value with ACK(ac=203, av=0).
+            // If the writable properties are empty, report the default value with ACK(ac=203, av=0) as part of the PnP convention.
+            // "DefaultPropertyValue" is set from the device when the desired property is not set via the hub.
             var propertyValue = _deviceClient.PayloadConvention.PayloadSerializer.CreateWritablePropertyResponse(
-                defaultPropertyValue, 203, 0);
+                DefaultPropertyValue, 203, 0);
 
             reportedProperties.AddRootProperty(propertyName, propertyValue);
 
