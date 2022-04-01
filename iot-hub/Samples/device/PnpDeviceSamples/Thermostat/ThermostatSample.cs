@@ -17,8 +17,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
     {
         Completed = 200,
         InProgress = 202,
-        NotFound = 404,
-        BadRequest = 400
+        Default = 203,
+        BadRequest = 400,
+        NotFound = 404
     }
 
     public class ThermostatSample
@@ -65,7 +66,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 // This can get back "lost" property updates in a device reconnection from status Disconnected_Retrying or Disconnected.
                 if (status == ConnectionStatus.Connected)
                 {
-                    await GetWritablePropertiesAndHandleChangesAsync();
+                    await GetWritablePropertiesAndHandleChangesAsync(cancellationToken);
                 }
             });
 
@@ -90,13 +91,19 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
-        private async Task GetWritablePropertiesAndHandleChangesAsync()
+        private async Task GetWritablePropertiesAndHandleChangesAsync(CancellationToken cancellationToken)
         {
             Twin twin = await _deviceClient.GetTwinAsync();
             _logger.LogInformation($"Device retrieving twin values on CONNECT: {twin.ToJson()}");
 
             TwinCollection twinCollection = twin.Properties.Desired;
             long serverWritablePropertiesVersion = twinCollection.Version;
+
+            if (!twinCollection.Contains("targetTemperature"))
+            {
+                // Update the reported property "targetTemperature" with the default values and ACK when the writable properties are empty.
+                await RespondToEmptyWritableProperty(cancellationToken);
+            }
 
             // Check if the writable property version is outdated on the local side.
             // For the purpose of this sample, we'll only check the writable property versions between local and server
@@ -253,6 +260,22 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
             await _deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
             _logger.LogDebug($"Property: Update - {{ \"{propertyName}\": {_maxTemp}°C }} is {StatusCode.Completed}.");
+        }
+
+        private async Task RespondToEmptyWritableProperty(CancellationToken cancellationToken)
+        {
+            const string propertyName = "targetTemperature";
+            const double defaultPropertyValue = 0d;
+            const long defaultVersion = 0L;
+
+            // If the writable properties are empty, report the default value with ACK(ac=203, av=0) as part of the PnP convention.
+            // "DefaultPropertyValue" is set from the device when the desired property is not set via the hub.
+            string jsonPropertyPending = $"{{ \"{propertyName}\": {{ \"value\": {defaultPropertyValue}, \"ac\": {(int)StatusCode.Default}, " +
+                    $"\"av\": {defaultVersion} }} }}";
+
+            var reportedPropertyPending = new TwinCollection(jsonPropertyPending);
+            await _deviceClient.UpdateReportedPropertiesAsync(reportedPropertyPending);
+            _logger.LogDebug($"Report the default values.\nProperty: Update - {jsonPropertyPending} is {StatusCode.Completed}.");
         }
     }
 }
