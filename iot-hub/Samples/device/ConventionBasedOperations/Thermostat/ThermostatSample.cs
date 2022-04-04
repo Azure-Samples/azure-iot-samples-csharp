@@ -95,7 +95,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             if (!writableProperties.Contains("targetTemperature"))
             {
                 // Update the reported property "targetTemperature" with the default values and ACK when the writable properties are empty.
-                await UpdateForEmptyWritableProperty(cancellationToken);
+                await UpdateForEmptyWritableProperty("targetTemperature", cancellationToken);
             }
 
             // Check if the writable property version is outdated on the local side.
@@ -287,10 +287,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
             return Math.Round(s_random.NextDouble() * (max - min) + min, 1);
         }
 
-        private async Task UpdateForEmptyWritableProperty(CancellationToken cancellationToken)
+        private async Task UpdateForEmptyWritableProperty(string propertyName, CancellationToken cancellationToken)
         {
-            const string propertyName = "targetTemperature";
-
             var reportedProperties = new ClientPropertyCollection();
 
             // If the writable properties are empty, report the default value with ACK(ac=203, av=0) as part of the PnP convention.
