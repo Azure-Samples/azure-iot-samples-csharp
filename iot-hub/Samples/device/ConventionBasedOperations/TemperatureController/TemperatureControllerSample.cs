@@ -15,11 +15,24 @@ namespace Microsoft.Azure.Devices.Client.Samples
 {
     public class TemperatureControllerSample
     {
+        // The specific response codes in this sample.
+        public class ClientResponseCodes : CommonClientResponseCodes
+        {
+            /// <summary>
+            /// This code does not comply with HTTP semantics. Instead, it indicates that the device client
+            /// reports the default value with ACK when its properties are empty.
+            /// </summary>
+            public const int Default = 203;
+        }
+
+        // The default reported "value" and "ad" for each "Thermostat" component on the client initial startup.
+        private const double DefaultPropertyValue = 0d;
+        private const string DefaultACKDescription = "Initialized with default value";
+
+        private const string SamplePropertyName = "targetTemperature";
+        
         private const string Thermostat1 = "thermostat1";
         private const string Thermostat2 = "thermostat2";
-
-        // The default reported "value" for each "Thermostat" component.
-        private const double DefaultPropertyValue = 0d;
 
         private static readonly Random s_random = new Random();
         private static readonly TimeSpan s_sleepDuration = TimeSpan.FromSeconds(5);
@@ -63,7 +76,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 // This can get back "lost" property updates in a device reconnection from status Disconnected_Retrying or Disconnected.
                 if (status == ConnectionStatus.Connected)
                 {
-                    await GetWritablePropertiesAndHandleChangesAsync(cancellationToken);
+                    await GetWritablePropertiesAndHandleChangesAsync();
                 }
             });
 
@@ -74,6 +87,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
             // Set handler to receive and respond to commands.
             _logger.LogDebug($"Subscribe to commands.");
             await _deviceClient.SubscribeToCommandsAsync(HandleCommandsAsync, cancellationToken);
+
+            // For each component, check if the corresponding properties (both writable and reported) are empty on the initial startup.
+            // If so, report the default values with ACK to the hub.
+            await CheckEmptyProperties(Thermostat1, cancellationToken);
+            await CheckEmptyProperties(Thermostat2, cancellationToken);
 
             // Report device information on "deviceInformation" component.
             // This is a component-level property update call.
@@ -113,27 +131,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
-        private async Task GetWritablePropertiesAndHandleChangesAsync(CancellationToken cancellationToken)
+        private async Task GetWritablePropertiesAndHandleChangesAsync()
         {
             ClientProperties properties = await _deviceClient.GetClientPropertiesAsync();
             ClientPropertyCollection writableProperties = properties.WritablePropertyRequests;
             long serverWritablePropertiesVersion = writableProperties.Version;
-
-            if (!writableProperties.Contains(Thermostat1))
-            {
-                // Update the reported property "targetTemperature" with the default values and ACK
-                // for the component "thermostat1" when its writable properties are empty.
-                // This is a component-level property update call.
-                await UpdateForEmptyWritableProperty(Thermostat1, cancellationToken);
-            }
-            
-            if (!writableProperties.Contains(Thermostat2))
-            {
-                // Update the reported property "targetTemperature" with the default values and ACK
-                // for the component "thermostat2" when its writable properties are empty.
-                // This is a component-level property update call.
-                await UpdateForEmptyWritableProperty(Thermostat2, cancellationToken);
-            }
 
             // Check if the writable property version is outdated on the local side.
             // For the purpose of this sample, we'll only check the writable property versions between local and server
@@ -148,16 +150,15 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     {
                         case Thermostat1:
                         case Thermostat2:
-                            const string targetTemperatureProperty = "targetTemperature";
                             string componentName = writableProperty.Key;
 
                             // The SubscribeToWritablePropertyUpdateRequestsAsync callback makes the writable property requests available as a
                             // WritableClientProperty, which provides convenience methods for acknowledging the requests. Since property
                             // update requests that were potentially lost during reconnection can be retrieved only as a collection of property
                             // values, and not as a collection of WritableClientProperty, we will need to create the property response ack by ourselves.
-                            if (writableProperties.TryGetValue(componentName, targetTemperatureProperty, out double targetTemperatureValue))
+                            if (writableProperties.TryGetValue(componentName, SamplePropertyName, out double targetTemperatureValue))
                             { 
-                                _logger.LogDebug($"Property: Received - component=\"{componentName}\", [ \"{targetTemperatureProperty}\": {targetTemperatureValue}°C ].");
+                                _logger.LogDebug($"Property: Received - component=\"{componentName}\", [ \"{SamplePropertyName}\": {targetTemperatureValue}°C ].");
 
                                 _temperature[componentName] = targetTemperatureValue;
 
@@ -165,15 +166,15 @@ namespace Microsoft.Azure.Devices.Client.Samples
                                 // to the format specified by IoT plug and play conventions.
                                 var propertyValue = _deviceClient.PayloadConvention.PayloadSerializer.CreateWritablePropertyResponse(
                                     _temperature[componentName], 
-                                    CommonClientResponseCodes.OK, 
+                                    ClientResponseCodes.OK, 
                                     serverWritablePropertiesVersion);
 
                                 var reportedProperty = new ClientPropertyCollection();
-                                reportedProperty.AddComponentProperty(componentName, targetTemperatureProperty, propertyValue);
+                                reportedProperty.AddComponentProperty(componentName, SamplePropertyName, propertyValue);
 
                                 ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(reportedProperty);
 
-                                _logger.LogDebug($"Property: Update - component=\"{componentName}\", {reportedProperty.GetSerializedString()} is {nameof(CommonClientResponseCodes.OK)} " +
+                                _logger.LogDebug($"Property: Update - component=\"{componentName}\", {reportedProperty.GetSerializedString()} is {nameof(ClientResponseCodes.OK)} " +
                                     $"with a version of {updateResponse.Version}.");
 
                                 break;
@@ -207,9 +208,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 {
                     case Thermostat1:
                     case Thermostat2:
-                        const string targetTemperatureProperty = "targetTemperature";
                         string componentName = writableProperty.Key;
-                        if (writableProperties.TryGetValue(componentName, targetTemperatureProperty, out WritableClientProperty targetTemperatureRequested))
+                        if (writableProperties.TryGetValue(componentName, SamplePropertyName, out WritableClientProperty targetTemperatureRequested))
                         {
                             await HandleTargetTemperatureUpdateRequestAsync(componentName, targetTemperatureRequested);
                             break;
@@ -235,18 +235,17 @@ namespace Microsoft.Azure.Devices.Client.Samples
         // The callback to handle target temperature property update requests for a component.
         private async Task HandleTargetTemperatureUpdateRequestAsync(string componentName, WritableClientProperty targetTemperatureUpdateRequest)
         {
-            const string targetTemperatureProperty = "targetTemperature";
             double targetTemperatureValue = SystemTextJsonPayloadSerializer.Instance.ConvertFromObject<double>(targetTemperatureUpdateRequest.Value);
-            _logger.LogDebug($"Property: Received - component=\"{componentName}\", [ \"{targetTemperatureProperty}\": {targetTemperatureValue}°C ].");
+            _logger.LogDebug($"Property: Received - component=\"{componentName}\", [ \"{SamplePropertyName}\": {targetTemperatureValue}°C ].");
 
             _temperature[componentName] = targetTemperatureValue;
 
             var reportedProperty = new ClientPropertyCollection();
-            reportedProperty.AddComponentProperty(componentName, targetTemperatureProperty, targetTemperatureUpdateRequest.AcknowledgeWith(CommonClientResponseCodes.OK));
+            reportedProperty.AddComponentProperty(componentName, SamplePropertyName, targetTemperatureUpdateRequest.AcknowledgeWith(ClientResponseCodes.OK));
 
             ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(reportedProperty);
 
-            _logger.LogDebug($"Property: Update - component=\"{componentName}\", {reportedProperty.GetSerializedString()} is {nameof(CommonClientResponseCodes.OK)} " +
+            _logger.LogDebug($"Property: Update - component=\"{componentName}\", {reportedProperty.GetSerializedString()} is {nameof(ClientResponseCodes.OK)} " +
                 $"with a version of {updateResponse.Version}.");
         }
 
@@ -273,7 +272,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             _logger.LogWarning($"Received a command request that isn't" +
                                 $" implemented - component name = {commandRequest.ComponentName}, command name = {commandRequest.CommandName}");
 
-                            return Task.FromResult(new CommandResponse(CommonClientResponseCodes.NotFound));
+                            return Task.FromResult(new CommandResponse(ClientResponseCodes.NotFound));
                     }
 
                 // For the default case, first check if CommandRequest.ComponentName is null.
@@ -291,7 +290,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                                 _logger.LogWarning($"Received a command request that isn't" +
                                     $" implemented - command name = {commandRequest.CommandName}");
 
-                                return Task.FromResult(new CommandResponse(CommonClientResponseCodes.NotFound));
+                                return Task.FromResult(new CommandResponse(ClientResponseCodes.NotFound));
                         }
                     }
                     else
@@ -299,7 +298,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         _logger.LogWarning($"Received a command request that isn't" +
                             $" implemented - component name = {commandRequest.ComponentName}, command name = {commandRequest.CommandName}");
 
-                        return Task.FromResult(new CommandResponse(CommonClientResponseCodes.NotFound));
+                        return Task.FromResult(new CommandResponse(ClientResponseCodes.NotFound));
                     }
             }
         }
@@ -321,12 +320,12 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 _temperatureReadingsDateTimeOffset.Clear();
                 _logger.LogDebug($"Command: Reboot completed.");
 
-                return new CommandResponse(CommonClientResponseCodes.OK);
+                return new CommandResponse(ClientResponseCodes.OK);
             }
             catch (JsonReaderException ex)
             {
                 _logger.LogDebug($"Command input for {commandRequest.CommandName} is invalid: {ex.Message}.");
-                return new CommandResponse(CommonClientResponseCodes.BadRequest);
+                return new CommandResponse(ClientResponseCodes.BadRequest);
             }
         }
 
@@ -361,25 +360,25 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             $" maxTemp={report.MaximumTemperature}, minTemp={report.MinimumTemperature}, avgTemp={report.AverageTemperature}, " +
                             $"startTime={report.StartTime.LocalDateTime}, endTime={report.EndTime.LocalDateTime}");
 
-                        return Task.FromResult(new CommandResponse(report, CommonClientResponseCodes.OK));
+                        return Task.FromResult(new CommandResponse(report, ClientResponseCodes.OK));
                     }
 
                     _logger.LogDebug($"Command: component=\"{commandRequest.ComponentName}\"," +
                         $" no relevant readings found since {sinceInUtc.LocalDateTime}, cannot generate any report.");
 
-                    return Task.FromResult(new CommandResponse(CommonClientResponseCodes.NotFound));
+                    return Task.FromResult(new CommandResponse(ClientResponseCodes.NotFound));
                 }
 
                 _logger.LogDebug($"Command: component=\"{commandRequest.ComponentName}\", no temperature readings sent yet," +
                     $" cannot generate any report.");
 
-                return Task.FromResult(new CommandResponse(CommonClientResponseCodes.NotFound));
+                return Task.FromResult(new CommandResponse(ClientResponseCodes.NotFound));
             }
             catch (JsonReaderException ex)
             {
                 _logger.LogError($"Command input for {commandRequest.CommandName} is invalid: {ex.Message}.");
 
-                return Task.FromResult(new CommandResponse(CommonClientResponseCodes.BadRequest));
+                return Task.FromResult(new CommandResponse(ClientResponseCodes.BadRequest));
             }
         }
 
@@ -516,23 +515,35 @@ namespace Microsoft.Azure.Devices.Client.Samples
             return Math.Round(s_random.NextDouble() * (max - min) + min, 1);
         }
 
-        private async Task UpdateForEmptyWritableProperty(string componentName, CancellationToken cancellationToken)
+        private async Task CheckEmptyProperties(string componentName, CancellationToken cancellationToken)
         {
-            const string propertyName = "targetTemperature";
-            
+            ClientProperties properties = await _deviceClient.GetClientPropertiesAsync();
+
+            ClientPropertyCollection writableProperty = properties.WritablePropertyRequests;
+            ClientPropertyCollection reportedProperty = properties.ReportedFromClient;
+
+            // Check if the device properties for the current component are empty.
+            if (!writableProperty.Contains(componentName) && !reportedProperty.Contains(componentName))
+            {
+                await ReportDefault(componentName, SamplePropertyName, cancellationToken);
+            }
+        }
+
+        private async Task ReportDefault(string componentName, string propertyName, CancellationToken cancellationToken)
+        {
             var reportedProperties = new ClientPropertyCollection();
 
-            // If the writable properties are empty, report the default value with ACK(ac=203, av=0) as part of the PnP convention.
+            // Report the default value with ACK(ac=203, av=0) as part of the PnP convention.
             // "DefaultPropertyValue" is set from the device when the desired property is not set via the hub.
             var propertyValue = _deviceClient.PayloadConvention.PayloadSerializer.CreateWritablePropertyResponse(
-                DefaultPropertyValue, 203, 0);
+                DefaultPropertyValue, ClientResponseCodes.Default, 0, DefaultACKDescription);
 
             reportedProperties.AddComponentProperty(componentName, propertyName, propertyValue);
 
             ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(reportedProperties, cancellationToken);
 
-            _logger.LogDebug($"Report the default values for \"{componentName}\".\nProperty: Update - component=\"{componentName}\", {reportedProperties.GetSerializedString()}" +
-                $" in °C is complete with a version of {updateResponse.Version}.");
+            _logger.LogDebug($"Report the default value with ACK for \"{componentName}\" on the client initial startup.\nProperty: Update - component=\"{componentName}\", " +
+                $"{reportedProperties.GetSerializedString()} is complete with a version of {updateResponse.Version}.");
         }
     }
 }

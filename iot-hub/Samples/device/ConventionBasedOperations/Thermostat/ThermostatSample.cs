@@ -58,9 +58,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         public async Task PerformOperationsAsync(CancellationToken cancellationToken)
         {
-            // Check if the device properties (both writable and reported) are empty on the initial startup. If so, report the default values with ACK to the hub.
-            await CheckEmptyProperties(cancellationToken);
-
             // Set handler to receive and respond to connection status changes.
             _deviceClient.SetConnectionStatusChangesHandler(async (status, reason) =>
             {
@@ -70,7 +67,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 // This can get back "lost" property updates in a device reconnection from status Disconnected_Retrying or Disconnected.
                 if (status == ConnectionStatus.Connected)
                 {
-                    await GetWritablePropertiesAndHandleChangesAsync(cancellationToken);
+                    await GetWritablePropertiesAndHandleChangesAsync();
                 }
             });
 
@@ -81,6 +78,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
             // Set handler to receive and respond to commands.
             _logger.LogDebug($"Subscribe to commands.");
             await _deviceClient.SubscribeToCommandsAsync(HandleCommandsAsync, cancellationToken);
+
+            // Check if the device properties (both writable and reported) are empty on the initial startup. If so, report the default values with ACK to the hub.
+            await CheckEmptyProperties(cancellationToken);
 
             bool temperatureReset = true;
 
@@ -102,7 +102,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
-        private async Task GetWritablePropertiesAndHandleChangesAsync(CancellationToken cancellationToken)
+        private async Task GetWritablePropertiesAndHandleChangesAsync()
         {
             ClientProperties properties = await _deviceClient.GetClientPropertiesAsync();
             ClientPropertyCollection writableProperties = properties.WritablePropertyRequests;
@@ -299,12 +299,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
             ClientProperties properties = await _deviceClient.GetClientPropertiesAsync();
 
             ClientPropertyCollection writableProperty = properties.WritablePropertyRequests;
-            String writablePropertyString = writableProperty.GetSerializedString();
             ClientPropertyCollection reportedProperty = properties.ReportedFromClient;
-            String reportedPropertyString = reportedProperty.GetSerializedString();
 
             // Check if the device properties are empty.
-            if (writablePropertyString.Equals("{}") && reportedPropertyString.Equals("{}"))
+            if (!writableProperty.Contains(SamplePropertyName) && !reportedProperty.Contains(SamplePropertyName))
             {
                 await ReportDefault(SamplePropertyName, cancellationToken);
             }
