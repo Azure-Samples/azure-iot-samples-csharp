@@ -514,18 +514,18 @@ namespace Microsoft.Azure.Devices.Client.Samples
             // Check if the device properties for the current component are empty.
             if (!writableProperty.Contains(componentName) && !reportedProperty.Contains(componentName))
             {
-                await ReportDefault(componentName, TargetTemperatureProperty, cancellationToken);
+                await ReportInitialProperty(componentName, TargetTemperatureProperty, cancellationToken);
             }
         }
 
-        private async Task ReportDefault(string componentName, string propertyName, CancellationToken cancellationToken)
+        private async Task ReportInitialProperty(string componentName, string propertyName, CancellationToken cancellationToken)
         {
             var reportedProperties = new ClientPropertyCollection();
 
             // Report the default value with ACK(ac=203, av=0) as part of the PnP convention.
             // "DefaultPropertyValue" is set from the device when the desired property is not set via the hub.
             var propertyValue = _deviceClient.PayloadConvention.PayloadSerializer.CreateWritablePropertyResponse(
-                DefaultPropertyValue, ClientResponseCodes.Default, 0, DefaultACKDescription);
+                DefaultPropertyValue, ClientResponseCodes.DeviceInitialProperty, 0, DefaultACKDescription);
 
             reportedProperties.AddComponentProperty(componentName, propertyName, propertyValue);
 
