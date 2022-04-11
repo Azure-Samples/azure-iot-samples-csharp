@@ -20,6 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\PnpConvention\PnpHelpers.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\helpers\ColorConsoleLogger\ColorConsoleLogger.csproj" />
   </ItemGroup>
 
