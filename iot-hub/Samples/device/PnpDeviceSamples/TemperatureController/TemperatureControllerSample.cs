@@ -92,7 +92,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 // This can get back "lost" property updates in a device reconnection from status Disconnected_Retrying or Disconnected.
                 if (status == ConnectionStatus.Connected)
                 {
-                    await GetWritablePropertiesAndHandleChangesAsync(cancellationToken);
+                    await GetWritablePropertiesAndHandleChangesAsync();
                 }
             });
             
@@ -138,7 +138,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
-        private async Task GetWritablePropertiesAndHandleChangesAsync(CancellationToken cancellationToken)
+        private async Task GetWritablePropertiesAndHandleChangesAsync()
         {
             Twin twin = await _deviceClient.GetTwinAsync();
             _logger.LogInformation($"Device retrieving twin values on CONNECT: {twin.ToJson()}");
