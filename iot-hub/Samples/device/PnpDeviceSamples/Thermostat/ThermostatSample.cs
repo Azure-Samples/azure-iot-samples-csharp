@@ -26,6 +26,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
     public class ThermostatSample
     {
         // The default reported "value" and "av" for each "Thermostat" component on the client initial startup.
+        // See https://docs.microsoft.com/en-us/azure/iot-develop/concepts-convention#writable-properties for more details in acknowledgment responses.
         private const double DefaultPropertyValue = 0d;
         private const long DefaultACKVersion = 0L;
 
@@ -120,10 +121,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                 foreach (KeyValuePair<string, object> propertyUpdate in twinCollection)
                 {
-                    string componentName = propertyUpdate.Key;
-                    if (componentName == TargetTemperatureProperty)
+                    string propertyName = propertyUpdate.Key;
+                    if (propertyName == TargetTemperatureProperty)
                     {
-                        await TargetTemperatureUpdateCallbackAsync(twinCollection, componentName);
+                        await TargetTemperatureUpdateCallbackAsync(twinCollection, propertyName);
                     }
                     else
                     {

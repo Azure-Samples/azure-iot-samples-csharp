@@ -27,6 +27,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
     public class TemperatureControllerSample
     {
         // The default reported "value" and "av" for each "Thermostat" component on the client initial startup.
+        // See https://docs.microsoft.com/en-us/azure/iot-develop/concepts-convention#writable-properties for more details in acknowledgment responses.
         private const double DefaultPropertyValue = 0d;
         private const long DefaultACKVersion = 0L;
 
