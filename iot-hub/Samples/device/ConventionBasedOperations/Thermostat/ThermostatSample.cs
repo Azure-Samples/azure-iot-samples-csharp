@@ -13,9 +13,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
 {
     public class ThermostatSample
     {
-        // The default reported "value" and "ad" on the client initial startup.
+        // The default reported "value", "ad" and "av" on the client initial startup.
+        // See https://docs.microsoft.com/en-us/azure/iot-develop/concepts-convention#writable-properties for more details in acknowledgment responses.
         private const double DefaultPropertyValue = 0d;
         private const string DefaultACKDescription = "Initialized with default value";
+        private const long DefaultACKVersion = 0L;
 
         private const string TargetTemperatureProperty = "targetTemperature";
 
@@ -304,7 +306,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
             // Report the default value with ACK(ac=203, av=0) as part of the PnP convention.
             // "DefaultPropertyValue" is set from the device when the desired property is not set via the hub.
             var propertyValue = _deviceClient.PayloadConvention.PayloadSerializer.CreateWritablePropertyResponse(
-                DefaultPropertyValue, ClientResponseCodes.DeviceInitialProperty, 0, DefaultACKDescription);
+                DefaultPropertyValue, 
+                ClientResponseCodes.DeviceInitialProperty, 
+                DefaultACKVersion, 
+                DefaultACKDescription);
 
             reportedProperties.AddRootProperty(propertyName, propertyValue);
 
