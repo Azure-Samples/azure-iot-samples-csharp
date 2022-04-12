@@ -19,7 +19,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
     {
         Completed = 200,
         InProgress = 202,
-        DeviceInitialProperty = 203,
+        ReportDeviceInitialProperty = 203,
         BadRequest = 400,
         NotFound = 404
     }
@@ -27,9 +27,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
     public class TemperatureControllerSample
     {
         // The default reported "value" and "av" for each "Thermostat" component on the client initial startup.
-        // See https://docs.microsoft.com/en-us/azure/iot-develop/concepts-convention#writable-properties for more details in acknowledgment responses.
+        // See https://docs.microsoft.com/azure/iot-develop/concepts-convention#writable-properties for more details in acknowledgment responses.
         private const double DefaultPropertyValue = 0d;
-        private const long DefaultACKVersion = 0L;
+        private const long DefaultAckVersion = 0L;
 
         private const string TargetTemperatureProperty = "targetTemperature";
 
@@ -111,8 +111,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
             _desiredPropertyUpdateCallbacks.Add(Thermostat2, TargetTemperatureUpdateCallbackAsync);
 
             _logger.LogDebug("For each component, check if the device properties are empty on the initial startup.");
-            await CheckEmptyProperties(Thermostat1, cancellationToken);
-            await CheckEmptyProperties(Thermostat2, cancellationToken);
+            await CheckEmptyPropertiesAsync(Thermostat1, cancellationToken);
+            await CheckEmptyPropertiesAsync(Thermostat2, cancellationToken);
 
             await UpdateDeviceInformationAsync(cancellationToken);
             await SendDeviceSerialNumberAsync(cancellationToken);
@@ -311,7 +311,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 targetTemperature,
                 (int)StatusCode.InProgress,
                 desiredProperties.Version,
-                "In-progress - reporting current temperature");
+                "In progress - reporting current temperature");
 
             await _deviceClient.UpdateReportedPropertiesAsync(pendingReportedProperty);
             _logger.LogDebug($"Property: Update - component=\"{componentName}\", {{\"{TargetTemperatureProperty}\": {targetTemperature} }} in °C is {StatusCode.InProgress}.");
@@ -433,7 +433,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             _logger.LogDebug($"Property: Update - component=\"{componentName}\", {{ \"{propertyName}\": {maxTemp} }} in °C is complete.");
         }
 
-        private async Task CheckEmptyProperties(string componentName, CancellationToken cancellationToken)
+        private async Task CheckEmptyPropertiesAsync(string componentName, CancellationToken cancellationToken)
         {
             Twin twin = await _deviceClient.GetTwinAsync();
             TwinCollection writableProperty = twin.Properties.Desired;
@@ -442,11 +442,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
             // Check if the device properties (both writable and reported) for the current component are empty.
             if (!writableProperty.Contains(componentName) && !reportedProperty.Contains(componentName))
             {
-                await ReportInitialProperty(componentName, TargetTemperatureProperty, cancellationToken);
+                await ReportInitialPropertyAsync(componentName, TargetTemperatureProperty, cancellationToken);
             }
         }
 
-        private async Task ReportInitialProperty(string componentName, string propertyName, CancellationToken cancellationToken)
+        private async Task ReportInitialPropertyAsync(string componentName, string propertyName, CancellationToken cancellationToken)
         {
             // If the device properties are empty, report the default value with ACK(ac=203, av=0) as part of the PnP convention.
             // "DefaultPropertyValue" is set from the device when the desired property is not set via the hub.
@@ -454,8 +454,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 componentName, 
                 propertyName, 
                 DefaultPropertyValue, 
-                (int)StatusCode.DeviceInitialProperty, 
-                DefaultACKVersion,
+                (int)StatusCode.ReportDeviceInitialProperty, 
+                DefaultAckVersion,
                 "Initialized with default value");
 
             await _deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken);
