@@ -78,7 +78,8 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
                 _logger.LogInformation($"Registration status: {result.Status}.");
                 if (result.Status != ProvisioningRegistrationStatusType.Assigned)
                 {
-                    _logger.LogError($"Registration status did not assign a hub, so exiting this sample.");
+                    _logger.LogError($"Registration status did not assign a hub, so exiting this sample. You will nede to inspect the registration result and take appropriate next steps.");
+                    _logger.LogError($"Error code: {result.ErrorCode}, error message: {result.ErrorMessage}.");
                     return;
                 }
 
