@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
 {
     /// <summary>
     /// Demonstrates how to register a device with the device provisioning service using a symmetric key, and then
-    /// use the registration information to authenticate to IoT Hub.
+    /// use the registration information to authenticate to IoT hub.
     /// </summary>
     internal class ProvisioningDeviceClientSample
     {
