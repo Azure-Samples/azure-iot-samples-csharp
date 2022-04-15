@@ -64,7 +64,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
                 // Pass in your certificate signing request along with the registration request.
                 // DPS will forward your signing request to your linked certificate authority (CA).
                 // The CA will sign and return an operational X509 device identity certificate (aka client certificate) to DPS.
-                // DPS will register the device and operational client certificate thumbprint in IoT Hub and return the certificate to the IoT device.
+                // DPS will register the device and operational client certificate thumbprint in IoT hub and return the certificate to the IoT device.
                 // The IoT device can then use the operational certificate to authenticate with IoT Hub.
 
                 var registrationData = new ProvisioningRegistrationAdditionalData
