@@ -35,7 +35,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
             try
             {
                 // Generate the certificate signing request for requesting X509 onboarding certificate for authenticating with IoT hub.
-                // This sample uses openssl to generate an ECC P-256 keypair and the corresponding certificate signing request.
+                // This sample uses openssl to generate an ECC P-256 public-private key-pair and the corresponding certificate signing request.
                 string certificateSigningRequest = GenerateClientCertKeyPairAndCsr(_parameters.Id);
 
                 _logger.LogInformation($"Initializing the device provisioning client...");
@@ -90,13 +90,13 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
                     return;
                 }
 
-                // This sample uses openssl to generate the pfx certificate from the issued operational certificate and the previously created ECC P-256 keypair.
+                // This sample uses openssl to generate the pfx certificate from the issued operational certificate and the previously created ECC P-256 public-private key-pair.
                 // This certificate will be used when authneticating with IoT hub.
                 _logger.LogInformation("Creating an X509 certificate from the issued operational certificate...");
                 using X509Certificate2 clientCertificate = GenerateOperationalCertificateFromIssuedCertificate(result.RegistrationId, result.IssuedClientCertificate);
                 IAuthenticationMethod auth = new DeviceAuthenticationWithX509Certificate(result.DeviceId, clientCertificate);
 
-                _logger.LogInformation($"Testing the provisioned device with IoT Hub...");
+                _logger.LogInformation($"Testing the provisioned device with IoT hub...");
                 using DeviceClient iotClient = DeviceClient.Create(result.AssignedHub, auth, _parameters.TransportType);
 
                 _logger.LogInformation("Sending a telemetry message...");
@@ -129,39 +129,37 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
 
         private string GenerateClientCertKeyPairAndCsr(string registrationId)
         {
-            // Generate keypair
+            // Generate EC public-private key-pair
             _logger.LogInformation($"Generating ECC P-256 {registrationId}.key file using ...");
-            string keygen = $"ecparam -genkey -name prime256v1 -out {s_dpsClientCertificateFolder}\\{registrationId}.key";
-            _logger.LogInformation($"openssl {keygen}");
-            using (var cmdProcess = Process.Start("openssl", keygen))
-            {
-                cmdProcess.WaitForExit();
-            }
+            string keyGen = $"ecparam -genkey -name prime256v1 -out {s_dpsClientCertificateFolder}\\{registrationId}.key";
+            _logger.LogInformation($"Running: openssl {keyGen}");
 
-            // Generate csr
+            using var keyGenProcess = Process.Start("openssl", keyGen);
+            keyGenProcess.WaitForExit();
+
+            // Generate the certificate signing request
             _logger.LogInformation($"Generating {registrationId}.csr file using ...");
-            string csrgen = $"req -new -key {s_dpsClientCertificateFolder}\\{registrationId}.key -out {s_dpsClientCertificateFolder}\\{registrationId}.csr -subj /CN={registrationId}";
-            _logger.LogInformation($"openssl {csrgen}");
-            using (var cmdProcess = Process.Start("openssl", csrgen))
-            {
-                cmdProcess.WaitForExit();
-            }
+            string csrGen = $"req -new -key {s_dpsClientCertificateFolder}\\{registrationId}.key -out {s_dpsClientCertificateFolder}\\{registrationId}.csr -subj /CN={registrationId}";
+            _logger.LogInformation($"Running: openssl {csrGen}");
+            
+            using var csrGenProcess = Process.Start("openssl", csrGen);
+            csrGenProcess.WaitForExit();
 
             return File.ReadAllText($"{s_dpsClientCertificateFolder}\\{registrationId}.csr");
         }
 
         private X509Certificate2 GenerateOperationalCertificateFromIssuedCertificate(string registrationId, string issuedCertificate)
         {
-            // Write the issued certificate to disk
+            // Write the issued public certificate to disk
             File.WriteAllText($"{s_dpsClientCertificateFolder}\\{registrationId}.cer", issuedCertificate);
 
+            // Generate the pfx file containing the public certificate information returned by DPS and the private certificate information genertated previously using openssl ecparam command.
             _logger.LogInformation($"Generating {registrationId}.pfx file using ...");
-            string pfxgen = $"pkcs12 -export -out {s_dpsClientCertificateFolder}\\{registrationId}.pfx -inkey {s_dpsClientCertificateFolder}\\{registrationId}.key -in {s_dpsClientCertificateFolder}\\{registrationId}.cer -passout pass:";
-            _logger.LogInformation($"openssl {pfxgen}");
-            using (var exeProcess = Process.Start("openssl", pfxgen))
-            {
-                exeProcess.WaitForExit();
-            }
+            string pfxGen = $"pkcs12 -export -out {s_dpsClientCertificateFolder}\\{registrationId}.pfx -inkey {s_dpsClientCertificateFolder}\\{registrationId}.key -in {s_dpsClientCertificateFolder}\\{registrationId}.cer -passout pass:";
+            _logger.LogInformation($"Running: openssl {pfxGen}");
+            
+            using var pfxGenProcess = Process.Start("openssl", pfxGen);
+            pfxGenProcess.WaitForExit();
 
             return new X509Certificate2($"{s_dpsClientCertificateFolder}\\{registrationId}.pfx");
         }
