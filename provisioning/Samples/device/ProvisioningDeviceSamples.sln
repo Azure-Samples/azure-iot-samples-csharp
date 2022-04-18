@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31129.286
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32407.343
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TpmSample", "TpmSample\TpmSample.csproj", "{995317C2-9D36-477A-8781-94C1F0C3A87F}"
 EndProject
@@ -11,7 +11,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SecurityProviderTpmSimulato
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SymmetricKeySample", "SymmetricKeySample\SymmetricKeySample.csproj", "{7148297F-B361-43FD-96A8-77305AA2B263}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ComputeDerivedSymmetricKeySample", "ComputeDerivedSymmetricKeySample\ComputeDerivedSymmetricKeySample.csproj", "{3557CC19-72B6-462E-9BF4-E3675D54E67F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ComputeDerivedSymmetricKeySample", "ComputeDerivedSymmetricKeySample\ComputeDerivedSymmetricKeySample.csproj", "{3557CC19-72B6-462E-9BF4-E3675D54E67F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SymmetricKeyWithOperationalCertificateSample", "SymmetricKeyWithOperationalCertificateSample\SymmetricKeyWithOperationalCertificateSample.csproj", "{15D99352-B7F4-4887-AC7F-78C3EAFCD244}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ColorConsoleLogger", "..\..\..\helpers\ColorConsoleLogger\ColorConsoleLogger.csproj", "{B5358F05-5795-4CB8-8ADF-0622FA55929E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +43,14 @@ Global
 		{3557CC19-72B6-462E-9BF4-E3675D54E67F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3557CC19-72B6-462E-9BF4-E3675D54E67F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3557CC19-72B6-462E-9BF4-E3675D54E67F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15D99352-B7F4-4887-AC7F-78C3EAFCD244}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15D99352-B7F4-4887-AC7F-78C3EAFCD244}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15D99352-B7F4-4887-AC7F-78C3EAFCD244}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15D99352-B7F4-4887-AC7F-78C3EAFCD244}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5358F05-5795-4CB8-8ADF-0622FA55929E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5358F05-5795-4CB8-8ADF-0622FA55929E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5358F05-5795-4CB8-8ADF-0622FA55929E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5358F05-5795-4CB8-8ADF-0622FA55929E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
