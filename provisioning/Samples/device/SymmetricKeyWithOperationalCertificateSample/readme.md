@@ -49,7 +49,7 @@ This sample uses symmetric keys for the onboarding authentication with DPS. You 
         ```
 
         Where:
-        - **<dps_service_endpoint>** - Your DPS Service Endpoint from the DPS Overview blade in Azure portal.
+        - **<dps_service_endpoint>** - Your DPS Service Endpoint from the DPS Overview blade in the Azure portal.
         - **<ca_name>** - The friendly name you wish to assign to your CA. A lower-case string (up to 128 characters long) of alphanumeric characters plus certain special characters : ._ -. No special characters allowed at start or end. 
         - **<service_api_sas_token>** - The DPS Service API shared access token.
         - **<api_key>** - Your DigiCert API key.
