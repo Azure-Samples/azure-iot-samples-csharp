@@ -47,46 +47,35 @@ This sample uses symmetric keys for the onboarding authentication with DPS. You 
         ```
 
         Where:
-        - **<dps_service_endpoint>** - Your DPS Service Endpoint from the DPS Overview blade in Azure.
+        - **<dps_service_endpoint>** - Your DPS Service Endpoint from the DPS Overview blade in Azure portal.
         - **<ca_name>** - The friendly name you wish to assign to your CA. A lower-case string (up to 128 characters long) of alphanumeric characters plus certain special characters : ._ -. No special characters allowed at start or end. 
         - **<service_api_sas_token>** - The DPS Service API shared access token.
         - **<api_key>** - Your DigiCert API key.
         - **<profile_id>** - Your DigiCert **Client Cert Profile ID**.
 
     1. Create a symmetric key enrollment in DPS and link it to your Certificate Authority.
-        Linking your enrollment to the Certificate Authority is currently unavailable through the portal, so you will need to run the following curl commands.
+        Linking your enrollment to the Certificate Authority is currently unavailable through the portal, so you will need to use the following API to create your enrollment and link it to your Certificate Authority.
 
-        1. Query the Service API for your individual enrollment:
+        The example below is for an `IndividualEnrollment`. `EnrollmentGroup` also supports setting the `ClientCertificateIssuancePolicy` in a similar fashion.
 
-            ```bash
-            curl -X GET -H "Content-Type: application/json" -H "Content-Encoding:  utf-8" -H "Authorization: <service_api_sas_token>" https://<dps_service_endpoint>/enrollments/<registration_id>?api-version=2021-11-01-preview > enrollment.json
-            ```
+        ```csharp
+        IndividualEnrollment individualEnrollment = new IndividualEnrollment(registrationId, attestation))
+        {
+            ClientCertificateIssuancePolicy = new ClientCertificateIssuancePolicy
+            {
+                CertificateAuthorityName = caName,
+            },
+        };
 
-            Where:
-            - **<dps_service_endpoint>** - Your DPS Service Endpoint from the DPS Overview blade in Azure.
-            - **<service_api_sas_token>** - The DPS Service API shared access token.
-            - **<registration_id>** - The RegistrationID of the individual entrollment that you'd like to modify.
+        using var provisioningService = ProvisioningServiceClient.CreateFromConnectionString(provisioningConnectionString);
+        IndividualEnrollment createdEnrollment = await provisioningService.CreateOrUpdateIndividualEnrollmentAsync(individualEnrollment);
+        ```
 
-        1.  Update the individual enrollment as follows, using the above JSON. Edit the `enrollment.json` file to add the following information:
-            ```json
-            "clientCertificateIssuancePolicy": {
-                "certificateAuthorityName": "ca1"
-            }
-            ```
-            
-            Replace ca1 with **<ca_name>**.
-
-        1. Update the enrollment information:
-
-            ```bash
-            curl -k -L -i -X PUT -H "Content-Type: application/json" -H "Content-Encoding:  utf-8" -H "Authorization: <service_api_sas_token>" https://<dps_service_endpoint>/enrollments/<registration_id>?api-version=2021-11-01-preview -H "If-Match: <etag>" -d @enrollment.json
-            ```
-
-            Where:
-            - **<dps_service_endpoint>** - Your DPS Service Endpoint from the DPS Overview blade in Azure.
-            - **<registration_id>** – The RegistrationID of the individual entrollment that you'd like to modify.
-            - **<service_api_sas_token>** - The DPS Service API shared access token.
-            - **<etag>** - The etag found in enrollment.json 
+        Where:
+        - **\<registrationId>** - The RegistrationID of the individual entrollment that you'd like to modify.
+        - **\<attestation>** - The attestation details of the individual entrollment that you'd like to modify.
+        - **\<caName>** - The ca_name from the previous step.
+        - **\<provisioningConnectionString>** - The provisioning service connection string copied over from the DPS shared access policies blade in Azure portal.
 
 1. Run the sample
 
@@ -105,8 +94,16 @@ This sample uses symmetric keys for the onboarding authentication with DPS. You 
         > **Note:** The same CSR can be reused and sent to DPS multiple times. You do not have to regenerate the CSR each time. DPS does not impose any restrictions on the cipher suite and key length that can be used. You are free to use RSA or ECC. However, your CA profile must support the cipher suite and key length.
 
     1. The certificate signing request generated is sent to DPS through the following API
-        ```c#
+        ```csharp
         public Task<DeviceRegistrationResult> RegisterAsync(ProvisioningRegistrationAdditionalData data, CancellationToken cancellationToken = default);
+        ```
+
+        Where:
+        ```csharp
+        public class ProvisioningRegistrationAdditionalData {
+            public string JsonData { get; set; }
+            public string OperationalCertificateRequest { get; set; }
+        }
         ```
 
     1. DPS forwards the certificate signing request to your linked Certificate Authority which signs the request and returns the signed operational certificate. 
