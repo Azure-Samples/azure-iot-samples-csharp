@@ -8,7 +8,7 @@
 
 From [Azure IoT C-SDK](https://github.com/Azure/azure-iot-sdk-c/blob/59d9ae9131fba61a2862b20d332fd0ca99bc8174/provisioning_client/devdoc/using_certificate_signing_requests.md) dev doc:
 
-![dpsCsr](https://www.plantuml.com/plantuml/png/bLDTRzCm57tFhpYFK3K12V50DKthKWO83MrDaP0G3svysrxXsS5sDlBlkQar54AaTM-Ex_auvrgv257vsDwPR4NtN1FoSwJJ0X_8abUHC9kvfZ-niyhCPdXVbg_MrH9DkpLSvutd-nxsaxgyKUmdf4fFWWWeoKVUSTt3AzvRjdkiwLTB8Q8DyZNsEiNZfbfWsSO3sPYKarArhEROt5p3UPI6POflRr-_wntirYcl1IG6jIVTCvK9cKWDKo_BpsCVJtiEaJnUf5DA-adFSUbqj_WlVbcjNqxAfgl1Fle6pdES5ZaIplBJ2Add03fk8Glt7RuNHV5Z7ExGRgzkLr_cqCSBQVOSzOzVBwVUuca98URdHtOIUv81-jsm9rqykf_boVtwThF1YaFjhAKwPjO9sD0kPaYpDz2E0kGUWecABMIajEPa1lsN34ygE5jaPBKGfgkUMd6KSx0beU1AiMaz_HDtS-204Ac1XA4GbE_WhEaWimSX8pcdLfCX7rzrJSV_73lZ7h8B0RPtvWy0 "dpsCsr")
+![dpsCsr](https://www.plantuml.com/plantuml/png/bLDTRzCm57tFhpYFK3K12V50DKthKWO83MrDaP0G3svysrxXsS5sDlBlkQar54AaTM-Ex_auvrgv257vsDwPR4NtN1FoSwJJ0X_8abUHC9kvfZ-niyhCPdXVbg_MrH9DkpLSvutd-nxsapeqYls4LEb9404b-SWxhdjunNlBTeyr_MefHBH1liPUftZSL0iistWW6vDoKggMrHoRcsiuZzAmJF7jxUjtlOFTEkMrWCIWzgHxfZ8X4wbXwcNvUUpZQSyXaiUBT4f9F-avBftk5l_5BwlroodPT3NSHz_0UOxJ8aV2MNuQ8VKSGCSjPE6-m_UYA7wCmntQxTNjwiiS-dWXpPwZ_l7hvTHRF2qXnFpyo4vYJp90lnlsf8j7zxCykL_VRZPOSQYTjLJ7p3e16zh536ds1jfHWDn3C56nXOoKrfpCeF-IuKa5PukCh1R2TDKJAmvoZhSa55mfDgsdV-9k3XmG8ZMGC1I2yXsSDHrazY3av8pKQZBauwkkwVYVOsVSGtOXmFRE_040 "dpsCsr")
 
 ## Public API
 
@@ -81,7 +81,7 @@ This sample uses symmetric keys for the onboarding authentication with DPS. You 
 
 1. Run the sample
 
-    1. The sample uses OpenSSL to generate an ECC P-256 public and private key-pair and certificate signing request.
+    1. The sample uses OpenSSL to generate an ECC P-256 public and private key pair and certificate signing request.
         ```bash
         openssl ecparam -genkey -name prime256v1 -out device1.key
         ```

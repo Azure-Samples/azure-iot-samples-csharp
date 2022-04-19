@@ -35,7 +35,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
             try
             {
                 // Generate the certificate signing request for requesting X509 onboarding certificate for authenticating with IoT hub.
-                // This sample uses openssl to generate an ECC P-256 public-private key-pair and the corresponding certificate signing request.
+                // This sample uses openssl to generate an ECC P-256 public-private key pair and the corresponding certificate signing request.
                 string certificateSigningRequest = GenerateClientCertKeyPairAndCsr(_parameters.Id);
 
                 _logger.LogInformation($"Initializing the device provisioning client...");
@@ -89,7 +89,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
                     return;
                 }
 
-                // This sample uses openssl to generate the pfx certificate from the issued operational certificate and the previously created ECC P-256 public-private key-pair.
+                // This sample uses openssl to generate the pfx certificate from the issued operational certificate and the previously created ECC P-256 public-private key pair.
                 // This certificate will be used when authneticating with IoT hub.
                 _logger.LogInformation("Creating an X509 certificate from the issued operational certificate...");
                 using X509Certificate2 clientCertificate = GenerateOperationalCertificateFromIssuedCertificate(result.RegistrationId, result.IssuedClientCertificate);
@@ -128,7 +128,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
 
         private string GenerateClientCertKeyPairAndCsr(string registrationId)
         {
-            // Generate EC public-private key-pair
+            // Generate EC public-private key pair
             _logger.LogInformation($"Generating ECC P-256 {registrationId}.key file using ...");
             string keyGen = $"ecparam -genkey -name prime256v1 -out {s_dpsClientCertificateFolder}\\{registrationId}.key";
             _logger.LogInformation($"Running: openssl {keyGen}");
