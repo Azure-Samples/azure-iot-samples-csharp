@@ -6,7 +6,9 @@
 
 ## Certificate Signing Request Flow
 
-![dpsCSR](https://www.plantuml.com/plantuml/png/bPFVJy8m4CVVzrVSeoumJOmF4aCOGzGO331CJ8mFPJsWSRQpxKJ-Uwyh69nBmBV-kC_tldVNzenbsfRlEV329Eaq6E2do13QNV2h3joYHCqiGXYgmgs4aYmFGxX9ahDf6iCRRje54xg1JJGIQI11RSL2P4uc5Kifv1Ac-56YiL0QjwkBDucEqmx4fLsXj5xAescSjc0s7e7IaEI2Rk7vylpAISgvOffJ42bc6haZMMu2ajgt6ISFzJmQby9Or73YLzxQFMz1N_5DvuzVwjrfewm_sck0gq1fOPj5Ak2wVIHGrRaNMg-2Egmty195qMlTtAgS3oU3nnRmwi1LzW_rkwT-uomEIX3OxbRqLkmG0VXL21fTjCjEpQduqMGsWu4mcP8ICnj8HS4vBcm0_ku2kAAtH-T0CPO92NJ5E1S-6V0VcCRDZ99HW98xeB7KOqki-Tph4Y4mP28lDVwoEri90_JQ2Y0pQ0oZeIcPRvpVDS7RpBwgHfExgKwn-j2moDKw27eKIN_x6m00 "dpsCSR")
+From [Azure IoT C-SDK](https://github.com/Azure/azure-iot-sdk-c/blob/59d9ae9131fba61a2862b20d332fd0ca99bc8174/provisioning_client/devdoc/using_certificate_signing_requests.md) dev doc:
+
+![dpsCsr](https://www.plantuml.com/plantuml/png/bLDTRzCm57tFhpYFK3K12V50DKthKWO83MrDaP0G3svysrxXsS5sDlBlkQar54AaTM-Ex_auvrgv257vsDwPR4NtN1FoSwJJ0X_8abUHC9kvfZ-niyhCPdXVbg_MrH9DkpLSvutd-nxsapeqYls4LEb9404b-SWxhdjunNlBTeyr_MefHBH1liPUftZSL0iistWW6vDoKggMrHoRcsiuZzAmJF7jxUjtlOFTEkMrWCIWzgHxfZ8X4wbXwcNvUUpZQSyXaiUBT4f9F-avBftk5l_5BwlroodPT3NSHz_0UOxJ8aV2MNuQ8VKSGCSjPE6-m_UYA7wCmntQxTNjwiiS-dWXpPwZ_l7hvTHRF2qXnFpyo4vYJp90lnlsf8j7zxCykL_VRZPOSQYTjLJ7p3e16zh536ds1jfHWDn3C56nXOoKrfpCeF-IuKa5PukCh1R2TDKJAmvoZhSa55mfDgsdV-9k3XmG8ZMGC1I2yXsSDHrazY3av8pKQZBauwkkwVYVOsVSGtOXmFRE_040 "dpsCsr")
 
 ## Public API
 
@@ -47,50 +49,39 @@ This sample uses symmetric keys for the onboarding authentication with DPS. You 
         ```
 
         Where:
-        - **<dps_service_endpoint>** - Your DPS Service Endpoint from the DPS Overview blade in Azure.
+        - **<dps_service_endpoint>** - Your DPS Service Endpoint from the DPS Overview blade in the Azure portal.
         - **<ca_name>** - The friendly name you wish to assign to your CA. A lower-case string (up to 128 characters long) of alphanumeric characters plus certain special characters : ._ -. No special characters allowed at start or end. 
         - **<service_api_sas_token>** - The DPS Service API shared access token.
         - **<api_key>** - Your DigiCert API key.
         - **<profile_id>** - Your DigiCert **Client Cert Profile ID**.
 
     1. Create a symmetric key enrollment in DPS and link it to your Certificate Authority.
-        Linking your enrollment to the Certificate Authority is currently unavailable through the portal, so you will need to run the following curl commands.
+        Linking your enrollment to the Certificate Authority is currently unavailable through the portal, so you will need to use the following API to create your enrollment and link it to your Certificate Authority.
 
-        1. Query the Service API for your individual enrollment:
+        The example below is for an `IndividualEnrollment`. `EnrollmentGroup` also supports setting the `ClientCertificateIssuancePolicy` in a similar fashion.
 
-            ```bash
-            curl -X GET -H "Content-Type: application/json" -H "Content-Encoding:  utf-8" -H "Authorization: <service_api_sas_token>" https://<dps_service_endpoint>/enrollments/<registration_id>?api-version=2021-11-01-preview > enrollment.json
-            ```
+        ```csharp
+        IndividualEnrollment individualEnrollment = new IndividualEnrollment(registrationId, attestation))
+        {
+            ClientCertificateIssuancePolicy = new ClientCertificateIssuancePolicy
+            {
+                CertificateAuthorityName = caName,
+            },
+        };
 
-            Where:
-            - **<dps_service_endpoint>** - Your DPS Service Endpoint from the DPS Overview blade in Azure.
-            - **<service_api_sas_token>** - The DPS Service API shared access token.
-            - **<registration_id>** - The RegistrationID of the individual entrollment that you'd like to modify.
+        using var provisioningService = ProvisioningServiceClient.CreateFromConnectionString(provisioningConnectionString);
+        IndividualEnrollment createdEnrollment = await provisioningService.CreateOrUpdateIndividualEnrollmentAsync(individualEnrollment);
+        ```
 
-        1.  Update the individual enrollment as follows, using the above JSON. Edit the `enrollment.json` file to add the following information:
-            ```json
-            "clientCertificateIssuancePolicy": {
-                "certificateAuthorityName": "ca1"
-            }
-            ```
-            
-            Replace ca1 with **<ca_name>**.
-
-        1. Update the enrollment information:
-
-            ```bash
-            curl -k -L -i -X PUT -H "Content-Type: application/json" -H "Content-Encoding:  utf-8" -H "Authorization: <service_api_sas_token>" https://<dps_service_endpoint>/enrollments/<registration_id>?api-version=2021-11-01-preview -H "If-Match: <etag>" -d @enrollment.json
-            ```
-
-            Where:
-            - **<dps_service_endpoint>** - Your DPS Service Endpoint from the DPS Overview blade in Azure.
-            - **<registration_id>** – The RegistrationID of the individual entrollment that you'd like to modify.
-            - **<service_api_sas_token>** - The DPS Service API shared access token.
-            - **<etag>** - The etag found in enrollment.json 
+        Where:
+        - **\<registrationId>** - The RegistrationID of the individual entrollment that you'd like to modify.
+        - **\<attestation>** - The attestation details of the individual entrollment that you'd like to modify.
+        - **\<caName>** - The ca_name from the previous step.
+        - **\<provisioningConnectionString>** - The provisioning service connection string copied over from the DPS shared access policies blade in Azure portal.
 
 1. Run the sample
 
-    1. The sample uses OpenSSL to generate an ECC P-256 public and private key-pair and certificate signing request.
+    1. The sample uses OpenSSL to generate an ECC P-256 public and private key pair and certificate signing request.
         ```bash
         openssl ecparam -genkey -name prime256v1 -out device1.key
         ```
@@ -105,8 +96,16 @@ This sample uses symmetric keys for the onboarding authentication with DPS. You 
         > **Note:** The same CSR can be reused and sent to DPS multiple times. You do not have to regenerate the CSR each time. DPS does not impose any restrictions on the cipher suite and key length that can be used. You are free to use RSA or ECC. However, your CA profile must support the cipher suite and key length.
 
     1. The certificate signing request generated is sent to DPS through the following API
-        ```c#
+        ```csharp
         public Task<DeviceRegistrationResult> RegisterAsync(ProvisioningRegistrationAdditionalData data, CancellationToken cancellationToken = default);
+        ```
+
+        Where:
+        ```csharp
+        public class ProvisioningRegistrationAdditionalData {
+            public string JsonData { get; set; }
+            public string OperationalCertificateRequest { get; set; }
+        }
         ```
 
     1. DPS forwards the certificate signing request to your linked Certificate Authority which signs the request and returns the signed operational certificate. 

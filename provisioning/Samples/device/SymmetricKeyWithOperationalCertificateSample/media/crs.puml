@@ -1,6 +1,6 @@
 @startuml dpsCSR
-Device -> Device: Generate **operational** ECC/RSA public-private key-pair
-Device -> Device: Creates Certificate Signing Request using **operational** key-pair
+Device -> Device: Generate **operational** ECC/RSA public-private key pair
+Device -> Device: Creates Certificate Signing Request using **operational** public-private key pair
 Device -> DPS: Authenticate using SAS, TPM or Client X509 **onboarding** credentials
 DPS -> Device: ACK
 Device -> DPS: register (registrationId, Body: **operational** CSR)
