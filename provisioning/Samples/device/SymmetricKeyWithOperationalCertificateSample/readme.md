@@ -6,7 +6,7 @@
 
 ## Certificate Signing Request Flow
 
-From [Azure IoT C-SDK](https://github.com/Azure/azure-iot-sdk-c/blob/59d9ae9131fba61a2862b20d332fd0ca99bc8174/provisioning_client/devdoc/using_certificate_signing_requests.md) devdoc:
+From [Azure IoT C-SDK](https://github.com/Azure/azure-iot-sdk-c/blob/59d9ae9131fba61a2862b20d332fd0ca99bc8174/provisioning_client/devdoc/using_certificate_signing_requests.md) dev doc:
 
 ![dpsCsr](https://www.plantuml.com/plantuml/png/bLDTRzCm57tFhpYFK3K12V50DKthKWO83MrDaP0G3svysrxXsS5sDlBlkQar54AaTM-Ex_auvrgv257vsDwPR4NtN1FoSwJJ0X_8abUHC9kvfZ-niyhCPdXVbg_MrH9DkpLSvutd-nxsaxgyKUmdf4fFWWWeoKVUSTt3AzvRjdkiwLTB8Q8DyZNsEiNZfbfWsSO3sPYKarArhEROt5p3UPI6POflRr-_wntirYcl1IG6jIVTCvK9cKWDKo_BpsCVJtiEaJnUf5DA-adFSUbqj_WlVbcjNqxAfgl1Fle6pdES5ZaIplBJ2Add03fk8Glt7RuNHV5Z7ExGRgzkLr_cqCSBQVOSzOzVBwVUuca98URdHtOIUv81-jsm9rqykf_boVtwThF1YaFjhAKwPjO9sD0kPaYpDz2E0kGUWecABMIajEPa1lsN34ygE5jaPBKGfgkUMd6KSx0beU1AiMaz_HDtS-204Ac1XA4GbE_WhEaWimSX8pcdLfCX7rzrJSV_73lZ7h8B0RPtvWy0 "dpsCsr")
 
