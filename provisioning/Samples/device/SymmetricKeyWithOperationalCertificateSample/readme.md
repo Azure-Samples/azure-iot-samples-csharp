@@ -1,7 +1,7 @@
 # Using Azure IoT Device Provisioning Certificate Signing Requests
 
 - Device Provisioning Service (DPS) can be configured to receive Certificate Signing Requests (CSRs) from IoT devices as a part of the DPS registration process. DPS will then forward the CSR on to the Certificate Authority (CA) linked to your DPS instance. 
-- The CA will sign and return an X.509 device identity certificate (aka client certificate) to DPS. We refer to this as an operational certificate. DPS will register the device and operational client certificate thumbprint in IoT hub and return the certificate to the IoT device. The IoT device can then use the operational certificate to authenticate with IoT hub. 
+- The CA will sign and return an X.509 device identity certificate (aka client certificate) to DPS. We refer to this as an operational certificate. DPS will register the device and operational client certificate thumbprint in IoT hub and return the certificate to the IoT device. The IoT device can then use the returned operational certificate along with the private key information to authenticate with IoT Hub.
 - An onboarding authentication mechanism (either SAS token or X509 client certificate) is still required to authenticate the device with DPS.
 
 ## Certificate Signing Request Flow
@@ -20,7 +20,7 @@ From [Azure IoT C-SDK](https://github.com/Azure/azure-iot-sdk-c/blob/59d9ae9131f
              public Task<DeviceRegistrationResult> RegisterAsync(ProvisioningRegistrationAdditionalData data, TimeSpan timeout);
          }
          public class ProvisioningRegistrationAdditionalData {
-+          public string OperationalCertificateRequest { get; set; }
++          public string ClientCertificateSigningRequest { get; set; }
          }
          public class DeviceRegistrationResult {
 +           public string IssuedClientCertificate { get; set; }
@@ -102,7 +102,8 @@ This sample uses symmetric keys for the onboarding authentication with DPS. You 
 
         Where:
         ```csharp
-        public class ProvisioningRegistrationAdditionalData {
+        public class ProvisioningRegistrationAdditionalData
+        {
             public string JsonData { get; set; }
             public string OperationalCertificateRequest { get; set; }
         }
