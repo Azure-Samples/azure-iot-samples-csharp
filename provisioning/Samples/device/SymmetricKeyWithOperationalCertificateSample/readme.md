@@ -1,7 +1,7 @@
 # Using Azure IoT Device Provisioning Certificate Signing Requests
 
 - Device Provisioning Service (DPS) can be configured to receive Certificate Signing Requests (CSRs) from IoT devices as a part of the DPS registration process. DPS will then forward the CSR on to the Certificate Authority (CA) linked to your DPS instance. 
-- The CA will sign and return an X.509 device identity certificate (aka client certificate) to DPS. We refer to this as an operational certificate. DPS will register the device and operational client certificate thumbprint in IoT hub and return the certificate to the IoT device. The IoT device can then use the returned operational certificate along with the private key information to authenticate with IoT hub.
+- The CA will sign and return an X.509 device identity certificate (aka client certificate) to DPS. We will refer to this here as an operational certificate. DPS will register the device and operational client certificate thumbprint in IoT hub and return the certificate with the public key to the IoT device. The IoT device can then use the returned client certificate along with the private key information to authenticate with IoT hub.
 - An onboarding authentication mechanism (either SAS token or X509 client certificate) is still required to authenticate the device with DPS.
 
 ## Certificate Signing Request Flow
@@ -105,11 +105,11 @@ This sample uses symmetric keys for the onboarding authentication with DPS. You 
         public class ProvisioningRegistrationAdditionalData
         {
             public string JsonData { get; set; }
-            public string OperationalCertificateRequest { get; set; }
+            public string ClientCertificateSigningRequest { get; set; }
         }
         ```
 
-    1. DPS forwards the certificate signing request to your linked Certificate Authority which signs the request and returns the signed operational certificate. 
+    1. DPS forwards the certificate signing request to your linked Certificate Authority which signs the request and returns the signed operational client certificate. 
 
     1. The IoT hub Device SDK needs both the signed certificate as well as the private key information. It expects to load a single PFX-formatted bundle containing all necessarily information. This sample uses OpenSSL to combine the key and certificate to create the PFX file:
         ```bash
