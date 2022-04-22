@@ -5,8 +5,6 @@ using CommandLine;
 using Microsoft.Azure.Devices.Logging;
 using Microsoft.Azure.Devices.Provisioning.Client.Samples;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Threading.Tasks;
 
 namespace SymmetricKeySample
 {
