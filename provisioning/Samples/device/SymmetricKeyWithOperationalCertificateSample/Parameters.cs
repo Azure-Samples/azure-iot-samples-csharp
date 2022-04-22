@@ -36,21 +36,21 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
             'e',
             "EnrollmentType",
             Default = EnrollmentType.Individual,
-            HelpText = "The type of enrollment: Individual or Group")]
+            HelpText = "The type of enrollment: Individual or Group. This defaults to EnrollmentType.Individual.")]
         public EnrollmentType EnrollmentType { get; set; }
 
         [Option(
             'g',
             "GlobalDeviceEndpoint",
             Default = "global.azure-devices-provisioning.net",
-            HelpText = "The global endpoint for devices to connect to.")]
+            HelpText = "The global endpoint for devices to connect to. This defaults to global.azure-devices-provisioning.net.")]
         public string GlobalDeviceEndpoint { get; set; }
 
         [Option(
             't',
             "TransportType",
             Default = TransportType.Mqtt,
-            HelpText = "The transport to use to communicate with the device provisioning instance. Possible values include Mqtt, Mqtt_WebSocket_Only, Mqtt_Tcp_Only, Amqp, Amqp_WebSocket_Only, Amqp_Tcp_only, and Http1.")]
+            HelpText = "The transport to use to communicate with the device provisioning instance. Possible values include Mqtt, Mqtt_WebSocket_Only, Mqtt_Tcp_Only, Amqp, Amqp_WebSocket_Only, Amqp_Tcp_only, and Http1. This defaults to Mqtt.")]
         public TransportType TransportType { get; set; }
     }
 }
