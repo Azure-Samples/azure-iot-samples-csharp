@@ -17,6 +17,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
     {
         // DTDL interface used: https://github.com/Azure/iot-plugandplay-models/blob/main/dtmi/com/example/thermostat-1.json
         private const string ModelId = "dtmi:com:example:Thermostat;1";
+        private const string SdkEventProviderPrefix = "Microsoft-Azure-";
 
         private static ILogger s_logger;
 
@@ -45,7 +46,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
             s_logger = loggerFactory.CreateLogger<Program>();
 
             // Instantiating this seems to do all we need for outputting SDK events to our console log.
-            const string SdkEventProviderPrefix = "Microsoft-Azure-";
             _ = new ConsoleEventListener(SdkEventProviderPrefix, s_logger);
 
             if (!parameters.Validate(s_logger))
