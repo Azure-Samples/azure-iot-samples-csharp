@@ -21,6 +21,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         // Both Thermostat models are identical in definition but this is done to allow IoT Central to handle
         // TemperatureController model correctly.
         private const string ModelId = "dtmi:com:example:TemperatureController;2";
+        private const string SdkEventProviderPrefix = "Microsoft-Azure-";
 
         private static ILogger s_logger;
 
@@ -43,14 +44,13 @@ namespace Microsoft.Azure.Devices.Client.Samples
             loggerFactory.AddColorConsoleLogger(
                 new ColorConsoleLoggerConfiguration
                 {
+                    // The SDK logs are written at Trace level. Set this to LogLevel.Trace to get ALL logs.
                     MinLogLevel = LogLevel.Debug,
                 });
             s_logger = loggerFactory.CreateLogger<Program>();
 
             // Instantiating this seems to do all we need for outputting SDK events to our console log.
-            // The SDK logs are written at Trace level. To view SDK logs change the MinLogLevel to Trace.
-            const string SdkEventProviderPrefix = "Microsoft-Azure-";
-            _ = new ConsoleEventListener(SdkEventProviderPrefix, logger);
+            _ = new ConsoleEventListener(SdkEventProviderPrefix, s_logger);
 
             if (!parameters.Validate(s_logger))
             {
