@@ -25,8 +25,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
         private readonly ClientOptions _clientOptions = new ClientOptions { SdkAssignsMessageId = SdkAssignsMessageId.WhenUnset };
 
         // An UnauthorizedException is handled in the connection status change handler through its corresponding status change event.
-        // We will ignore this exception when thrown by the client API operation.
-        private readonly Dictionary<Type, string> _exceptionsToBeIgnored = new Dictionary<Type, string> { { typeof(UnauthorizedException), "Unauthorized exceptions are handled by the ConnectionStatusChangeHandler." } };
+        // We will ignore this exception when thrown by client API operations.
+        private readonly Dictionary<Type, string> _exceptionsToBeIgnored = new Dictionary<Type, string>
+        {
+            { typeof(UnauthorizedException), "Unauthorized exceptions are handled by the ConnectionStatusChangeHandler." }
+        };
 
         private readonly ILogger _logger;
 
@@ -35,6 +38,12 @@ namespace Microsoft.Azure.Devices.Client.Samples
         private static volatile ConnectionStatus s_connectionStatus = ConnectionStatus.Disconnected;
 
         private static CancellationTokenSource s_cancellationTokenSource;
+
+        // A safe initial value for caching the twin desired properties version is 1, so the client
+        // will process all previous property change requests and initialize the device application
+        // after which this version will be updated to that, so we have a high water mark of which version number
+        // has been processed.
+        private static long s_localDesiredPropertyVersion = 1;
 
         public DeviceReconnectionSample(List<string> deviceConnectionStrings, TransportType transportType, ILogger logger)
         {
@@ -66,7 +75,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             {
                 eventArgs.Cancel = true;
                 s_cancellationTokenSource.Cancel();
-                _logger.LogInformation("Sample execution cancellation requested; will exit.");
+                _logger.LogWarning("Sample execution cancellation requested; will exit.");
             };
 
             _logger.LogInformation($"Sample execution started, press Control+C to quit the sample.");
@@ -102,12 +111,15 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     {
                         _logger.LogDebug($"Attempting to initialize the client instance, current status={s_connectionStatus}");
 
-                        // If the device client instance has been previously initialized, then dispose it.
+                        // If the device client instance has been previously initialized, close and dispose it.
                         if (s_deviceClient != null)
                         {
-                            await s_deviceClient.CloseAsync(cancellationToken);
+                            try
+                            {
+                                await s_deviceClient.CloseAsync(cancellationToken);
+                            }
+                            catch (UnauthorizedException) { } // if the previous token is now invalid, this call may fail
                             s_deviceClient.Dispose();
-                            s_deviceClient = null;
                         }
 
                         s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionStrings.First(), _transportType, _clientOptions);
@@ -144,10 +156,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
-        // It is not good practice to have async void methods, however, DeviceClient.SetConnectionStatusChangesHandler() event handler signature has a void return type.
-        // As a result, any operation within this block will be executed unmonitored on another thread.
-        // To prevent multi-threaded synchronization issues, the async method InitializeClientAsync being called in here first grabs a lock
-        // before attempting to initialize or dispose the device client instance.
+        // It is not generally a good practice to have async void methods, however, DeviceClient.SetConnectionStatusChangesHandler() event handler signature
+        // has a void return type. As a result, any operation within this block will be executed unmonitored on another thread.
+        // To prevent multi-threaded synchronization issues, the async method InitializeClientAsync being called in here first grabs a lock before attempting to
+        // initialize or dispose the device client instance; the async method GetTwinAndDetectChangesAsync is implemented similarly for the same purpose.
         private async void ConnectionStatusChangeHandler(ConnectionStatus status, ConnectionStatusChangeReason reason)
         {
             _logger.LogDebug($"Connection status changed: status={status}, reason={reason}");
@@ -157,10 +169,15 @@ namespace Microsoft.Azure.Devices.Client.Samples
             {
                 case ConnectionStatus.Connected:
                     _logger.LogDebug("### The DeviceClient is CONNECTED; all operations will be carried out as normal.");
+
+                    // Call GetTwinAndDetectChangesAsync() to retrieve twin values from the server once the connection status changes into Connected.
+                    // This can get back "lost" twin updates in a device reconnection from status like Disconnected_Retrying or Disconnected.
+                    await GetTwinAndDetectChangesAsync(s_cancellationTokenSource.Token);
+                    _logger.LogDebug("The client has retrieved twin values after the connection status changes into CONNECTED.");
                     break;
 
                 case ConnectionStatus.Disconnected_Retrying:
-                    _logger.LogDebug("### The DeviceClient is retrying based on the retry policy. Do NOT close or open the DeviceClient instance");
+                    _logger.LogDebug("### The DeviceClient is retrying based on the retry policy. Do NOT close or open the DeviceClient instance.");
                     break;
 
                 case ConnectionStatus.Disabled:
@@ -219,6 +236,38 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
+        private async Task GetTwinAndDetectChangesAsync(CancellationToken cancellationToken)
+        {
+            Twin twin = null;
+
+            // Allow a single thread to call GetTwin here
+            await _initSemaphore.WaitAsync(cancellationToken);
+
+            await RetryOperationHelper.RetryTransientExceptionsAsync(
+                operationName: "GetTwin",
+                asyncOperation: async () =>
+                {
+                    twin = await s_deviceClient.GetTwinAsync();
+                    _logger.LogInformation($"Device retrieving twin values: {twin.ToJson()}");
+
+                    TwinCollection twinCollection = twin.Properties.Desired;
+                    long serverDesiredPropertyVersion = twinCollection.Version;
+
+                    // Check if the desired property version is outdated on the local side.
+                    if (serverDesiredPropertyVersion > s_localDesiredPropertyVersion)
+                    {
+                        _logger.LogDebug($"The desired property version cached on local is changing from {s_localDesiredPropertyVersion} to {serverDesiredPropertyVersion}.");
+                        await HandleTwinUpdateNotificationsAsync(twinCollection, cancellationToken);
+                    }
+                },
+                shouldExecuteOperation: () => IsDeviceConnected,
+                logger: _logger,
+                exceptionsToBeIgnored: _exceptionsToBeIgnored,
+                cancellationToken: cancellationToken);
+
+            _initSemaphore.Release();
+        }
+
         private async Task HandleTwinUpdateNotificationsAsync(TwinCollection twinUpdateRequest, object userContext)
         {
             CancellationToken cancellationToken = (CancellationToken)userContext;
@@ -235,6 +284,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     _logger.LogInformation($"Setting property {desiredProperty.Key} to {desiredProperty.Value}.");
                     reportedProperties[desiredProperty.Key] = desiredProperty.Value;
                 }
+
+                s_localDesiredPropertyVersion = twinUpdateRequest.Version;
+                _logger.LogDebug($"The desired property version on local is currently {s_localDesiredPropertyVersion}.");
 
                 // For the purpose of this sample, we'll blindly accept all twin property write requests.
                 await RetryOperationHelper.RetryTransientExceptionsAsync(
@@ -277,7 +329,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         {
             var c2dReceiveExceptionsToBeIgnored = new Dictionary<Type, string>(_exceptionsToBeIgnored)
             {
-                { typeof(DeviceMessageLockLostException), "Attempted to complete a received message whose lock token has expired" }
+                { typeof(DeviceMessageLockLostException), "Attempted to complete a received message whose lock token has expired" },
             };
 
             while (!cancellationToken.IsCancellationRequested)

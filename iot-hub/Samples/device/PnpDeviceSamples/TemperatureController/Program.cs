@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using CommandLine;
+using Microsoft.Azure.Devices.Logging;
 using Microsoft.Azure.Devices.Provisioning.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.PlugAndPlay;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
@@ -20,6 +21,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         // Both Thermostat models are identical in definition but this is done to allow IoT Central to handle
         // TemperatureController model correctly.
         private const string ModelId = "dtmi:com:example:TemperatureController;2";
+        private const string SdkEventProviderPrefix = "Microsoft-Azure-";
 
         private static ILogger s_logger;
 
@@ -37,7 +39,19 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     Environment.Exit(1);
                 });
 
-            s_logger = InitializeConsoleDebugLogger();
+            // Set up logging
+            ILoggerFactory loggerFactory = new LoggerFactory();
+            loggerFactory.AddColorConsoleLogger(
+                new ColorConsoleLoggerConfiguration
+                {
+                    // The SDK logs are written at Trace level. Set this to LogLevel.Trace to get ALL logs.
+                    MinLogLevel = LogLevel.Debug,
+                });
+            s_logger = loggerFactory.CreateLogger<Program>();
+
+            // Instantiating this seems to do all we need for outputting SDK events to our console log.
+            _ = new ConsoleEventListener(SdkEventProviderPrefix, s_logger);
+
             if (!parameters.Validate(s_logger))
             {
                 throw new ArgumentException("Required parameters are not set. Please recheck required variables by using \"--help\"");
@@ -125,8 +139,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         }
 
         // Initialize the device client instance using connection string based authentication, over Mqtt protocol (TCP, with fallback over Websocket) and
-        // setting the ModelId into ClientOptions.This method also sets a connection status change callback, that will get triggered any time the device's
-        // connection status changes.
+        // setting the ModelId into ClientOptions.
         private static DeviceClient InitializeDeviceClient(string deviceConnectionString)
         {
             var options = new ClientOptions
@@ -135,16 +148,12 @@ namespace Microsoft.Azure.Devices.Client.Samples
             };
 
             DeviceClient deviceClient = DeviceClient.CreateFromConnectionString(deviceConnectionString, TransportType.Mqtt, options);
-            deviceClient.SetConnectionStatusChangesHandler((status, reason) =>
-            {
-                s_logger.LogDebug($"Connection status change registered - status={status}, reason={reason}.");
-            });
 
             return deviceClient;
         }
 
         // Initialize the device client instance using symmetric key based authentication, over Mqtt protocol (TCP, with fallback over Websocket)
-        // and setting the ModelId into ClientOptions. This method also sets a connection status change callback, that will get triggered any time the device's connection status changes.
+        // and setting the ModelId into ClientOptions.
         private static DeviceClient InitializeDeviceClient(string hostname, IAuthenticationMethod authenticationMethod)
         {
             var options = new ClientOptions
@@ -153,10 +162,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
             };
 
             DeviceClient deviceClient = DeviceClient.Create(hostname, authenticationMethod, TransportType.Mqtt, options);
-            deviceClient.SetConnectionStatusChangesHandler((status, reason) =>
-            {
-                s_logger.LogDebug($"Connection status change registered - status={status}, reason={reason}.");
-            });
 
             return deviceClient;
         }
