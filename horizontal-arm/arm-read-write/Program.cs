@@ -137,7 +137,7 @@ namespace arm_read_write
                 await s_deviceClient.SendEventAsync(message);
 
                 // Print out the message.
-                Console.WriteLine("{0} > Sent message: {1}", DateTime.UtcNow, telemetryDataString);
+                Console.WriteLine("{0} > Sent message: {1}", DateTime.Now, telemetryDataString);
 
                 await Task.Delay(1000);
             }
