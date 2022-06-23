@@ -111,7 +111,7 @@ This sample uses symmetric keys for the onboarding authentication with DPS. You 
 
     1. DPS forwards the certificate signing request to your linked Certificate Authority which signs the request and returns the signed operational client certificate. 
 
-    1. The IoT hub Device SDK needs both the signed certificate as well as the private key information. It expects to load a single PFX-formatted bundle containing all necessarily information. This sample uses OpenSSL to combine the key and certificate to create the PFX file:
+    1. The IoT hub Device SDK needs both the signed certificate as well as the private key information. It expects to load a single PFX-formatted bundle containing all necessarily information. This sample uses OpenSSL to combine the private key and issued public certificate to create the PFX file:
         ```bash
         openssl pkcs12 -export -out device1.pfx -inkey device1.key -in device1.cer
         ```

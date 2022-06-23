@@ -22,22 +22,15 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
             'i',
             "Id",
             Required = true,
-            HelpText = "The registration Id when using individual enrollment, or the desired device Id when using group enrollment.")]
+            HelpText = "The registration Id of the individual enrollment.")]
         public string Id { get; set; }
 
         [Option(
             'p',
             "PrimaryKey",
             Required = true,
-            HelpText = "The primary key of the individual enrollment or the derived primary key of the group enrollment. See the ComputeDerivedSymmetricKeySample for how to generate the derived key.")]
+            HelpText = "The primary key of the individual enrollment.")]
         public string PrimaryKey { get; set; }
-
-        [Option(
-            'e',
-            "EnrollmentType",
-            Default = EnrollmentType.Individual,
-            HelpText = "The type of enrollment: Individual or Group. This defaults to EnrollmentType.Individual.")]
-        public EnrollmentType EnrollmentType { get; set; }
 
         [Option(
             'g',

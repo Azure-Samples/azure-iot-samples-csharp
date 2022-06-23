@@ -3,15 +3,16 @@
 
 using CommandLine;
 using Microsoft.Azure.Devices.Logging;
-using Microsoft.Azure.Devices.Provisioning.Client.Samples;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
 
-namespace SymmetricKeySample
+namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
 {
     /// <summary>
     /// A sample to illustrate connecting a device to hub using the device provisioning service and a symmetric key.
     /// </summary>
-    internal class Program
+    public class Program
     {
         public static async Task<int> Main(string[] args)
         {
@@ -41,7 +42,7 @@ namespace SymmetricKeySample
             // The SDK events are written at trace log level.
             _ = new ConsoleEventListener(SdkEventProviderPrefix, logger);
 
-            var sample = new ProvisioningDeviceClientSample(parameters, logger);
+            var sample = new ConnectUsingOperationalCertificateSample(parameters, logger);
             await sample.RunSampleAsync();
 
             return 0;

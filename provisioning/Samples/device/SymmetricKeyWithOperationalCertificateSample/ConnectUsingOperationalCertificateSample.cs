@@ -5,26 +5,29 @@ using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
+using System;
+using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
 {
     /// <summary>
-    /// Demonstrates how to register a device with the device provisioning service using a symmetric key, and then
-    /// use the registration information to authenticate to IoT hub.
+    /// Demonstrates how to register a device with the device provisioning service using a symmetric key as
+    /// onboarding authentication mechanism and passing in a certificate signing request, and then use the 
+    /// issued device certificate to authenticate to IoT hub.
     /// </summary>
-    internal class ProvisioningDeviceClientSample
+    internal class ConnectUsingOperationalCertificateSample
     {
         private readonly Parameters _parameters;
         private readonly ILogger _logger;
         private readonly DirectoryInfo s_dpsClientCertificateFolder;
 
-        public ProvisioningDeviceClientSample(Parameters parameters, ILogger logger)
+        public ConnectUsingOperationalCertificateSample(Parameters parameters, ILogger logger)
         {
             _parameters = parameters;
-            _logger = logger;   
+            _logger = logger;
 
             // Create a folder to hold the DPS client certificates. If a folder by the same name already exists, it will be used.
             s_dpsClientCertificateFolder = Directory.CreateDirectory("DpsClientCertificates");
@@ -34,10 +37,6 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
         {
             try
             {
-                // Generate the certificate signing request for requesting X509 onboarding certificate for authenticating with IoT hub.
-                // This sample uses openssl to generate an ECC P-256 public-private key pair and the corresponding certificate signing request.
-                string certificateSigningRequest = GenerateClientCertKeyPairAndCsr(_parameters.Id);
-
                 _logger.LogInformation($"Initializing the device provisioning client...");
 
                 // You will need to use a symmetric key enrollment that has been linked to your Certificate Authority.
@@ -58,6 +57,12 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
                     transportHandler);
 
                 _logger.LogInformation($"Initialized for registration Id {security.GetRegistrationID()}.");
+
+                // Generate the certificate signing request for requesting X509 onboarding certificate for authenticating with IoT hub.
+                // This sample uses openssl to generate an ECC P-256 public-private key pair and the corresponding certificate signing request.
+                X509Certificate2Helper.GenerateCertificateSigningRequestFiles(security.GetRegistrationID(), s_dpsClientCertificateFolder, _logger);
+                string csrFile = Path.Combine(s_dpsClientCertificateFolder.FullName, $"{security.GetRegistrationID()}.csr");
+                string certificateSigningRequest = File.ReadAllText(csrFile);
 
                 // Pass in your certificate signing request along with the registration request.
                 // DPS will forward your signing request to your linked certificate authority (CA).
@@ -89,11 +94,17 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
                     return;
                 }
 
-                // This sample uses openssl to generate the pfx certificate from the issued client certificate and the previously created ECC P-256 public-private key pair.
+                // Write the issued certificate to disk
+                string cerFile = Path.Combine(s_dpsClientCertificateFolder.FullName, $"{result.RegistrationId}.cer");
+                File.WriteAllText(cerFile, result.IssuedClientCertificate);
+
+                // This sample uses openssl to generate the pfx certificate from the issued client certificate and the previously created ECC P-256 private key.
                 // This certificate will be used when authenticating with IoT hub.
                 _logger.LogInformation("Creating an X509 certificate from the issued client certificate...");
-                using X509Certificate2 clientCertificate = GenerateOperationalCertificateFromIssuedCertificate(result.RegistrationId, result.IssuedClientCertificate);
-                IAuthenticationMethod auth = new DeviceAuthenticationWithX509Certificate(result.DeviceId, clientCertificate);
+                X509Certificate2Helper.GeneratePfxFromPublicCertificateAndPrivateKey(result.RegistrationId, s_dpsClientCertificateFolder, _logger);
+                using X509Certificate2 clientCertificate = X509Certificate2Helper.CreateX509Certificate2FromPfxFile(result.RegistrationId, s_dpsClientCertificateFolder);
+
+                using var auth = new DeviceAuthenticationWithX509Certificate(result.DeviceId, clientCertificate);
 
                 _logger.LogInformation($"Testing the provisioned device with IoT hub...");
                 using DeviceClient iotClient = DeviceClient.Create(result.AssignedHub, auth, _parameters.TransportType);
@@ -124,43 +135,6 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
                 TransportType.Http1 => new ProvisioningTransportHandlerHttp(),
                 _ => throw new NotSupportedException($"Unsupported transport type {_parameters.TransportType}"),
             };
-        }
-
-        private string GenerateClientCertKeyPairAndCsr(string registrationId)
-        {
-            // Generate EC public-private key pair
-            _logger.LogInformation($"Generating ECC P-256 {registrationId}.key file using ...");
-            string keyGen = $"ecparam -genkey -name prime256v1 -out {s_dpsClientCertificateFolder}\\{registrationId}.key";
-            _logger.LogInformation($"Running: openssl {keyGen}");
-
-            using var keyGenProcess = Process.Start("openssl", keyGen);
-            keyGenProcess.WaitForExit();
-
-            // Generate the certificate signing request
-            _logger.LogInformation($"Generating {registrationId}.csr file using ...");
-            string csrGen = $"req -new -key {s_dpsClientCertificateFolder}\\{registrationId}.key -out {s_dpsClientCertificateFolder}\\{registrationId}.csr -subj /CN={registrationId}";
-            _logger.LogInformation($"Running: openssl {csrGen}");
-            
-            using var csrGenProcess = Process.Start("openssl", csrGen);
-            csrGenProcess.WaitForExit();
-
-            return File.ReadAllText($"{s_dpsClientCertificateFolder}\\{registrationId}.csr");
-        }
-
-        private X509Certificate2 GenerateOperationalCertificateFromIssuedCertificate(string registrationId, string issuedCertificate)
-        {
-            // Write the issued public certificate to disk
-            File.WriteAllText($"{s_dpsClientCertificateFolder}\\{registrationId}.cer", issuedCertificate);
-
-            // Generate the pfx file containing the public certificate information returned by DPS and the private certificate information genertated previously using openssl ecparam command.
-            _logger.LogInformation($"Generating {registrationId}.pfx file using ...");
-            string pfxGen = $"pkcs12 -export -out {s_dpsClientCertificateFolder}\\{registrationId}.pfx -inkey {s_dpsClientCertificateFolder}\\{registrationId}.key -in {s_dpsClientCertificateFolder}\\{registrationId}.cer -passout pass:";
-            _logger.LogInformation($"Running: openssl {pfxGen}");
-            
-            using var pfxGenProcess = Process.Start("openssl", pfxGen);
-            pfxGenProcess.WaitForExit();
-
-            return new X509Certificate2($"{s_dpsClientCertificateFolder}\\{registrationId}.pfx");
         }
 
         private void CleanupCertificates()
