@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
 {
     /// <summary>
-    /// A sample to illustrate connecting a device to hub using the device provisioning service and CA issued operational X509 certificate.
+    /// A sample to illustrate provisioning a device to hub and receiving the Trust Bundle information in the response.
     /// </summary>
     public class Program
     {
@@ -42,7 +42,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
             // The SDK events are written at trace log level.
             _ = new ConsoleEventListener(SdkEventProviderPrefix, logger);
 
-            var sample = new ConnectUsingOperationalCertificateSample(parameters, logger);
+            var sample = new TrustBundleSample(parameters, logger);
             await sample.RunSampleAsync();
 
             return 0;

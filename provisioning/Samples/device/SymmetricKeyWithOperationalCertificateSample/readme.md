@@ -61,7 +61,7 @@ This sample uses symmetric keys for the onboarding authentication with DPS. You 
         The example below is for an `IndividualEnrollment`. `EnrollmentGroup` also supports setting the `ClientCertificateIssuancePolicy` in a similar fashion.
 
         ```csharp
-        IndividualEnrollment individualEnrollment = new IndividualEnrollment(registrationId, attestation))
+        IndividualEnrollment individualEnrollment = new IndividualEnrollment(registrationId, attestation)
         {
             ClientCertificateIssuancePolicy = new ClientCertificateIssuancePolicy
             {
@@ -74,8 +74,8 @@ This sample uses symmetric keys for the onboarding authentication with DPS. You 
         ```
 
         Where:
-        - **\<registrationId>** - The RegistrationID of the individual entrollment that you'd like to modify.
-        - **\<attestation>** - The attestation details of the individual entrollment that you'd like to modify.
+        - **\<registrationId>** - The RegistrationID of the individual entrollment that you'd like to create or update.
+        - **\<attestation>** - The attestation details of the individual entrollment that you'd like to create or update.
         - **\<caName>** - The ca_name from the previous step.
         - **\<provisioningConnectionString>** - The provisioning service connection string copied over from the DPS shared access policies blade in Azure portal.
 
