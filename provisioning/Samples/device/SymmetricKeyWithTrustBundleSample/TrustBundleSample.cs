@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
 {
     /// <summary>
-    /// 
+    /// Demonstrates how to register a device with the device provisioning service and receive the Trust Bundle information in the response.
     /// </summary>
     internal class TrustBundleSample
     {
@@ -70,7 +70,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
             }
 
             _logger.LogInformation("The following certificates have been uploaded as trusted root certificates.");
-            _logger.LogInformation("You will need to add these certificates to your device's certificate store so that it can successfully negotiate mTLS authentication.");
+            _logger.LogInformation("You will need to add these certificates to your device's certificate store so that it can successfully negotiate mTLS authentication with $edgeHub.");
 
             int certificateCount = 0;
             foreach(var certificate in result.TrustBundle.Certificates)

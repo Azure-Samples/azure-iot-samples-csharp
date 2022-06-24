@@ -10,7 +10,9 @@ using System.Threading.Tasks;
 namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
 {
     /// <summary>
-    /// A sample to illustrate connecting a device to hub using the device provisioning service and CA issued operational X509 certificate.
+    /// Demonstrates how to register a device with the device provisioning service using a symmetric key as
+    /// onboarding authentication mechanism and passing in a certificate signing request, and then use the 
+    /// issued device certificate to authenticate to IoT hub.
     /// </summary>
     public class Program
     {

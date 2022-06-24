@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
 {
     /// <summary>
-    /// A sample to illustrate provisioning a device to hub and receiving the Trust Bundle information in the response.
+    /// Demonstrates how to register a device with the device provisioning service and receive the Trust Bundle information in the response.
     /// </summary>
     public class Program
     {
