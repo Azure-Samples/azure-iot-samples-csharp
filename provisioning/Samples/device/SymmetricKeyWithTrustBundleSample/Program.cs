@@ -10,9 +10,7 @@ using System.Threading.Tasks;
 namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
 {
     /// <summary>
-    /// Demonstrates how to register a device with the device provisioning service using a symmetric key as
-    /// onboarding authentication mechanism and passing in a certificate signing request, and then use the 
-    /// issued device certificate to authenticate to IoT hub.
+    /// Demonstrates how to register a device with the device provisioning service and receive the Trust Bundle information in the response.
     /// </summary>
     public class Program
     {
@@ -44,7 +42,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
             // The SDK events are written at trace log level.
             _ = new ConsoleEventListener(SdkEventProviderPrefix, logger);
 
-            var sample = new ConnectUsingOperationalCertificateSample(parameters, logger);
+            var sample = new TrustBundleSample(parameters, logger);
             await sample.RunSampleAsync();
 
             return 0;

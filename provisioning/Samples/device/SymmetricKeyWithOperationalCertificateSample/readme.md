@@ -61,7 +61,7 @@ This sample uses symmetric keys for the onboarding authentication with DPS. You 
         The example below is for an `IndividualEnrollment`. `EnrollmentGroup` also supports setting the `ClientCertificateIssuancePolicy` in a similar fashion.
 
         ```csharp
-        IndividualEnrollment individualEnrollment = new IndividualEnrollment(registrationId, attestation))
+        IndividualEnrollment individualEnrollment = new IndividualEnrollment(registrationId, attestation)
         {
             ClientCertificateIssuancePolicy = new ClientCertificateIssuancePolicy
             {
@@ -74,8 +74,8 @@ This sample uses symmetric keys for the onboarding authentication with DPS. You 
         ```
 
         Where:
-        - **\<registrationId>** - The RegistrationID of the individual entrollment that you'd like to modify.
-        - **\<attestation>** - The attestation details of the individual entrollment that you'd like to modify.
+        - **\<registrationId>** - The RegistrationID of the individual entrollment that you'd like to create or update.
+        - **\<attestation>** - The attestation details of the individual entrollment that you'd like to create or update.
         - **\<caName>** - The ca_name from the previous step.
         - **\<provisioningConnectionString>** - The provisioning service connection string copied over from the DPS shared access policies blade in Azure portal.
 
@@ -111,7 +111,7 @@ This sample uses symmetric keys for the onboarding authentication with DPS. You 
 
     1. DPS forwards the certificate signing request to your linked Certificate Authority which signs the request and returns the signed operational client certificate. 
 
-    1. The IoT hub Device SDK needs both the signed certificate as well as the private key information. It expects to load a single PFX-formatted bundle containing all necessarily information. This sample uses OpenSSL to combine the key and certificate to create the PFX file:
+    1. The IoT hub Device SDK needs both the signed certificate as well as the private key information. It expects to load a single PFX-formatted bundle containing all necessarily information. This sample uses OpenSSL to combine the private key and issued public certificate to create the PFX file:
         ```bash
         openssl pkcs12 -export -out device1.pfx -inkey device1.key -in device1.cer
         ```

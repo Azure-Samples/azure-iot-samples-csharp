@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SymmetricKeyWithOperational
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ColorConsoleLogger", "..\..\..\helpers\ColorConsoleLogger\ColorConsoleLogger.csproj", "{B5358F05-5795-4CB8-8ADF-0622FA55929E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SymmetricKeyWithTrustBundleSample", "SymmetricKeyWithTrustBundleSample\SymmetricKeyWithTrustBundleSample.csproj", "{B39DCE06-C671-4B6C-9826-A9F81680B966}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{B5358F05-5795-4CB8-8ADF-0622FA55929E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B5358F05-5795-4CB8-8ADF-0622FA55929E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B5358F05-5795-4CB8-8ADF-0622FA55929E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B39DCE06-C671-4B6C-9826-A9F81680B966}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B39DCE06-C671-4B6C-9826-A9F81680B966}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B39DCE06-C671-4B6C-9826-A9F81680B966}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B39DCE06-C671-4B6C-9826-A9F81680B966}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
