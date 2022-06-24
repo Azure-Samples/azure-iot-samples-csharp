@@ -5,18 +5,26 @@
     <TargetFramework>net6.0</TargetFramework>
     <LangVersion>10.0</LangVersion>
   </PropertyGroup>
-  <ItemGroup>
-	  <PackageReference Include="CommandLineParser" Version="2.8.0" />
-	  <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.41.0-preview-001" />
-	  <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Client" Version="1.21.0-private-001" />
 
-	  <!-- Note: Applications should not need to import all 3 protocols. This was done to simplify protocol selection within the sample.-->
-	  <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Mqtt" Version="1.19.0-private-001" />
-	  <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Amqp" Version="1.18.0-private-001" />
-	  <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Http" Version="1.17.0-private-001" />
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.8.0" />
+    <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.41.1-unsigned" />
+    <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Client" Version="1.21.1-private-001" />
+
+    <!-- Note: Applications should not need to import all 3 protocols. This was done to simplify protocol selection within the sample.-->
+    <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Mqtt" Version="1.19.0-private-002" />
+    <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Amqp" Version="1.18.0-private-002" />
+    <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Http" Version="1.17.0-private-002" />
   </ItemGroup>
+
+  <!-- This packge is added explicitly even though we are using the same version as publicly available.-->
+  <!-- This is because the publicly available Shared package is a signed package whereas
+       the unsigned provisioning device and provisioning transport packages reference an unsigned Shared package.-->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.Devices.Shared" Version="1.30.2-unsigned" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\helpers\ColorConsoleLogger\ColorConsoleLogger.csproj" />
   </ItemGroup>
-
 </Project>

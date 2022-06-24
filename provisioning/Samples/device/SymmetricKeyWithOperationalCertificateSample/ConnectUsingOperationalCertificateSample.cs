@@ -107,11 +107,18 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
                 using var auth = new DeviceAuthenticationWithX509Certificate(result.DeviceId, clientCertificate);
 
                 _logger.LogInformation($"Testing the provisioned device with IoT hub...");
-                using DeviceClient iotClient = DeviceClient.Create(result.AssignedHub, auth, _parameters.TransportType);
+
+                var clientOptions = new ClientOptions
+                {
+                    SdkAssignsMessageId = SdkAssignsMessageId.WhenUnset,
+                };
+                using DeviceClient iotClient = DeviceClient.Create(result.AssignedHub, auth, _parameters.TransportType, clientOptions);
 
                 _logger.LogInformation("Sending a telemetry message...");
                 using var message = new Message(Encoding.UTF8.GetBytes("TestMessage"));
                 await iotClient.SendEventAsync(message);
+                _logger.LogInformation($"Sent message with Id {message.MessageId}.");
+
                 await iotClient.CloseAsync();
             }
             finally

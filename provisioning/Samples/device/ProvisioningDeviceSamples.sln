@@ -3,21 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32407.343
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TpmSample", "TpmSample\TpmSample.csproj", "{995317C2-9D36-477A-8781-94C1F0C3A87F}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "X509Sample", "X509Sample\X509Sample.csproj", "{65C39A45-983D-4F0A-B839-F9109241C803}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SecurityProviderTpmSimulator", "..\..\..\security\Samples\SecurityProviderTpmSimulator\SecurityProviderTpmSimulator.csproj", "{3B888FEC-552E-4FCE-9126-147695BE4F7F}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SymmetricKeySample", "SymmetricKeySample\SymmetricKeySample.csproj", "{7148297F-B361-43FD-96A8-77305AA2B263}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ComputeDerivedSymmetricKeySample", "ComputeDerivedSymmetricKeySample\ComputeDerivedSymmetricKeySample.csproj", "{3557CC19-72B6-462E-9BF4-E3675D54E67F}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SymmetricKeyWithOperationalCertificateSample", "SymmetricKeyWithOperationalCertificateSample\SymmetricKeyWithOperationalCertificateSample.csproj", "{15D99352-B7F4-4887-AC7F-78C3EAFCD244}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ColorConsoleLogger", "..\..\..\helpers\ColorConsoleLogger\ColorConsoleLogger.csproj", "{B5358F05-5795-4CB8-8ADF-0622FA55929E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SymmetricKeyWithTrustBundleSample", "SymmetricKeyWithTrustBundleSample\SymmetricKeyWithTrustBundleSample.csproj", "{B39DCE06-C671-4B6C-9826-A9F81680B966}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SymmetricKeyWithTrustBundleSample", "SymmetricKeyWithTrustBundleSample\SymmetricKeyWithTrustBundleSample.csproj", "{B39DCE06-C671-4B6C-9826-A9F81680B966}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,26 +15,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{995317C2-9D36-477A-8781-94C1F0C3A87F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{995317C2-9D36-477A-8781-94C1F0C3A87F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{995317C2-9D36-477A-8781-94C1F0C3A87F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{995317C2-9D36-477A-8781-94C1F0C3A87F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{65C39A45-983D-4F0A-B839-F9109241C803}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{65C39A45-983D-4F0A-B839-F9109241C803}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{65C39A45-983D-4F0A-B839-F9109241C803}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{65C39A45-983D-4F0A-B839-F9109241C803}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3B888FEC-552E-4FCE-9126-147695BE4F7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3B888FEC-552E-4FCE-9126-147695BE4F7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3B888FEC-552E-4FCE-9126-147695BE4F7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3B888FEC-552E-4FCE-9126-147695BE4F7F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7148297F-B361-43FD-96A8-77305AA2B263}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7148297F-B361-43FD-96A8-77305AA2B263}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7148297F-B361-43FD-96A8-77305AA2B263}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7148297F-B361-43FD-96A8-77305AA2B263}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3557CC19-72B6-462E-9BF4-E3675D54E67F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3557CC19-72B6-462E-9BF4-E3675D54E67F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3557CC19-72B6-462E-9BF4-E3675D54E67F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3557CC19-72B6-462E-9BF4-E3675D54E67F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{15D99352-B7F4-4887-AC7F-78C3EAFCD244}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{15D99352-B7F4-4887-AC7F-78C3EAFCD244}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15D99352-B7F4-4887-AC7F-78C3EAFCD244}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -69,7 +69,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
                 return;
             }
 
-            _logger.LogInformation("The following certificates have been uploaded as trusted root certificates.");
+            _logger.LogInformation($"The following {result.TrustBundle.Certificates.Count} certificate(s) have been uploaded as trusted root certificates.");
             _logger.LogInformation("You will need to add these certificates to your device's certificate store so that it can successfully negotiate mTLS authentication with $edgeHub.");
 
             int certificateCount = 0;

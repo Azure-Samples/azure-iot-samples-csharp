@@ -33,7 +33,8 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
             loggerFactory.AddColorConsoleLogger(
                 new ColorConsoleLoggerConfiguration
                 {
-                    MinLogLevel = LogLevel.Trace,
+                    // The SDK logs are written at Trace level. Set this to LogLevel.Trace to get ALL logs.
+                    MinLogLevel = LogLevel.Debug,
                 });
             var logger = loggerFactory.CreateLogger<Program>();
 
