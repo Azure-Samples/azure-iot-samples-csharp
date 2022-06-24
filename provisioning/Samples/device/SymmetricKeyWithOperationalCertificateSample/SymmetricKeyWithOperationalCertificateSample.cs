@@ -18,13 +18,13 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
     /// onboarding authentication mechanism and passing in a certificate signing request, and then use the 
     /// issued device certificate to authenticate to IoT hub.
     /// </summary>
-    internal class ConnectUsingOperationalCertificateSample
+    internal class SymmetricKeyWithOperationalCertificateSample
     {
         private readonly Parameters _parameters;
         private readonly ILogger _logger;
         private readonly DirectoryInfo s_dpsClientCertificateFolder;
 
-        public ConnectUsingOperationalCertificateSample(Parameters parameters, ILogger logger)
+        public SymmetricKeyWithOperationalCertificateSample(Parameters parameters, ILogger logger)
         {
             _parameters = parameters;
             _logger = logger;
@@ -107,11 +107,18 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
                 using var auth = new DeviceAuthenticationWithX509Certificate(result.DeviceId, clientCertificate);
 
                 _logger.LogInformation($"Testing the provisioned device with IoT hub...");
-                using DeviceClient iotClient = DeviceClient.Create(result.AssignedHub, auth, _parameters.TransportType);
+
+                var clientOptions = new ClientOptions
+                {
+                    SdkAssignsMessageId = SdkAssignsMessageId.WhenUnset,
+                };
+                using DeviceClient iotClient = DeviceClient.Create(result.AssignedHub, auth, _parameters.TransportType, clientOptions);
 
                 _logger.LogInformation("Sending a telemetry message...");
                 using var message = new Message(Encoding.UTF8.GetBytes("TestMessage"));
                 await iotClient.SendEventAsync(message);
+                _logger.LogInformation($"Sent message with Id {message.MessageId}.");
+
                 await iotClient.CloseAsync();
             }
             finally

@@ -35,7 +35,8 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
             loggerFactory.AddColorConsoleLogger(
                 new ColorConsoleLoggerConfiguration
                 {
-                    MinLogLevel = LogLevel.Trace,
+                    // The SDK logs are written at Trace level. Set this to LogLevel.Trace to get ALL logs.
+                    MinLogLevel = LogLevel.Debug,
                 });
             var logger = loggerFactory.CreateLogger<Program>();
 
@@ -44,7 +45,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
             // The SDK events are written at trace log level.
             _ = new ConsoleEventListener(SdkEventProviderPrefix, logger);
 
-            var sample = new ConnectUsingOperationalCertificateSample(parameters, logger);
+            var sample = new SymmetricKeyWithOperationalCertificateSample(parameters, logger);
             await sample.RunSampleAsync();
 
             return 0;

@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "RegistryManagerSample": {
-      "commandName": "Project",
-      "commandLineArgs": "-c \"\" -p \"\" -s \"\""
-    }
-  }
-}
