@@ -16,12 +16,12 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
     /// <summary>
     /// Demonstrates how to register a device with the device provisioning service and receive the Trust Bundle information in the response.
     /// </summary>
-    internal class TrustBundleSample
+    internal class SymmetricKeyWithTrustBundleSample
     {
         private readonly Parameters _parameters;
         private readonly ILogger _logger;
 
-        public TrustBundleSample(Parameters parameters, ILogger logger)
+        public SymmetricKeyWithTrustBundleSample(Parameters parameters, ILogger logger)
         {
             _parameters = parameters;
             _logger = logger;

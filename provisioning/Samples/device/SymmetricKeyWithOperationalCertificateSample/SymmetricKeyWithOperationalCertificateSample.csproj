@@ -20,6 +20,7 @@
   <!-- This packge is added explicitly even though we are using the same version as publicly available.-->
   <!-- This is because the publicly available Shared package is a signed package whereas
        the unsigned provisioning device and provisioning transport packages reference an unsigned Shared package.-->
+  <!-- This reference can be removed once the signed packages are generated.-->
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.Devices.Shared" Version="1.30.2-unsigned" />
   </ItemGroup>

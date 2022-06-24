@@ -18,13 +18,13 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
     /// onboarding authentication mechanism and passing in a certificate signing request, and then use the 
     /// issued device certificate to authenticate to IoT hub.
     /// </summary>
-    internal class ConnectUsingOperationalCertificateSample
+    internal class SymmetricKeyWithOperationalCertificateSample
     {
         private readonly Parameters _parameters;
         private readonly ILogger _logger;
         private readonly DirectoryInfo s_dpsClientCertificateFolder;
 
-        public ConnectUsingOperationalCertificateSample(Parameters parameters, ILogger logger)
+        public SymmetricKeyWithOperationalCertificateSample(Parameters parameters, ILogger logger)
         {
             _parameters = parameters;
             _logger = logger;

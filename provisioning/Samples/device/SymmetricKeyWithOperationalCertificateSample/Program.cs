@@ -45,7 +45,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
             // The SDK events are written at trace log level.
             _ = new ConsoleEventListener(SdkEventProviderPrefix, logger);
 
-            var sample = new ConnectUsingOperationalCertificateSample(parameters, logger);
+            var sample = new SymmetricKeyWithOperationalCertificateSample(parameters, logger);
             await sample.RunSampleAsync();
 
             return 0;
