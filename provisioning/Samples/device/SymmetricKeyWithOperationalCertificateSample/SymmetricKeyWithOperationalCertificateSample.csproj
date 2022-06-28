@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
-    <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.41.1-unsigned" />
+    <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.41.0" />
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Client" Version="1.21.1-private-001" />
 
     <!-- Note: Applications should not need to import all 3 protocols. This was done to simplify protocol selection within the sample.-->
@@ -17,12 +17,11 @@
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Http" Version="1.17.0-private-002" />
   </ItemGroup>
 
-  <!-- This packge is added explicitly even though we are using the same version as publicly available.-->
-  <!-- This is because the publicly available Shared package is a signed package whereas
-       the unsigned provisioning device and provisioning transport packages reference an unsigned Shared package.-->
-  <!-- This reference can be removed once the signed packages are generated.-->
+  <!-- This package reference should ideally not be required since Newtonsoft.Json is referenced indirectly by Microsoft.Azure.Devices.* nugets. 
+       However, with the Newtonsoft.Json version 12.0.3 -> 13.0.1 upgrade, Visual Studio and nuget integration is throwing an exception where it resolves the
+       target Newtonsoft.Json version to be 13.0.0 (which doesn't exist on nuget.org). To work around this, we need to explicitly reference v13.0.1.-->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.Devices.Shared" Version="1.30.2-unsigned" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
   <ItemGroup>
