@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
     {
         /// <summary>
         /// This code does not comply with HTTP semantics. Instead, it indicates that the device client
-        /// reports the default value with ACK when its properties are empty.
+        /// reports the default value with acknowledgement when its properties are empty.
         /// </summary>
         public const int DeviceInitialProperty = 203;
     }

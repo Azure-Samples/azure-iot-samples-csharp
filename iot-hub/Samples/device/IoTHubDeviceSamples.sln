@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeviceClientStreamingSample", "DeviceStreamingSample\DeviceClientStreamingSample.csproj", "{B9A6FBA0-23DE-4197-9C3F-BDC4D58BD0DA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ConventionBasedOperations", "ConventionBasedOperations", "{F5303EDE-71ED-4F4F-973A-A9604DE9FA04}"
+	ProjectSection(SolutionItems) = preProject
+		ConventionBasedOperations\readme.md = ConventionBasedOperations\readme.md
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TemperatureController", "ConventionBasedOperations\TemperatureController\TemperatureController.csproj", "{9CC9E3B6-1051-4D01-8D9B-AF5F13FD88C1}"
 EndProject

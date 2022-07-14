@@ -85,21 +85,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
             await deviceClient.CloseAsync();
         }
 
-        private static ILogger InitializeConsoleDebugLogger()
-        {
-            ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
-            {
-                builder
-                .AddFilter(level => level >= LogLevel.Debug)
-                .AddConsole(options =>
-                {
-                    options.TimestampFormat = "[MM/dd/yyyy HH:mm:ss]";
-                });
-            });
-
-            return loggerFactory.CreateLogger<TemperatureControllerSample>();
-        }
-
         private static async Task<DeviceClient> SetupDeviceClientAsync(Parameters parameters, CancellationToken cancellationToken)
         {
             DeviceClient deviceClient;

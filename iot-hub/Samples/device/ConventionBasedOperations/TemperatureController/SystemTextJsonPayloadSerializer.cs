@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Text.Json;
-using Microsoft.Azure.Devices.Shared;
 
 namespace Microsoft.Azure.Devices.Client.Samples
 {
@@ -37,50 +36,15 @@ namespace Microsoft.Azure.Devices.Client.Samples
         }
 
         /// <inheritdoc/>
-        public override T ConvertFromObject<T>(object objectToConvert)
+        public override T ConvertFromJsonObject<T>(object jsonObjectToConvert)
         {
-            return DeserializeToType<T>(SerializeToString(objectToConvert));
+            return DeserializeToType<T>(SerializeToString(jsonObjectToConvert));
         }
 
         /// <inheritdoc/>
-        public override bool TryGetNestedObjectValue<T>(object nestedObject, string propertyName, out T outValue)
+        public override IWritablePropertyAcknowledgementPayload CreateWritablePropertyAcknowledgementPayload(object value, int statusCode, long version, string description = null)
         {
-            outValue = default;
-            if (nestedObject == null || string.IsNullOrEmpty(propertyName))
-            {
-                return false;
-            }
-
-            try
-            {
-                // The supplied nested object is either a JsonElement or the string representation of a JsonElement.
-                JsonElement nestedObjectAsJElement;
-                if (nestedObject.GetType() == typeof(string))
-                {
-                    nestedObjectAsJElement = DeserializeToType<JsonElement>((string)nestedObject);
-                }
-                else
-                {
-                    nestedObjectAsJElement = (JsonElement)nestedObject;
-                }
-
-                if (nestedObjectAsJElement.TryGetProperty(propertyName, out JsonElement element))
-                {
-                    outValue = DeserializeToType<T>(element.GetRawText());
-                    return true;
-                }
-            }
-            catch
-            {
-                // Catch and ignore any exceptions caught
-            }
-            return false;
-        }
-
-        /// <inheritdoc/>
-        public override IWritablePropertyResponse CreateWritablePropertyResponse(object value, int statusCode, long version, string description = null)
-        {
-            return new SystemTextJsonWritablePropertyResponse(value, statusCode, version, description);
+            return new SystemTextJsonWritablePropertyAckPayload(value, statusCode, version, description);
         }
     }
 }
