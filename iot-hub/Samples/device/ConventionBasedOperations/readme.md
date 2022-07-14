@@ -187,19 +187,15 @@ await _deviceClient.SubscribeToCommandsAsync(
 
         if (commandRequest.CommandName == "reboot")
         {
-            try
+            if (commandRequest.TryGetPayload(out int delay))
             {
-                int delay = commandRequest.GetPayload<int>();
                 await Task.Delay(delay * 1000);
 
                 // Application code ...
 
                 return new CommandResponse(CommonClientResponseCodes.OK);
             }
-            catch (JsonReaderException)
-            {
-                return new CommandResponse(CommonClientResponseCodes.BadRequest);
-            }
+            return new CommandResponse(CommonClientResponseCodes.BadRequest);
         }
         else
         {
@@ -255,19 +251,15 @@ await _deviceClient.SubscribeToCommandsAsync(
         if (commandRequest.ComponentName == "thermostat1"
             && commandRequest.CommandName == "getMaxMinReport")
         {
-            try
+            if (commandRequest.TryGetPayload(out DateTimeOffset sinceInUtc))
             {
-                DateTimeOffset sinceInUtc = commandRequest.GetPayload<DateTimeOffset>();
-
-                // Application code ...
+                // Application code...
                 Report report = GetMaxMinReport(sinceInUtc);
 
                 return Task.FromResult(new CommandResponse(report, CommonClientResponseCodes.OK));
             }
-            catch (JsonReaderException)
-            {
-                return Task.FromResult(new CommandResponse(CommonClientResponseCodes.BadRequest));
-            }
+
+            return Task.FromResult(new CommandResponse(CommonClientResponseCodes.BadRequest));
         }
         else
         {
@@ -309,7 +301,7 @@ if (isTargetTemperatureUpdateRequested)
  ClientProperties properties = await _deviceClient.GetClientPropertiesAsync(cancellationToken);
 
 // To fetch the value of client reported property "serialNumber".
-bool isSerialNumberReported = properties.ReportedFromClient.TryGetValue("serialNumber", out string serialNumberReported);
+bool isSerialNumberReported = properties.ReportedByClient.TryGetValue("serialNumber", out string serialNumberReported);
 
 
 // To fetch the value of service requested "targetTemperature" value.
@@ -352,7 +344,7 @@ if (isTargetTemperatureUpdateRequested)
  ClientProperties properties = await _deviceClient.GetClientPropertiesAsync(cancellationToken);
 
 // To fetch the value of client reported property "serialNumber" under component "thermostat1".
-bool isSerialNumberReported = properties.ReportedFromClient.TryGetValue("thermostat1", "serialNumber", out string serialNumberReported);
+bool isSerialNumberReported = properties.ReportedByClient.TryGetValue("thermostat1", "serialNumber", out string serialNumberReported);
 
 
 // To fetch the value of service requested "targetTemperature" value under component "thermostat1".
@@ -457,12 +449,11 @@ await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(
 await _deviceClient.SubscribeToWritablePropertyUpdateRequestsAsync(
     async (writableProperties) =>
     {
-        if (writableProperties.TryGetValue("targetTemperature", out WritableClientProperty targetTemperatureRequested))
+        if (writableProperties.TryGetWritableClientProperty("targetTemperature", out WritableClientProperty targetTemperatureWritableProperty))
         {
             var propertiesToBeUpdated = new ClientPropertyCollection();
-            propertiesToBeUpdated.AddRootProperty(
-                "targetTemperature",
-                targetTemperatureRequested.AcknowledgeWith(CommonClientResponseCodes.OK, "The operation completed successfully."));
+            propertiesToBeUpdated.AddWritableClientPropertyAcknowledgement(
+                targetTemperatureWritableProperty.AcknowledgeWith(CommonClientResponseCodes.OK, "The operation completed successfully."));
 
             ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(propertiesToBeUpdated, cancellationToken);
         }
@@ -523,13 +514,11 @@ await _deviceClient.SetDesiredPropertyUpdateCallbackAsync(
 await _deviceClient.SubscribeToWritablePropertyUpdateRequestsAsync(
     async (writableProperties) =>
     {
-        if (writableProperties.TryGetValue("thermostat1", "targetTemperature", out WritableClientProperty targetTemperatureRequested))
+        if (writableProperties.TryGetWritableClientProperty("thermostat1", "targetTemperature", out WritableClientProperty targetTemperatureWritableProperty))
         {
             var propertiesToBeUpdated = new ClientPropertyCollection();
-            propertiesToBeUpdated.AddComponentProperty(
-                "thermostat1",
-                "targetTemperature",
-                targetTemperatureRequested.AcknowledgeWith(CommonClientResponseCodes.OK, "The operation completed successfully."));
+            propertiesToBeUpdated.AddWritableClientPropertyAcknowledgement(
+                targetTemperatureWritableProperty.AcknowledgeWith(CommonClientResponseCodes.OK, "The operation completed successfully."));
 
             ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(propertiesToBeUpdated, cancellationToken);
         }
