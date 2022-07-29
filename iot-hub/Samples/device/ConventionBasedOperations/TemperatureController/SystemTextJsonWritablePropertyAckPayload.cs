@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
     /// This helper class will only work with <see cref="System.Text.Json"/>.
     /// It uses <see cref="System.Text.Json"/> based <see cref="JsonPropertyNameAttribute"/> to define the JSON property names.
     /// </remarks>
-    public sealed class SystemTextJsonWritablePropertyAckPayload : IWritablePropertyAcknowledgementPayload
+    internal sealed class SystemTextJsonWritablePropertyAckPayload : IWritablePropertyAcknowledgementPayload
     {
         /// <summary>
         /// Convenience constructor for specifying the properties.

@@ -6,12 +6,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Devices.Client.Samples
 {
-    public class TemperatureControllerSample
+    internal class TemperatureControllerSample
     {
         private const string TargetTemperatureProperty = "targetTemperature";
 
@@ -66,7 +67,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 if (status == ConnectionStatus.Connected)
                 {
                     ClientProperties clientProperties = await _deviceClient.GetClientPropertiesAsync();
-                    await HandlePropertyUpdatesAsync(clientProperties.WritablePropertyRequests);
+                    ClientPropertyCollection propertiesToBeReported = await HandlePropertyUpdatesAsync(clientProperties.WritablePropertyRequests);
+
+                    await _deviceClient.UpdateClientPropertiesAsync(propertiesToBeReported, cancellationToken);
                 }
             });
 
@@ -122,8 +125,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
         }
 
         // The callback to handle property update requests.
-        private async Task HandlePropertyUpdatesAsync(WritableClientPropertyCollection writableProperties)
+        private Task<ClientPropertyCollection> HandlePropertyUpdatesAsync(WritableClientPropertyCollection writableProperties)
         {
+            ClientPropertyCollection propertiesToBeReported = new();
+
             long serverWritablePropertiesVersion = writableProperties.Version;
 
             // Check if the writable property version is outdated on the local side.
@@ -136,6 +141,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                 foreach (WritableClientProperty writableProperty in writableProperties)
                 {
+                    // Fetch the property value as an object. This will be used in error-logging.
+                    _ = writableProperty.TryGetValue(out object value);
+
                     switch (writableProperty.ComponentName)
                     {
                         case Thermostat1:
@@ -143,12 +151,31 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             switch (writableProperty.PropertyName)
                             {
                                 case TargetTemperatureProperty:
-                                    await HandleTargetTemperatureUpdateRequestAsync(writableProperty);
+                                    if (writableProperty.TryGetValue(out double targetTemperature))
+                                    {
+                                        _logger.LogDebug($"Property: Received - component=\"{writableProperty.ComponentName}\"," +
+                                            $" [ \"{TargetTemperatureProperty}\": {targetTemperature}°C ].");
+
+                                        _temperature[writableProperty.ComponentName] = targetTemperature;
+
+                                        propertiesToBeReported
+                                            .AddWritableClientPropertyAcknowledgement(writableProperty.CreateAcknowledgement(CommonClientResponseCodes.OK));
+
+                                        _logger.LogDebug($"Property: Update - component=\"{writableProperty.ComponentName}\"," +
+                                            $" {writableProperty.PropertyName} with requested value {targetTemperature} will be acknowledged with" +
+                                            $" {nameof(CommonClientResponseCodes.OK)}.");
+                                    }
+                                    else
+                                    {
+                                        _logger.LogWarning($"Property: Received an unrecognized value type from service:" +
+                                            $"\n[ {writableProperty.ComponentName} - {writableProperty.PropertyName}: {value} ].");
+                                    }
+
                                     break;
 
                                 default:
                                     _logger.LogWarning($"Property: Received an unrecognized property update from service for component {writableProperty.ComponentName}:" +
-                                        $"\n[ {writableProperty.Value} ].");
+                                        $"\n[ {value} ].");
                                     break;
                             }
 
@@ -156,39 +183,17 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                         default:
                             _logger.LogWarning($"Property: Received an unrecognized property update from service:" +
-                                $"\n[ {writableProperty.ComponentName} - {writableProperty.PropertyName}: {writableProperty.Value} ].");
+                                $"\n[ {writableProperty.ComponentName} - {writableProperty.PropertyName}: {value} ].");
                             break;
                     }
                 }
 
                 s_localWritablePropertiesVersion = writableProperties.Version;
                 _logger.LogDebug($"The writable property version on local is currently {s_localWritablePropertiesVersion}.");
+
             }
-        }
 
-        // The callback to handle target temperature property update requests for a component.
-        private async Task HandleTargetTemperatureUpdateRequestAsync(WritableClientProperty targetTemperatureWritableProperty)
-        {
-            if (targetTemperatureWritableProperty.TryGetValue(out double targetTemperature))
-            {
-                _logger.LogDebug($"Property: Received - component=\"{targetTemperatureWritableProperty.ComponentName}\"," +
-                    $" [ \"{TargetTemperatureProperty}\": {targetTemperature}°C ].");
-
-                _temperature[targetTemperatureWritableProperty.ComponentName] = targetTemperature;
-
-                var reportedProperty = new ClientPropertyCollection();
-                reportedProperty.AddWritableClientPropertyAcknowledgement(targetTemperatureWritableProperty.AcknowledgeWith(CommonClientResponseCodes.OK));
-
-                ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(reportedProperty);
-
-                _logger.LogDebug($"Property: Update - component=\"{targetTemperatureWritableProperty.ComponentName}\"," +
-                    $" {reportedProperty.GetSerializedString()} is {nameof(CommonClientResponseCodes.OK)} with a version of {updateResponse.Version}.");
-            }
-            else
-            {
-                _logger.LogWarning($"Property: Received an unrecognized value type from service:" +
-                    $"\n[ {targetTemperatureWritableProperty.ComponentName} - {targetTemperatureWritableProperty.PropertyName}: {targetTemperatureWritableProperty.Value} ].");
-            }
+            return Task.FromResult(propertiesToBeReported);
         }
 
         // The callback to handle command invocation requests.
@@ -320,26 +325,32 @@ namespace Microsoft.Azure.Devices.Client.Samples
         // This is a component-level property update call.
         private async Task UpdateDeviceInformationPropertyAsync(CancellationToken cancellationToken)
         {
-            const string componentName = "deviceInformation";
-            var deviceInformationProperties = new Dictionary<string, object>
-            {
-                { "manufacturer", "element15" },
-                { "model", "ModelIDxcdvmk" },
-                { "swVersion", "1.0.0" },
-                { "osName", "Windows 10" },
-                { "processorArchitecture", "64-bit" },
-                { "processorManufacturer", "Intel" },
-                { "totalStorage", 256 },
-                { "totalMemory", 1024 },
-            };
-            var deviceInformation = new ClientPropertyCollection();
+            ClientPropertyCollection deviceInformationToReport = new();
 
-            foreach (var deviceInformationProperty in deviceInformationProperties)
+            const string componentName = "deviceInformation";
+            var deviceInformation = new DeviceInformation
             {
-                deviceInformation.AddComponentProperty(componentName, deviceInformationProperty.Key, deviceInformationProperty.Value);
+                Manufacturer = "element15",
+                Model = "ModelIDxcdvmk",
+                SwVersion = "2.0.0",
+                OsName = "Windows 10",
+                ProcessorArchitecture = "64-bit",
+                ProcessorManufacturer = "Intel",
+                TotalStorage = 256,
+                TotalMemory = 1024,
+            };
+
+            var deviceInformationAsDictionary = _deviceClient
+                .PayloadConvention
+                .PayloadSerializer
+                .ConvertFromJsonObject<Dictionary<string, object>>(deviceInformation);
+
+            foreach (var deviceInformationProperty in deviceInformationAsDictionary)
+            {
+                deviceInformationToReport.AddComponentProperty(componentName, deviceInformationProperty.Key, deviceInformationProperty.Value);
             }
 
-            ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(deviceInformation, cancellationToken);
+            ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(deviceInformationToReport, cancellationToken);
 
             _logger.LogDebug($"Property: Update - component = '{componentName}', properties update is complete " +
                 $"with a version of {updateResponse.Version}.");
@@ -461,7 +472,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
             ClientPropertyCollection reportedProperty = properties.ReportedByClient;
 
             // Check if the device properties for the current component are empty.
-            if (!writableProperty.Contains(componentName, propertyName) && !reportedProperty.Contains(componentName, propertyName))
+            if (!writableProperty.TryGetWritableClientProperty(componentName, propertyName, out var _)
+                && !reportedProperty.TryGetValue(componentName, propertyName, out object _))
             {
                 await ReportInitialProperty<T>(componentName, propertyName, cancellationToken);
             }

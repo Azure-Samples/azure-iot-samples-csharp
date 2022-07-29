@@ -6,7 +6,7 @@ using Microsoft.Azure.Devices.Shared;
 namespace Microsoft.Azure.Devices.Client.Samples
 {
     // The specific response codes in this sample.
-    public class ClientResponseCodes : CommonClientResponseCodes
+    internal class ClientResponseCodes : CommonClientResponseCodes
     {
         /// <summary>
         /// This code does not comply with HTTP semantics. Instead, it indicates that the device client

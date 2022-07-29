@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace Microsoft.Azure.Devices.Client.Samples
 {
-    public class TemperatureReport
+    internal class TemperatureReport
     {
         [JsonPropertyName("maxTemp")]
         public double MaximumTemperature { get; set; }

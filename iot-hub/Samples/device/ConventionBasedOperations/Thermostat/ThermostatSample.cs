@@ -57,7 +57,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 if (status == ConnectionStatus.Connected)
                 {
                     ClientProperties clientProperties = await _deviceClient.GetClientPropertiesAsync();
-                    await HandlePropertyUpdatesAsync(clientProperties.WritablePropertyRequests);
+                    ClientPropertyCollection propertiesToBeReported = await HandlePropertyUpdatesAsync(clientProperties.WritablePropertyRequests);
+
+                    await _deviceClient.UpdateClientPropertiesAsync(propertiesToBeReported, cancellationToken);
                 }
             });
 
@@ -93,8 +95,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
         }
 
         // The callback to handle property update requests.
-        private async Task HandlePropertyUpdatesAsync(WritableClientPropertyCollection writableProperties)
+        private async Task<ClientPropertyCollection> HandlePropertyUpdatesAsync(WritableClientPropertyCollection writableProperties)
         {
+            ClientPropertyCollection propertiesToBeReported = new();
+
             long serverWritablePropertiesVersion = writableProperties.Version;
 
             // Check if the writable property version is outdated on the local side.
@@ -107,6 +111,9 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                 foreach (WritableClientProperty writableProperty in writableProperties)
                 {
+                    // Fetch the property value as an object. This will be used in error-logging.
+                    _ = writableProperty.TryGetValue(out object value);
+
                     switch (writableProperty.PropertyName)
                     {
                         case TargetTemperatureProperty:
@@ -118,24 +125,25 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
                                     _temperature = targetTemperature;
 
-                                    var reportedProperty = new ClientPropertyCollection();
-                                    reportedProperty.AddWritableClientPropertyAcknowledgement(targetTemperatureWritableProperty.AcknowledgeWith(CommonClientResponseCodes.OK, "Reached target temperature"));
+                                    propertiesToBeReported
+                                        .AddWritableClientPropertyAcknowledgement(targetTemperatureWritableProperty.CreateAcknowledgement(CommonClientResponseCodes.OK, "Reached target temperature"));
 
-                                    ClientPropertiesUpdateResponse updateResponse = await _deviceClient.UpdateClientPropertiesAsync(reportedProperty);
-
-                                    _logger.LogDebug($"Property: Update - {reportedProperty.GetSerializedString()} is {nameof(CommonClientResponseCodes.OK)} " +
-                                        $"with a version of {updateResponse.Version}.");
+                                    _logger.LogDebug($"Property: Update - {writableProperty.PropertyName} with" +
+                                        $" requested value {targetTemperature} will be acknowledged with" +
+                                        $" {nameof(CommonClientResponseCodes.OK)}.");
                                 }
                                 else
                                 {
-                                    _logger.LogWarning($"Property: Received an unrecognized value type from service:\n[ {writableProperty.PropertyName}: {writableProperty.Value} ].");
+                                    _logger.LogWarning($"Property: Received an unrecognized value type from service:" +
+                                        $"\n[ {writableProperty.PropertyName}: {value} ].");
                                 }
                             }
 
                             break;
 
                         default:
-                            _logger.LogWarning($"Property: Received an unrecognized property update from service:\n[ {writableProperty.PropertyName}: {writableProperty.Value} ].");
+                            _logger.LogWarning($"Property: Received an unrecognized property update from service:" +
+                                $"\n[ {writableProperty.PropertyName}: {value} ].");
                             break;
                     }
                 }
@@ -143,6 +151,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
             s_localWritablePropertiesVersion = serverWritablePropertiesVersion;
             _logger.LogDebug($"The writable property version on local is currently {s_localWritablePropertiesVersion}.");
+
+            return propertiesToBeReported;
         }
 
         // The callback to handle command invocation requests.
@@ -249,7 +259,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
             ClientPropertyCollection reportedProperty = properties.ReportedByClient;
 
             // Check if the device properties are empty.
-            if (!writableProperty.Contains(propertyName) && !reportedProperty.Contains(propertyName))
+            if (!writableProperty.TryGetWritableClientProperty(propertyName, out var _)
+                && !reportedProperty.TryGetValue(propertyName, out object _))
             {
                 await ReportInitialProperty<T>(propertyName, cancellationToken);
             }

@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
     /// <summary>
     /// A <see cref="System.Text.Json"/> <see cref="PayloadSerializer"/> implementation.
     /// </summary>
-    public class SystemTextJsonPayloadSerializer : PayloadSerializer
+    internal class SystemTextJsonPayloadSerializer : PayloadSerializer
     {
         /// <summary>
         /// The Content Type string.
