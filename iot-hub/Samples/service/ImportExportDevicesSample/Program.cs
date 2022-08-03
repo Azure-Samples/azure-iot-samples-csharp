@@ -43,7 +43,9 @@ namespace Microsoft.Azure.Devices.Samples
                 var importExportDevicesSample = new ImportExportDevicesSample(
                     parameters.SourceIotHubConnectionString,
                     parameters.DestIotHubConnectionString,
-                    parameters.StorageConnectionString);
+                    parameters.StorageConnectionString,
+                        parameters.ContainerName,
+                        parameters.DevicesBlobName);
 
                 await importExportDevicesSample
                     .RunSampleAsync(
