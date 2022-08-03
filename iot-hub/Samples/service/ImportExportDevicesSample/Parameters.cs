@@ -3,53 +3,36 @@ using CommandLine;
 
 namespace Microsoft.Azure.Devices.Samples
 {
+    /// <summary>
+    /// Configurable parameters for the sample.
+    /// </summary>
     internal class Parameters
     {
-        /// <summary>
-        /// The source IoT Hub connection string.
-        /// </summary>
-        /// <remarks>
-        /// You can get this from the portal:
-        /// 1. Log into https://azure.portal.com, go to Resources, find your IoT hub and select it.
-        /// 2. Then look for Shared Access Policies and select it.
-        /// 3. Then select 'iothubowner' and copy one of the connection strings.
-        /// </remarks>
         [Option(
             'i',
             "SourceIoTHubConnectionString",
             Required = true,
-            HelpText = "The service connection string with permissions to manage devices for the source IoT hub to copy devices.")]
+            HelpText = "The service connection string with permissions to manage devices for the source IoT hub to copy devices. Log into https://azure.portal.com, go to Resources, open the IoT hub, open Shared Access Policies, open iothubowner, and copy a connection string.")]
         public string SourceIotHubConnectionString { get; set; } = Environment.GetEnvironmentVariable("SOURCE_IOTHUB_CONN_STRING_CSHARP");
 
-        /// <summary>
-        /// When copying data from one hub to another, this is the connection string
-        /// to the destination hub, i.e. the new one.
-        /// </summary>
         [Option(
             'd',
             "DestIoTHubConnectionString",
             Required = true,
-            HelpText = "The service connection string with permissions to manage devices for the destination IoT hub to migrate devices.")]
+            HelpText = "The service connection string with permissions to manage devices for the destination IoT hub to migrate devices. Log into https://azure.portal.com, go to Resources, open the IoT hub, open Shared Access Policies, open iothubowner, and copy a connection string.")]
         public string DestIotHubConnectionString { get; set; } = Environment.GetEnvironmentVariable("DEST_IOTHUB_CONN_STRING_CSHARP");
 
-        /// <summary>
-        /// Connection string to the storage account used to hold the imported or exported data.
-        /// </summary>
-        /// <remarks>
-        /// Log into https://azure.portal.com, go to Resources, find your storage account and select it.
-        /// Select Access Keys and copy one of the connection strings.
-        /// </remarks>
         [Option(
             's',
             "StorageConnectionString",
             Required = true,
-            HelpText = "The connection string for the storage account to use for device migration data.")]
+            HelpText = "The storage account connection string to use with the IoT hub for migrating device data. Log into https://azure.portal.com, go to Resources, open the storage account, open Access Keys, and copy a connection string.")]
         public string StorageConnectionString { get; set; } = Environment.GetEnvironmentVariable("STORAGE_CONN_STRING_CSHARP");
 
         [Option(
             "AddDevices",
             Default = 0,
-            HelpText = "Generates the specified number of new devices and add to the source hub, for migration to the destination hub.")]
+            HelpText = "Generates the specified number of new devices and add to the source IoT hub, for migration to the destination IoT hub.")]
         public int AddDevices { get; set; }
 
         [Option(
@@ -69,6 +52,18 @@ namespace Microsoft.Azure.Devices.Samples
             Default = false,
             HelpText = "Delete the devices that were migrated in the destionation IoT hub, after migration and this sample is finished.")]
         public bool DeleteDestDevices { get; set; }
+
+        [Option(
+            "ContainerName",
+            Default = "iotdevices",
+            HelpText = "The storage account container name for importing and exporting IoT hub devices.")]
+        public string ContainerName { get; set; }
+
+        [Option(
+            "DevicesBlobName",
+            Default = "devices.txt",
+            HelpText = "The name of the blob in the storage account container to use for importing and exporting devices.")]
+        public string DevicesBlobName { get; set; }
 
         /// <summary>
         /// Loads up from environment variables for types that require parsing.
