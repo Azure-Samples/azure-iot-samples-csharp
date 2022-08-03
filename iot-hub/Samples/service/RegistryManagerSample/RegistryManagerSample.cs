@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Devices.Samples
     internal class RegistryManagerSample
     {
         private readonly Parameters _parameters;
-        private readonly IList<string> _deviceIdsAdded = new List<string>();
+        private readonly List<string> _deviceIdsAdded = new();
 
         public RegistryManagerSample(Parameters parameters)
         {

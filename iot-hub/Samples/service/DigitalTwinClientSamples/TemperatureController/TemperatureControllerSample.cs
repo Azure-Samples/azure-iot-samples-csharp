@@ -16,10 +16,10 @@ namespace Microsoft.Azure.Devices.Samples
     {
         private const string Thermostat1Component = "thermostat1";
 
-        private static readonly string DeviceSampleLink = 
+        private const string DeviceSampleLink = 
             "https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/main/iot-hub/Samples/device/PnpDeviceSamples/TemperatureController";
 
-        private static readonly Random Random = new Random();
+        private static readonly Random s_random = new();
         private readonly DigitalTwinClient _digitalTwinClient;
         private readonly string _digitalTwinId;
         private readonly ILogger _logger;
@@ -28,7 +28,16 @@ namespace Microsoft.Azure.Devices.Samples
         {
             _digitalTwinClient = client ?? throw new ArgumentNullException(nameof(client));
             _digitalTwinId = digitalTwinId ?? throw new ArgumentNullException(nameof(digitalTwinId));
-            _logger = logger ?? LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<TemperatureControllerSample>();
+
+            if (logger != null)
+            {
+                _logger = logger;
+            }
+            else
+            {
+                using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+                _logger = loggerFactory.CreateLogger<TemperatureControllerSample>();
+            }
         }
 
         public async Task RunSampleAsync()
@@ -62,7 +71,7 @@ namespace Microsoft.Azure.Devices.Samples
         private async Task UpdateDigitalTwinComponentPropertyAsync()
         {
             // Choose a random value to assign to the targetTemperature property in thermostat1 component
-            int desiredTargetTemperature = Random.Next(0, 100);
+            int desiredTargetTemperature = s_random.Next(0, 100);
 
             const string targetTemperaturePropertyName = "targetTemperature";
             var updateOperation = new UpdateOperationsUtility();
