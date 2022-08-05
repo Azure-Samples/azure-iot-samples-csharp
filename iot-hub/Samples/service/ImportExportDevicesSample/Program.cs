@@ -8,17 +8,37 @@ using CommandLine;
 
 namespace Microsoft.Azure.Devices.Samples
 {
-    // This application will do the following:
-    //   * Create new devices and add them to an IoT hub (for testing) -- you specify how many you want to add
-    //      --> This has been tested up to 500,000 devices,
-    //          but should work all the way up to the million devices allowed on a hub.
-    //   * Copy the devices from one hub to another.
-    //   * Delete the devices from any hub -- referred to as source or destination in case
-    //       you're cloning a hub and want to test adding or copying devices more than once.
-    //       This option is to clean up the hubs after the sample has finished.
-    //
-    // Be advised: The size of the hubs you are using should be able to manage the number of devices
-    //  you want to create and test with.
+    /// <summary>
+    /// This program illustrates how to import and export large numbers of devices and configurations where otherwise
+    /// using direct APIs would be time consuming and involve rate limiting other activity to the IoT hub.
+    /// </summary>
+    /// <remarks>
+    /// Using import and export is ideal for backing up an IoT hub's device and configurations registry, or to migrate
+    /// them to another IoT hub.
+    /// <para>
+    /// This application will do the following:
+    /// <list type="number">
+    /// <item>
+    /// <term>Create new devices and add them to an IoT hub (for testing) -- you specify how many you want to add</term>
+    /// <description>
+    /// This has been tested up to 500,000 devices, but should work all the way up to the million devices allowed on a hub.
+    /// </description>
+    /// </item>
+    /// <item>
+    /// <term>Copy the items from one hub to another.</term>
+    /// <description>This involves exporting from one into storage, and then importing from storage into the other.</description>
+    /// </item>
+    /// <item>
+    /// <term>Delete the items from the IoT hub(s).</term>
+    /// <description>This option is to clean up the hubs after the sample has finished.</description>
+    /// </item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// Be advised: The size of the hubs you are using should be able to manage the number of devices
+    ///  you want to create and test with.
+    /// </para>
+    /// </remarks>
     public class Program
     {
         public static async Task Main(string[] args)
@@ -44,12 +64,13 @@ namespace Microsoft.Azure.Devices.Samples
                     parameters.SourceIotHubConnectionString,
                     parameters.DestIotHubConnectionString,
                     parameters.StorageConnectionString,
-                        parameters.ContainerName,
-                        parameters.DevicesBlobName);
+                    parameters.ContainerName,
+                    parameters.BlobNamePrefix);
 
                 await importExportDevicesSample
                     .RunSampleAsync(
                         parameters.AddDevices,
+                        parameters.IncludeConfigurations,
                         parameters.CopyDevices,
                         parameters.DeleteSourceDevices,
                         parameters.DeleteDestDevices)
@@ -61,8 +82,7 @@ namespace Microsoft.Azure.Devices.Samples
                 Console.WriteLine($"Error. Description = {ex.Message}\n{ex.StackTrace}");
             }
 
-            Console.WriteLine("Finished. Press any key to continue.");
-            Console.ReadKey(true);
+            Console.WriteLine("Sample finished.");
         }
     }
 }

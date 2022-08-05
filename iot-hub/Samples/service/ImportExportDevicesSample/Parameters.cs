@@ -32,38 +32,44 @@ namespace Microsoft.Azure.Devices.Samples
         [Option(
             "AddDevices",
             Default = 0,
-            HelpText = "Generates the specified number of new devices and add to the source IoT hub, for migration to the destination IoT hub.")]
+            HelpText = "Generates the specified number of new devices (and configurations, if specified) and add to the source IoT hub, for migration to the destination IoT hub.")]
         public int AddDevices { get; set; }
 
         [Option(
             "CopyDevices",
             Default = true,
-            HelpText = "Copies devices from the source to the destionation IoT hub.")]
+            HelpText = "Copies devices (and configurations, if specified) from the source to the destionation IoT hub.")]
         public bool CopyDevices { get; set; }
 
         [Option(
             "DeleteSourceDevices",
             Default = false,
-            HelpText = "Deletes generated devices in the source IoT hub, after migration and this sample is finished.")]
+            HelpText = "Deletes generated devices (and configurations, if specified) in the source IoT hub, after migration and this sample is finished.")]
         public bool DeleteSourceDevices { get; set; }
 
         [Option(
             "DeleteDestDevices",
             Default = false,
-            HelpText = "Delete the devices that were migrated in the destionation IoT hub, after migration and this sample is finished.")]
+            HelpText = "Delete the devices (and configurations, if specified) that were migrated in the destionation IoT hub, after migration and this sample is finished.")]
         public bool DeleteDestDevices { get; set; }
 
         [Option(
             "ContainerName",
-            Default = "iotdevices",
-            HelpText = "The storage account container name for importing and exporting IoT hub devices.")]
+            Default = "iothub",
+            HelpText = "The storage account container name for importing and exporting IoT hub devices (and configurations, if specified).")]
         public string ContainerName { get; set; }
 
         [Option(
-            "DevicesBlobName",
-            Default = "devices.txt",
-            HelpText = "The name of the blob in the storage account container to use for importing and exporting devices.")]
-        public string DevicesBlobName { get; set; }
+            "BlobNamePrefix",
+            Default = "ImportExportSample-",
+            HelpText = "The prefix of the blob names to use in the storage account container for importing and exporting devices. That prefix will be used to create unique names for each step in the sample.")]
+        public string BlobNamePrefix { get; set; }
+
+        [Option(
+            "IncludeConfigurations",
+            Default = false,
+            HelpText = "Include configurations in the generation, import, export, and clean-up. See https://docs.microsoft.com/azure/iot-hub/iot-hub-automatic-device-management.")]
+        public bool IncludeConfigurations { get; set; }
 
         /// <summary>
         /// Loads up from environment variables for types that require parsing.
