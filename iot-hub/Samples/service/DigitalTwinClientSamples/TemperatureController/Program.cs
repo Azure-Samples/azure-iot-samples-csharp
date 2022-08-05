@@ -48,11 +48,11 @@ namespace Microsoft.Azure.Devices.Samples
 
         private static ILogger InitializeConsoleDebugLogger()
         {
-            ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+            using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
             {
                 builder
                 .AddFilter(level => level >= LogLevel.Debug)
-                .AddConsole(options =>
+                .AddSimpleConsole(options =>
                 {
                     options.TimestampFormat = "[MM/dd/yyyy HH:mm:ss]";
                 });
