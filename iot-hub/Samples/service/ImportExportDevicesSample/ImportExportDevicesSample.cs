@@ -24,58 +24,84 @@ namespace Microsoft.Azure.Devices.Samples
         private readonly string _destIotHubConnectionString;
         private readonly string _storageAccountConnectionString;
         private readonly string _containerName;
-        private readonly string _blobName;
+        private readonly string _blobNamePrefix;
+
+        private readonly string _generateDevicesBlobName;
+        private readonly string _srcHubDevicesExportBlobName;
+        private readonly string _srcHubConfigsExportBlobName;
+        private readonly string _destHubDevicesImportBlobName;
+        private readonly string _destHubConfigsImportBlobName;
+        private readonly string _hubDevicesCleanupBlobName;
+
+        private const string DeviceImportErrorsBlobName = "importErrors.log";
+        private const string ConfigImportErrorsBlobName = "importConfigErrors.log";
 
         // The container used to hold the blob containing the list of import/export files.
         // This is a sample-wide variable. If this project doesn't find this container, it will create it.
         private BlobContainerClient _blobContainerClient;
-        private Uri _containerUri;
+        private string _containerUri;
 
         public ImportExportDevicesSample(
             string sourceIotHubConnectionString,
             string destinationHubConnectionString,
             string sourceStorageAccountConnectionString,
             string containerName,
-            string blobName)
+            string blobNamePrefix)
         {
             _destIotHubConnectionString = destinationHubConnectionString;
             _srcIotHubConnectionString = sourceIotHubConnectionString;
             _storageAccountConnectionString = sourceStorageAccountConnectionString;
             _containerName = containerName;
-            _blobName = blobName;
+            _blobNamePrefix = blobNamePrefix;
+
+            _generateDevicesBlobName = _blobNamePrefix + "Generate.txt";
+            _srcHubDevicesExportBlobName = _blobNamePrefix + "ExportDevices.txt";
+            _srcHubConfigsExportBlobName = _blobNamePrefix + "ExportConfigs.txt";
+            _destHubDevicesImportBlobName = _blobNamePrefix + "ImportDevices.txt";
+            _destHubConfigsImportBlobName = _blobNamePrefix + "ImportConfigs.txt";
+            _hubDevicesCleanupBlobName = _blobNamePrefix + "DeleteDevices.txt";
         }
 
         public async Task RunSampleAsync(
             int devicesToAdd,
+            bool includeConfigurations,
             bool shouldCopyDevices,
             bool shouldDeleteSourceDevices,
             bool shouldDeleteDestDevices)
         {
+            using var srcRegistryManager = RegistryManager.CreateFromConnectionString(_srcIotHubConnectionString);
+            using var destRegistryManager = RegistryManager.CreateFromConnectionString(_destIotHubConnectionString);
+
             // This sets cloud blob container and returns container URI (w/shared access token).
             await PrepareStorageForImportExportAsync(_storageAccountConnectionString);
 
             if (devicesToAdd > 0)
             {
                 // generate and add new devices
-                await GenerateDevicesAsync(_srcIotHubConnectionString, devicesToAdd);
+                await GenerateDevicesAsync(srcRegistryManager, devicesToAdd);
+
+                if (includeConfigurations)
+                {
+                    await GenerateConfigurationAsync(srcRegistryManager);
+                }
             }
 
             if (shouldCopyDevices)
             {
                 // Copy devices from the original hub to a new hub
-                await CopyToDestHubAsync(_srcIotHubConnectionString, _destIotHubConnectionString);
+                await CopyToDestHubAsync(srcRegistryManager, destRegistryManager, includeConfigurations);
             }
 
             if (shouldDeleteSourceDevices)
             {
                 // delete devices from the source hub
-                await DeleteFromHubAsync(_srcIotHubConnectionString);
+                await DeleteFromHubAsync(srcRegistryManager, includeConfigurations);
             }
 
             if (shouldDeleteDestDevices)
             {
                 // delete devices from the destination hub
-                await DeleteFromHubAsync(_destIotHubConnectionString);
+                await DeleteFromHubAsync(destRegistryManager, includeConfigurations);
             }
         }
 
@@ -103,7 +129,7 @@ namespace Microsoft.Azure.Devices.Samples
                         BlobContainerSasPermissions.Write
                             | BlobContainerSasPermissions.Read
                             | BlobContainerSasPermissions.Delete,
-                        DateTime.UtcNow.AddHours(24));
+                        DateTime.UtcNow.AddHours(24)).ToString();
             }
             catch (Exception ex)
             {
@@ -114,85 +140,22 @@ namespace Microsoft.Azure.Devices.Samples
 
         /// <summary>
         /// Add devices to the hub; specify how many. This creates a number of devices
-        ///   with partially random hub names. 
+        ///   with partially random hub names.
         /// This is a good way to test the import -- create a bunch of devices on one hub,
         ///    then use this the Copy feature to copy the devices to another hub.
         /// Number of devices to create and add. Default is 10.
         /// </summary>
-        public async Task GenerateDevicesAsync(string hubConnectionString, int numToAdd)
+        private async Task GenerateDevicesAsync(RegistryManager registryManager, int numToAdd)
         {
             var stopwatch = Stopwatch.StartNew();
 
             Console.WriteLine($"Creating {numToAdd} devices for the source IoT hub.");
-
-            await GenerateAndAddDevicesAsync(hubConnectionString, numToAdd);
-
-            stopwatch.Stop();
-            Console.WriteLine($"GenerateDevices, time elapsed = {stopwatch.Elapsed}.");
-        }
-
-        /// <summary>
-        ///  This reads the device list from the IoT hub, then writes them to a file in blob storage.
-        /// </summary>
-        public async Task ExportToBlobStorageAsync(string hubConnectionString)
-        {
-            var stopwatch = Stopwatch.StartNew();
-            Console.WriteLine("Exporting devices to blob storage.");
-
-            await ExportDevicesAsync(hubConnectionString);
-
-            stopwatch.Stop();
-            Console.WriteLine($"Exported devices to blob storage: time elapsed = {stopwatch.Elapsed}");
-        }
-
-        /// <summary>
-        /// Delete all of the devices from the hub with the given connection string.
-        /// </summary>
-        /// <param name="hubConnectionString">Connection to the hub from which you want to delete the devices.</param>
-        public async Task DeleteFromHubAsync(string hubConnectionString)
-        {
-            var stopwatch = Stopwatch.StartNew();
-
-            Console.WriteLine("Deleting all devices from an IoT hub.");
-            await DeleteAllDevicesFromHubAsync(hubConnectionString);
-
-            stopwatch.Stop();
-            Console.WriteLine($"Deleted IoT hub devices: time elapsed = {stopwatch.Elapsed}");
-        }
-
-        /// <summary>
-        /// Copy the devices from one hub to another.
-        /// </summary>
-        /// <param name="prevHubConnectionString">Connection string for source hub.</param>
-        /// <param name="newHubConnectionString">Connection string for destination hub.</param>
-        public async Task CopyToDestHubAsync(string prevHubConnectionString, string newHubConnectionString)
-        {
-            Console.WriteLine("Copying devices from the source to the destination IoT hub.");
-            var stopwatch = Stopwatch.StartNew();
-
-            await CopyAllDevicesToDestinationHubAsync(
-                prevHubConnectionString,
-                newHubConnectionString);
-
-            stopwatch.Stop();
-            Console.WriteLine($"Copied devices: time elapsed = {stopwatch.Elapsed}");
-        }
-
-        /// <summary>
-        /// Generate NumToAdd devices and add them to the hub.
-        /// To do this, generate each identity.
-        /// Include authentication keys.
-        /// Write the device info to a block blob.
-        /// Import the devices into the identity registry by calling the import job.
-        /// </summary>
-        private async Task GenerateAndAddDevicesAsync(string hubConnectionString, int numToAdd)
-        {
             int interimProgressCount = 0;
             int displayProgressCount = 1000;
             int totalProgressCount = 0;
 
             // generate reference for list of new devices we're going to add, will write list to this blob
-            BlobClient blobClient = _blobContainerClient.GetBlobClient(_blobName);
+            BlobClient generateDevicesBlob = _blobContainerClient.GetBlobClient(_generateDevicesBlobName);
 
             // define serializedDevices as a generic list<string>
             var serializedDevices = new List<string>(numToAdd);
@@ -240,7 +203,7 @@ namespace Microsoft.Azure.Devices.Samples
             serializedDevices.ForEach(serializedDevice => sb.AppendLine(serializedDevice));
 
             // Write list of serialized objects to the blob.
-            using Stream stream = await blobClient.OpenWriteAsync(overwrite: true);
+            using Stream stream = await generateDevicesBlob.OpenWriteAsync(overwrite: true);
             byte[] bytes = Encoding.UTF8.GetBytes(sb.ToString());
             for (int i = 0; i < bytes.Length; i += BlobWriteBytes)
             {
@@ -261,36 +224,96 @@ namespace Microsoft.Azure.Devices.Samples
             // This reads in the rows from the text file and writes them to IoT Devices.
             // If you want to add devices from a file, you can create a file and use this to import it.
             //   They have to be in the exact right format.
-            using var registryManager = RegistryManager.CreateFromConnectionString(hubConnectionString);
             try
             {
                 // The first URI is the container to import from; the file defaults to devices.txt, but may be specified.
                 // The second URI points to the container to write errors to as a blob.
                 // This lets you import the devices from any file name. Since we wrote the new
                 // devices to [devicesToAdd], need to read the list from there as well.
-                JobProperties importJob = await registryManager.ImportDevicesAsync(_containerUri.ToString(), _containerUri.ToString(), _blobName);
-                await WaitForJobAsync(registryManager, importJob);
+                var importGeneratedDevicesJob = JobProperties.CreateForImportJob(
+                    _containerUri,
+                    _containerUri,
+                    _generateDevicesBlobName);
+                importGeneratedDevicesJob = await registryManager.ImportDevicesAsync(importGeneratedDevicesJob);
+                await WaitForJobAsync(registryManager, importGeneratedDevicesJob);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Adding devices failed due to {ex.Message}");
             }
+
+            stopwatch.Stop();
+            Console.WriteLine($"GenerateDevices, time elapsed = {stopwatch.Elapsed}.");
+        }
+
+        private static async Task GenerateConfigurationAsync(RegistryManager registryManager)
+        {
+            Console.WriteLine($"Creating a configuration for the source IoT hub.");
+            try
+            {
+                var config = new Configuration($"hub_config_{Guid.NewGuid().ToString().ToLower()}")
+                {
+                    Priority = 2,
+                    Labels = { { "labelName", "labelValue" } },
+                    TargetCondition = "*",
+                    Content = new ConfigurationContent
+                    {
+                        DeviceContent = { { "properties.desired.x", 4L } },
+                    },
+                    Metrics = new ConfigurationMetrics
+                    {
+                        Queries = { { "successfullyConfigured", "select deviceId from devices where properties.reported.x = 4" } }
+                    },
+                };
+                await registryManager.AddConfigurationAsync(config);
+                Debug.Print($"Added configuration '{config.Id}'");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error adding configuration. Exception message {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Copy the devices from one hub to another.
+        /// </summary>
+        /// <param name="sourceHubConnectionString">Connection string for source hub.</param>
+        /// <param name="destHubConnectionString">Connection string for destination hub.</param>
+        private async Task CopyToDestHubAsync(RegistryManager srcRegistryManager, RegistryManager destRegistryManager, bool includeConfigurations)
+        {
+            Console.WriteLine("Copying devices from the source to the destination IoT hub.");
+            var stopwatch = Stopwatch.StartNew();
+            Console.WriteLine("Exporting devices to destination IoT hub.");
+
+            // Read the devices from the hub and write them to blob storage.
+            await ExportDevicesAsync(srcRegistryManager, _srcHubDevicesExportBlobName, _srcHubConfigsExportBlobName, includeConfigurations);
+
+            // Load the exported devices and edit the entries to be ready for import
+            await LoadAndUpdateDevicesAsync(_srcHubDevicesExportBlobName, _destHubDevicesImportBlobName);
+            await LoadAndUpdateConfigsAsync(_srcHubConfigsExportBlobName, _destHubConfigsImportBlobName);
+            await ImportDevicesAsync(destRegistryManager, includeConfigurations);
+
+            stopwatch.Stop();
+            Console.WriteLine($"Copied devices: time elapsed = {stopwatch.Elapsed}");
         }
 
         /// Get the list of devices registered to the IoT Hub
         ///   and export it to a blob as deserialized objects.
-        private async Task ExportDevicesAsync(string hubConnectionString)
+        private async Task ExportDevicesAsync(RegistryManager registryManager, string devicesBlobName, string configsBlobName, bool includeConfigurations)
         {
             try
             {
                 Console.WriteLine("Running a registry manager job to export devices from the hub.");
-                // Create an instance of the registry manager class.
-                using var registryManager = RegistryManager.CreateFromConnectionString(hubConnectionString);
 
                 // Call an export job on the IoT hub to retrieve all devices.
                 // This writes them to the container.
-                JobProperties exportJob = await registryManager
-                    .ExportDevicesAsync(_containerUri.ToString(), excludeKeys: false);
+                var exportJob = JobProperties.CreateForExportJob(
+                    _containerUri,
+                    excludeKeysInExport: true,
+                    devicesBlobName);
+                exportJob.IncludeConfigurations = includeConfigurations;
+                exportJob.ConfigurationsBlobName = configsBlobName;
+                exportJob = await registryManager.ExportDevicesAsync(exportJob);
                 await WaitForJobAsync(registryManager, exportJob);
             }
             catch (Exception ex)
@@ -299,47 +322,79 @@ namespace Microsoft.Azure.Devices.Samples
             }
         }
 
-        // This shows how to delete all of the devices for the IoT Hub.
-        // First, export the list storage. (ExportDevices).
-        // Next, read in that file. Each row is a serialized object;
-        // read them into the generic list serializedDevices.
-        // For each serializedDevice, deserialize it, set ImportMode to Delete,
-        // reserialize it, and write it to a StringBuilder. The ImportMode field is what
-        // tells the job framework to delete each one.
-        // Write the new StringBuilder to the block blob.
-        // This essentially replaces the list with a list of devices that have ImportJob = Delete.
-        // Call ImportDevicesAsync, which will read in the list from storage, then delete each one.
-        private async Task DeleteAllDevicesFromHubAsync(string hubConnectionString)
+        private async Task ImportDevicesAsync(RegistryManager registryManager, bool includeConfigurations)
         {
-            Console.WriteLine("Exporting a list of devices from IoT hub to blob storage.");
+            Console.WriteLine("Running a registry manager job to import the entries from the devices file to the destination IoT hub.");
 
-            // Read the devices from the hub and write them to blob storage.
-            await ExportDevicesAsync(hubConnectionString);
+            // Step 3: Call import using the same blob to create all devices.
+            // Loads and adds the devices to the destination IoT hub.
+            var importJob = JobProperties.CreateForImportJob(
+                _containerUri,
+                _containerUri,
+                _destHubDevicesImportBlobName);
+            importJob.IncludeConfigurations = includeConfigurations;
+            importJob.ConfigurationsBlobName = _destHubConfigsImportBlobName;
+            importJob = await registryManager.ImportDevicesAsync(importJob);
+            await WaitForJobAsync(registryManager, importJob);
+
+            // Read from error logs to see if there were any failures
+            BlobClient devicesErrorsBlob = _blobContainerClient.GetBlobClient(DeviceImportErrorsBlobName);
+            await PrintErrorsAsync(devicesErrorsBlob);
+            BlobClient configErrorsBlob = _blobContainerClient.GetBlobClient(ConfigImportErrorsBlobName);
+            await PrintErrorsAsync(configErrorsBlob);
+        }
+
+        private static async Task PrintErrorsAsync(BlobClient errorsBlob)
+        {
+            List<string> errors = await ReadFromBlobAsync(errorsBlob);
+            if (errors.Any())
+            {
+                Console.WriteLine($"Found reported errors importing:");
+                foreach (string error in errors)
+                {
+                    Console.WriteLine($"\t{error}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Delete all of the devices from the hub with the given connection string.
+        /// </summary>
+        /// <remarks>
+        /// This shows how to delete all of the devices for the IoT hub.
+        /// First, export the list storage. (ExportDevices).
+        /// Next, read in that file. Each row is a serialized object;
+        /// read them into the generic list serializedDevices.
+        /// For each serializedDevice, deserialize it, set ImportMode to Delete,
+        /// reserialize it, and write it to a StringBuilder. The ImportMode field is what
+        /// tells the job framework to delete each one.
+        /// Write the new StringBuilder to the block blob.
+        /// This essentially replaces the list with a list of devices that have ImportJob = Delete.
+        /// Call ImportDevicesAsync, which will read in the list from storage, then delete each one.
+        /// </remarks>
+        /// <param name="hubConnectionString">Connection to the hub from which you want to delete the devices.</param>
+        private async Task DeleteFromHubAsync(RegistryManager registryManager, bool includeConfigurations)
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            Console.WriteLine("Deleting all devices from an IoT hub.");
+
+            Console.WriteLine("Exporting a list of devices from IoT hub to blob storage.");
 
             // Read from storage, which contains serialized objects.
             // Write each line to the serializedDevices list.
-            BlobClient blobClient = _blobContainerClient.GetBlobClient(_blobName);
+            BlobClient devicesBlobClient = _blobContainerClient.GetBlobClient(_destHubDevicesImportBlobName);
 
             Console.WriteLine("Reading the list of devices in from blob storage.");
-
-            // Read the blob file of devices, import each row into serializedDevices.
-            var serializedDevices = new List<string>();
-            using Stream blobStream = await blobClient.OpenReadAsync();
-            using var streamReader = new StreamReader(blobStream, Encoding.UTF8);
-            while (streamReader.Peek() != -1)
-            {
-                string line = await streamReader.ReadLineAsync();
-                serializedDevices.Add(line);
-            }
-
-            Console.WriteLine("Updating ImportMode to be 'Delete' for each device and writing back to the blob.");
+            List<string> serializedDevices = await ReadFromBlobAsync(devicesBlobClient);
 
             // Step 1: Update each device's ImportMode to be Delete
+            Console.WriteLine("Updating ImportMode to be 'Delete' for each device and writing back to the blob.");
             var sb = new StringBuilder();
-            serializedDevices.ForEach(serializedDevice =>
+            serializedDevices.ForEach(serializedEntity =>
             {
                 // Deserialize back to an ExportImportDevice and change import mode.
-                ExportImportDevice device = JsonConvert.DeserializeObject<ExportImportDevice>(serializedDevice);
+                ExportImportDevice device = JsonConvert.DeserializeObject<ExportImportDevice>(serializedEntity);
                 device.ImportMode = ImportMode.Delete;
 
                 // Reserialize the object now that we've updated the property.
@@ -347,88 +402,139 @@ namespace Microsoft.Azure.Devices.Samples
             });
 
             // Step 2: Write the list in memory to the blob.
-            using Stream stream = await blobClient.OpenWriteAsync(overwrite: true);
-            byte[] bytes = Encoding.UTF8.GetBytes(sb.ToString());
-            for (int i = 0; i < bytes.Length; i += BlobWriteBytes)
-            {
-                int length = Math.Min(bytes.Length - i, BlobWriteBytes);
-                await stream.WriteAsync(bytes.AsMemory(i, length));
-            }
-            await stream.FlushAsync();
-
-            Console.WriteLine("Running a registry manager job to delete the devices from the IoT hub.");
+            BlobClient deleteDevicesBlobClient = _blobContainerClient.GetBlobClient(_hubDevicesCleanupBlobName);
+            await WriteToBlobAsync(deleteDevicesBlobClient, sb.ToString());
 
             // Step 3: Call import using the same blob to delete all devices.
-            using var registryManager = RegistryManager.CreateFromConnectionString(hubConnectionString);
-            JobProperties importJob = await registryManager.ImportDevicesAsync(_containerUri.ToString(), _containerUri.ToString());
+            Console.WriteLine("Running a registry manager job to delete the devices from the IoT hub.");
+            var importJob = JobProperties.CreateForImportJob(
+                _containerUri,
+                _containerUri,
+                _hubDevicesCleanupBlobName);
+            importJob = await registryManager.ImportDevicesAsync(importJob);
             await WaitForJobAsync(registryManager, importJob);
-        }
 
-        // This shows how to copy devices from one IoT hub to another.
-        // First, export the list from the source IoT hub to storage (ExportDevices).
-        // Next, read in that file. Each row is a serialized object;
-        //   read them into the generic list serializedDevices.
-        // For each serializedDevice, deserialize it, set ImportMode to Create,
-        //   reserialize it, and write it to a StringBuilder. The ImportMode field is what
-        //   tells the job framework to add each device.
-        // Write the new StringBuilder to the blob.
-        //   This essentially replaces the list with a list of devices that have ImportJob = Delete.
-        // Call ImportDevicesAsync, which will read in the list in the blob, then add each one
-        //   because it doesn't already exist. If it already exists, it will write an entry to
-        //   the import error log and not add the new one.
-        private async Task CopyAllDevicesToDestinationHubAsync(string sourceHubConnectionString, string destHubConnectionString)
-        {
-            Console.WriteLine("Exporting devices to destination IoT hub.");
-
-            // Read the devices from the hub and write them to blob storage.
-            await ExportDevicesAsync(sourceHubConnectionString);
-
-            // Write each line to the serializedDevices list.
-            BlobClient blobClient = _blobContainerClient.GetBlobClient(_blobName);
-
-            Console.WriteLine("Reading in the list of devices from blob storage.");
-
-            // Read the blob file of devices, import each row into serializedDevices.
-            var serializedDevices = new List<string>();
-            using Stream blobStream = await blobClient.OpenReadAsync();
-            using var streamReader = new StreamReader(blobStream, Encoding.UTF8);
-            while (streamReader.Peek() != -1)
+            // Step 4: delete configurations
+            if (includeConfigurations)
             {
-                string line = await streamReader.ReadLineAsync();
-                serializedDevices.Add(line);
+                BlobClient configsBlobClient = _blobContainerClient.GetBlobClient(_srcHubConfigsExportBlobName);
+                List<string> serializedConfigs = await ReadFromBlobAsync(configsBlobClient);
+                foreach (string serializedConfig in serializedConfigs)
+                {
+                    try
+                    {
+                        Configuration config = JsonConvert.DeserializeObject<Configuration>(serializedConfig);
+                        await registryManager.RemoveConfigurationAsync(config.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to deserialize or remove a config.\n\t{serializedConfig}\n\n{ex.Message}");
+                    }
+                }
             }
 
-            Console.WriteLine("Updating ImportMode to be Create.");
+            stopwatch.Stop();
+            Console.WriteLine($"Deleted IoT hub devices and configs: time elapsed = {stopwatch.Elapsed}");
+        }
 
+        private async Task LoadAndUpdateDevicesAsync(string readFromBlobName, string writeToBlobName)
+        {
+            // Write each line to the serializedDevices list.
+            BlobClient readFromBlob = _blobContainerClient.GetBlobClient(readFromBlobName);
+
+            Console.WriteLine("Reading in the list of devices from blob storage.");
+            List<string> serializedDevices = await ReadFromBlobAsync(readFromBlob);
+
+            Console.WriteLine("Updating ImportMode to be Create.");
             // Step 1: Update each device's ImportMode to Create
             var sb = new StringBuilder();
             serializedDevices.ForEach(serializedDevice =>
             {
                 // Deserialize back to an ExportImportDevice and update the import mode property.
-                ExportImportDevice device = JsonConvert.DeserializeObject<ExportImportDevice>(serializedDevice);
-                device.ImportMode = ImportMode.Create;
+                try
+                {
+                    ExportImportDevice device = JsonConvert.DeserializeObject<ExportImportDevice>(serializedDevice);
+                    device.ImportMode = ImportMode.Create;
 
-                // Reserialize the object now that we've updated the property.
-                sb.AppendLine(JsonConvert.SerializeObject(device));
+                    // Reserialize the object now that we've updated the property.
+                    sb.AppendLine(JsonConvert.SerializeObject(device));
+                }
+                catch
+                {
+                    // Exports can have warnings and other messages from the hub, so we have to handle lines that aren't actually
+                    // serialized devices. This one is probably the warning that since we didn't include the credentials,
+                    // if they are imported back into the same IoT hub, the credentials will be newly generated.
+                    Debug.Print($"Export file contained a line that is not a device:\t`{serializedDevice}`");
+                }
             });
 
             // Step 2: Write the in-memory list to the blob.
-            byte[] bytes = Encoding.UTF8.GetBytes(sb.ToString());
+            BlobClient writeToBlob = _blobContainerClient.GetBlobClient(writeToBlobName);
+            await WriteToBlobAsync(writeToBlob, sb.ToString());
+        }
+
+        private async Task LoadAndUpdateConfigsAsync(string readFromBlobName, string writeToBlobName)
+        {
+            // Write each line to the list.
+            BlobClient readFromBlob = _blobContainerClient.GetBlobClient(readFromBlobName);
+
+            Console.WriteLine("Reading in the list of configs from blob storage.");
+            List<string> serializedDevices = await ReadFromBlobAsync(readFromBlob);
+
+            Console.WriteLine("Updating config's ImportMode.");
+            // Step 1: Update each config's ImportMode
+            var sb = new StringBuilder();
+            serializedDevices.ForEach(serializedConfig =>
+            {
+                // Deserialize back to an ExportImportDevice and update the import mode property.
+                try
+                {
+                    ImportConfiguration config = JsonConvert.DeserializeObject<ImportConfiguration>(serializedConfig);
+                    config.ImportMode = ConfigurationImportMode.CreateOrUpdateIfMatchETag;
+
+                    // Reserialize the object now that we've updated the property.
+                    sb.AppendLine(JsonConvert.SerializeObject(config));
+                }
+                catch
+                {
+                    // Exports can have warnings and other messages from the hub, so we have to handle lines that aren't actually
+                    // serialized devices. This one is probably the warning that since we didn't include the credentials,
+                    // if they are imported back into the same IoT hub, the credentials will be newly generated.
+                    Debug.Print($"Export file contained a line that is not a config:\t`{serializedConfig}`");
+                }
+            });
+
+            // Step 2: Write the in-memory list to the blob.
+            BlobClient writeToBlob = _blobContainerClient.GetBlobClient(writeToBlobName);
+            await WriteToBlobAsync(writeToBlob, sb.ToString());
+        }
+
+        private static async Task<List<string>> ReadFromBlobAsync(BlobClient blobClient)
+        {
+            // Read the blob file of devices, import each row into a list.
+            var contents = new List<string>();
+
+            using Stream blobStream = await blobClient.OpenReadAsync();
+            using var streamReader = new StreamReader(blobStream, Encoding.UTF8);
+            while (streamReader.Peek() != -1)
+            {
+                string line = await streamReader.ReadLineAsync();
+                contents.Add(line);
+            }
+
+            return contents;
+        }
+
+        private static async Task WriteToBlobAsync(BlobClient blobClient, string contents)
+        {
             using Stream stream = await blobClient.OpenWriteAsync(overwrite: true);
+            byte[] bytes = Encoding.UTF8.GetBytes(contents);
             for (int i = 0; i < bytes.Length; i += BlobWriteBytes)
             {
                 int length = Math.Min(bytes.Length - i, BlobWriteBytes);
                 await stream.WriteAsync(bytes.AsMemory(i, length));
             }
             await stream.FlushAsync();
-
-            Console.WriteLine("Running a registry manager job to import the entries from the devices file to the destination IoT hub.");
-
-            // Step 3: Call import using the same blob to create all devices.
-            // Loads and adds the devices to the destination IoT hub.
-            using var registryManager = RegistryManager.CreateFromConnectionString(destHubConnectionString);
-            JobProperties importJob = await registryManager.ImportDevicesAsync(_containerUri.ToString(), _containerUri.ToString());
-            await WaitForJobAsync(registryManager, importJob);
         }
 
         private static string GenerateKey(int keySize)
