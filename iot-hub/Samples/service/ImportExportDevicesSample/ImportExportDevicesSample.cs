@@ -30,6 +30,7 @@ namespace Microsoft.Azure.Devices.Samples
         private readonly string _srcHubDevicesExportBlobName;
         private readonly string _srcHubConfigsExportBlobName;
         private readonly string _destHubDevicesImportBlobName;
+        private readonly string _destHubConfigsImportBlobName;
         private readonly string _hubDevicesCleanupBlobName;
 
         private const string DeviceImportErrorsBlobName = "importErrors.log";
@@ -57,6 +58,7 @@ namespace Microsoft.Azure.Devices.Samples
             _srcHubDevicesExportBlobName = _blobNamePrefix + "ExportDevices.txt";
             _srcHubConfigsExportBlobName = _blobNamePrefix + "ExportConfigs.txt";
             _destHubDevicesImportBlobName = _blobNamePrefix + "ImportDevices.txt";
+            _destHubConfigsImportBlobName = _blobNamePrefix + "ImportConfigs.txt";
             _hubDevicesCleanupBlobName = _blobNamePrefix + "DeleteDevices.txt";
         }
 
@@ -287,7 +289,8 @@ namespace Microsoft.Azure.Devices.Samples
             await ExportDevicesAsync(srcRegistryManager, _srcHubDevicesExportBlobName, _srcHubConfigsExportBlobName, includeConfigurations);
 
             // Load the exported devices and edit the entries to be ready for import
-            await LoadAndUpdateRecordsAsync(_srcHubDevicesExportBlobName, _destHubDevicesImportBlobName);
+            await LoadAndUpdateDevicesAsync(_srcHubDevicesExportBlobName, _destHubDevicesImportBlobName);
+            await LoadAndUpdateConfigsAsync(_srcHubConfigsExportBlobName, _destHubConfigsImportBlobName);
             await ImportDevicesAsync(destRegistryManager, includeConfigurations);
 
             stopwatch.Stop();
@@ -330,7 +333,7 @@ namespace Microsoft.Azure.Devices.Samples
                 _containerUri,
                 _destHubDevicesImportBlobName);
             importJob.IncludeConfigurations = includeConfigurations;
-            importJob.ConfigurationsBlobName = _srcHubConfigsExportBlobName;
+            importJob.ConfigurationsBlobName = _destHubConfigsImportBlobName;
             importJob = await registryManager.ImportDevicesAsync(importJob);
             await WaitForJobAsync(registryManager, importJob);
 
@@ -434,7 +437,7 @@ namespace Microsoft.Azure.Devices.Samples
             Console.WriteLine($"Deleted IoT hub devices and configs: time elapsed = {stopwatch.Elapsed}");
         }
 
-        private async Task LoadAndUpdateRecordsAsync(string readFromBlobName, string writeToBlobName)
+        private async Task LoadAndUpdateDevicesAsync(string readFromBlobName, string writeToBlobName)
         {
             // Write each line to the serializedDevices list.
             BlobClient readFromBlob = _blobContainerClient.GetBlobClient(readFromBlobName);
@@ -462,6 +465,42 @@ namespace Microsoft.Azure.Devices.Samples
                     // serialized devices. This one is probably the warning that since we didn't include the credentials,
                     // if they are imported back into the same IoT hub, the credentials will be newly generated.
                     Debug.Print($"Export file contained a line that is not a device:\t`{serializedDevice}`");
+                }
+            });
+
+            // Step 2: Write the in-memory list to the blob.
+            BlobClient writeToBlob = _blobContainerClient.GetBlobClient(writeToBlobName);
+            await WriteToBlobAsync(writeToBlob, sb.ToString());
+        }
+
+        private async Task LoadAndUpdateConfigsAsync(string readFromBlobName, string writeToBlobName)
+        {
+            // Write each line to the list.
+            BlobClient readFromBlob = _blobContainerClient.GetBlobClient(readFromBlobName);
+
+            Console.WriteLine("Reading in the list of configs from blob storage.");
+            List<string> serializedDevices = await ReadFromBlobAsync(readFromBlob);
+
+            Console.WriteLine("Updating config's ImportMode.");
+            // Step 1: Update each config's ImportMode
+            var sb = new StringBuilder();
+            serializedDevices.ForEach(serializedConfig =>
+            {
+                // Deserialize back to an ExportImportDevice and update the import mode property.
+                try
+                {
+                    ImportConfiguration config = JsonConvert.DeserializeObject<ImportConfiguration>(serializedConfig);
+                    config.ImportMode = ConfigurationImportMode.CreateOrUpdateIfMatchETag;
+
+                    // Reserialize the object now that we've updated the property.
+                    sb.AppendLine(JsonConvert.SerializeObject(config));
+                }
+                catch
+                {
+                    // Exports can have warnings and other messages from the hub, so we have to handle lines that aren't actually
+                    // serialized devices. This one is probably the warning that since we didn't include the credentials,
+                    // if they are imported back into the same IoT hub, the credentials will be newly generated.
+                    Debug.Print($"Export file contained a line that is not a config:\t`{serializedConfig}`");
                 }
             });
 
