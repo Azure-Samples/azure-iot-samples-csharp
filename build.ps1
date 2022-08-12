@@ -13,6 +13,7 @@ Parameters:
     -clean: Runs dotnet clean. Use `git clean -xdf` if this is not sufficient.
     -build: Builds the project.
     -run: Runs the sample. The required environmental variables need to be set beforehand.
+    -clear: Clear device and enrollment.
     -configuration {Debug|Release}
     -verbosity: Sets the verbosity level of the command. Allowed values are q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic].
 
@@ -37,6 +38,7 @@ Param(
     [switch] $clean,
     [switch] $build,
     [switch] $run,
+    [switch] $clear,
     [string] $configuration = "Debug",
     [string] $verbosity = "q"
 )
@@ -101,6 +103,14 @@ try {
         BuildProject provisioning\Samples\service "Provisioning Service Samples"
     }
 
+    if ($clear)
+    {
+        # Clear device and enrollment
+        RunApp provisioning\Samples\service\CleanupEnrollmentsSample "Provisioning\Service\CleanupEnrollmentsSample"
+        RunApp iot-hub\Samples\service\CleanupDevicesSample "IoTHub\Service\CleanupDevicesSample" "-c ""$env:IOTHUB_CONNECTION_STRING"" -a ""$env:STORAGE_ACCOUNT_CONNECTION_STRING"" --PathToDevicePrefixForDeletion ""$env:PATH_TO_DEVICE_PREFIX_FOR_DELETION_FILE"""
+        RunApp iot-hub\Samples\service\CleanupDevicesSample "IoTHub\Service\CleanupDevicesSample" "-c ""$env:FAR_AWAY_IOTHUB_CONNECTION_STRING"" -a ""$env:STORAGE_ACCOUNT_CONNECTION_STRING"" --PathToDevicePrefixForDeletion ""$env:PATH_TO_DEVICE_PREFIX_FOR_DELETION_FILE"""
+    }
+
     if ($run)
     {
         $sampleRunningTimeInSeconds = 60
@@ -108,6 +118,7 @@ try {
         # Run cleanup first so the samples don't get overloaded with old devices
         RunApp provisioning\Samples\service\CleanupEnrollmentsSample "Provisioning\Service\CleanupEnrollmentsSample"
         RunApp iot-hub\Samples\service\CleanupDevicesSample "IoTHub\Service\CleanupDevicesSample" "-c ""$env:IOTHUB_CONNECTION_STRING"" -a ""$env:STORAGE_ACCOUNT_CONNECTION_STRING"" --PathToDevicePrefixForDeletion ""$env:PATH_TO_DEVICE_PREFIX_FOR_DELETION_FILE"""
+        RunApp iot-hub\Samples\service\CleanupDevicesSample "IoTHub\Service\CleanupDevicesSample" "-c ""$env:FAR_AWAY_IOTHUB_CONNECTION_STRING"" -a ""$env:STORAGE_ACCOUNT_CONNECTION_STRING"" --PathToDevicePrefixForDeletion ""$env:PATH_TO_DEVICE_PREFIX_FOR_DELETION_FILE"""
 
         # Run the iot-hub\device samples
         RunApp iot-hub\Samples\device\DeviceReconnectionSample "IoTHub\Device\DeviceReconnectionSample" "-p ""$env:IOTHUB_DEVICE_CONN_STRING"" -r $sampleRunningTimeInSeconds"
