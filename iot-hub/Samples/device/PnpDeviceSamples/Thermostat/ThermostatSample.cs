@@ -33,8 +33,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private readonly Random _random = new Random();
 
-        private double _temperature = 0d;
-        private double _maxTemp = 0d;
+        private double _temperature;
+        private double _maxTemp;
 
         // Dictionary to hold the temperature updates sent over.
         // NOTE: Memory constrained devices should leverage storage capabilities of an external service to store this information and perform computation.
@@ -52,8 +52,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         public ThermostatSample(DeviceClient deviceClient, ILogger logger)
         {
-            _deviceClient = deviceClient ?? throw new ArgumentNullException($"{nameof(deviceClient)} cannot be null.");
-            _logger = logger ?? LoggerFactory.Create(builer => builer.AddConsole()).CreateLogger<ThermostatSample>();
+            _deviceClient = deviceClient ?? throw new ArgumentNullException(nameof(deviceClient));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task PerformOperationsAsync(CancellationToken cancellationToken)
@@ -98,7 +98,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 }
 
                 await SendTemperatureAsync();
-                await Task.Delay(5 * 1000);
+                await Task.Delay(5 * 1000, cancellationToken);
             }
         }
 

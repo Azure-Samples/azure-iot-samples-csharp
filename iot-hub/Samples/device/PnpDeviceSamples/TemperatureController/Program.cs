@@ -40,7 +40,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 });
 
             // Set up logging
-            ILoggerFactory loggerFactory = new LoggerFactory();
+            using ILoggerFactory loggerFactory = new LoggerFactory();
             loggerFactory.AddColorConsoleLogger(
                 new ColorConsoleLoggerConfiguration
                 {
@@ -50,7 +50,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             s_logger = loggerFactory.CreateLogger<Program>();
 
             // Instantiating this seems to do all we need for outputting SDK events to our console log.
-            _ = new ConsoleEventListener(SdkEventProviderPrefix, s_logger);
+            using var sdkLog = new ConsoleEventListener(SdkEventProviderPrefix, s_logger);
 
             if (!parameters.Validate(s_logger))
             {
@@ -73,7 +73,12 @@ namespace Microsoft.Azure.Devices.Client.Samples
             s_logger.LogDebug($"Set up the device client.");
             using DeviceClient deviceClient = await SetupDeviceClientAsync(parameters, cts.Token);
             var sample = new TemperatureControllerSample(deviceClient, s_logger);
-            await sample.PerformOperationsAsync(cts.Token);
+
+            try
+            {
+                await sample.PerformOperationsAsync(cts.Token);
+            }
+            catch (OperationCanceledException) { }
 
             // PerformOperationsAsync is designed to run until cancellation has been explicitly requested, either through
             // cancellation token expiration or by Console.CancelKeyPress.
@@ -87,7 +92,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private static ILogger InitializeConsoleDebugLogger()
         {
-            ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+            using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
             {
                 builder
                 .AddFilter(level => level >= LogLevel.Debug)
@@ -127,8 +132,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
         // Provision a device via DPS, by sending the PnP model Id as DPS payload.
         private static async Task<DeviceRegistrationResult> ProvisionDeviceAsync(Parameters parameters, CancellationToken cancellationToken)
         {
-            SecurityProvider symmetricKeyProvider = new SecurityProviderSymmetricKey(parameters.DeviceId, parameters.DeviceSymmetricKey, null);
-            ProvisioningTransportHandler mqttTransportHandler = new ProvisioningTransportHandlerMqtt();
+            using SecurityProvider symmetricKeyProvider = new SecurityProviderSymmetricKey(parameters.DeviceId, parameters.DeviceSymmetricKey, null);
+            using ProvisioningTransportHandler mqttTransportHandler = new ProvisioningTransportHandlerMqtt();
             ProvisioningDeviceClient pdc = ProvisioningDeviceClient.Create(parameters.DpsEndpoint, parameters.DpsIdScope, symmetricKeyProvider, mqttTransportHandler);
 
             var pnpPayload = new ProvisioningRegistrationAdditionalData

@@ -17,7 +17,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
     {
         private const int TemperatureThreshold = 30;
         private static readonly Random s_randomGenerator = new Random();
-        private static readonly TimeSpan s_sleepDuration = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan s_sleepDuration = TimeSpan.FromSeconds(15);
 
         private readonly SemaphoreSlim _initSemaphore = new SemaphoreSlim(1, 1);
         private readonly List<string> _deviceConnectionStrings;
