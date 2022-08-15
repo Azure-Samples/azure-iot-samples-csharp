@@ -58,7 +58,7 @@ namespace ImportExportDevicesWithManagedIdentitySample
                 storageAuthenticationType: StorageAuthenticationType.IdentityBased,
                 identity: new ManagedIdentity
                 {
-                    userAssignedIdentity = userDefinedManagedIdentityResourceId
+                    UserAssignedIdentity = userDefinedManagedIdentityResourceId
                 });
 
             JobProperties jobResult = await srcRegistryManager
@@ -109,7 +109,7 @@ namespace ImportExportDevicesWithManagedIdentitySample
                 storageAuthenticationType: StorageAuthenticationType.IdentityBased,
                 identity: new ManagedIdentity
                 {
-                    userAssignedIdentity = userDefinedManagedIdentityResourceId
+                    UserAssignedIdentity = userDefinedManagedIdentityResourceId
                 });
 
             JobProperties jobResult = await destRegistryManager

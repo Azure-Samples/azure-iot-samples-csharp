@@ -29,7 +29,7 @@ namespace Microsoft.Azure.Devices.Samples
             _serviceClient = serviceClient ?? throw new ArgumentNullException(nameof(serviceClient));
             _registryManager = registryManager ?? throw new ArgumentNullException(nameof(registryManager));
             _deviceId = deviceId ?? throw new ArgumentNullException(nameof(deviceId));
-            _logger = logger ?? LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<TemperatureControllerSample>();
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task RunSampleAsync()

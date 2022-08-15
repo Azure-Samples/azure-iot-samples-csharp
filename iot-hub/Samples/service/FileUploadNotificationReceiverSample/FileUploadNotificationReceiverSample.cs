@@ -79,7 +79,7 @@ namespace Microsoft.Azure.Devices.Samples
             {
                 try
                 {
-                    FileNotification fileUploadNotification = await notificationReceiver.ReceiveAsync(s_notificationReceiverTimeout);
+                    FileNotification fileUploadNotification = await notificationReceiver.ReceiveAsync(cancellationToken);
 
                     if (fileUploadNotification == null)
                     {
@@ -104,7 +104,7 @@ namespace Microsoft.Azure.Devices.Samples
                     {
                         _logger.LogInformation($"Marking notification for {fileUploadNotification.DeviceId} as Abandoned.");
 
-                        await notificationReceiver.AbandonAsync(fileUploadNotification);
+                        await notificationReceiver.AbandonAsync(fileUploadNotification, cancellationToken);
 
                         _logger.LogInformation($"Successfully marked the notification for device {fileUploadNotification.DeviceId} as Abandoned.");
                         totalNotificationsAbandoned++;
@@ -113,7 +113,7 @@ namespace Microsoft.Azure.Devices.Samples
                     {
                         _logger.LogInformation($"Marking notification for {fileUploadNotification.DeviceId} as Completed.");
 
-                        await notificationReceiver.CompleteAsync(fileUploadNotification);
+                        await notificationReceiver.CompleteAsync(fileUploadNotification, cancellationToken);
 
                         _logger.LogInformation($"Successfully marked the notification for device {fileUploadNotification.DeviceId} as Completed.");
                         totalNotificationsCompleted++;

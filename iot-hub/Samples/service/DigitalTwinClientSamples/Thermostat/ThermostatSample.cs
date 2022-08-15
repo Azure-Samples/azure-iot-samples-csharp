@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Devices.Samples
         {
             _digitalTwinClient = client ?? throw new ArgumentNullException(nameof(client));
             _digitalTwinId = digitalTwinId ?? throw new ArgumentNullException(nameof(digitalTwinId));
-            _logger = logger ?? LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<ThermostatSample>();
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task RunSampleAsync()
