@@ -35,7 +35,6 @@ namespace Microsoft.Azure.Devices.Samples
                 });
 
             // Set up logging
-            
             using ILoggerFactory loggerFactory = new LoggerFactory();
             loggerFactory.AddColorConsoleLogger(
                 new ColorConsoleLoggerConfiguration
