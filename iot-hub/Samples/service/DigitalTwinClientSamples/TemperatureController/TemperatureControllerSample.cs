@@ -46,7 +46,7 @@ namespace Microsoft.Azure.Devices.Samples
             // Invoke the root-level command reboot on the TemperatureController digital twin
             await InvokeRebootCommandAsync();
         }
-        private static ILogger InitializeConsoleDebugLogger()
+        private ILogger InitializeConsoleDebugLogger()
         {
             using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
             {

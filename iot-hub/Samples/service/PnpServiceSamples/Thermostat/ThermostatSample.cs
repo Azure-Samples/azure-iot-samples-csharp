@@ -39,7 +39,7 @@ namespace Microsoft.Azure.Devices.Samples
             await InvokeGetMaxMinReportCommandAsync();
         }
 
-        private static ILogger InitializeConsoleDebugLogger()
+        private ILogger InitializeConsoleDebugLogger()
         {
             using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
             {

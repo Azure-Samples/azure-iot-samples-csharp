@@ -48,7 +48,7 @@ namespace Microsoft.Azure.Devices.Samples
             await InvokeRebootCommandAsync();
         }
 
-        private static ILogger InitializeConsoleDebugLogger()
+        private ILogger InitializeConsoleDebugLogger()
         {
             using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
             {

@@ -80,6 +80,12 @@ namespace Microsoft.Azure.Devices.Samples
                 {
                     FileNotification fileUploadNotification = await notificationReceiver.ReceiveAsync(cancellationToken);
 
+                    if (fileUploadNotification != null)
+                    {
+                        _logger.LogInformation("Did not receive any notification.");
+                        continue;
+                    }
+
                     totalNotificationsReceived++;
 
                     _logger.LogInformation($"Received file upload notification.");
