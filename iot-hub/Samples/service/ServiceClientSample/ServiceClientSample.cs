@@ -65,7 +65,7 @@ namespace Microsoft.Azure.Devices.Samples
             {
                 try
                 {
-                    FeedbackBatch feedbackMessages = await feedbackReceiver.ReceiveAsync();
+                    FeedbackBatch feedbackMessages = await feedbackReceiver.ReceiveAsync(token);
                     if (feedbackMessages != null)
                     {
                         _logger.LogInformation("New Feedback received:");
@@ -76,10 +76,10 @@ namespace Microsoft.Azure.Devices.Samples
                             _logger.LogInformation($"\tDevice {feedbackRecord.DeviceId} acted on message: {feedbackRecord.OriginalMessageId} with status: {feedbackRecord.StatusCode}");
                         }
 
-                        await feedbackReceiver.CompleteAsync(feedbackMessages);
+                        await feedbackReceiver.CompleteAsync(feedbackMessages, token);
                     }
 
-                    await Task.Delay(s_sleepDuration);
+                    await Task.Delay(s_sleepDuration, token);
                 }
                 catch (Exception e) when (ExceptionHelper.IsNetwork(e))
                 {
@@ -101,7 +101,7 @@ namespace Microsoft.Azure.Devices.Samples
             while (!cancellationToken.IsCancellationRequested)
             {
                 var str = $"Hello, Cloud! - Message {++messageCount }";
-                var message = new Message(Encoding.ASCII.GetBytes(str))
+                using var message = new Message(Encoding.ASCII.GetBytes(str))
                 {
                     // An acknowledgment is sent on delivery success or failure.
                     Ack = DeliveryAcknowledgement.Full
@@ -127,9 +127,9 @@ namespace Microsoft.Azure.Devices.Samples
                         _logger.LogError($"Unexpected error, will need to reinitialize the client: {e}");
                         await InitializeServiceClientAsync();
                     }
-                    await Task.Delay(s_sleepDuration);
+                    await Task.Delay(s_sleepDuration, cancellationToken);
                 }
-                await Task.Delay(s_sleepDuration);
+                await Task.Delay(s_sleepDuration, cancellationToken);
             }
         }
 

@@ -24,12 +24,12 @@ namespace Microsoft.Azure.Devices.Samples
         private readonly string _deviceId;
         private readonly ILogger _logger;
 
-        public TemperatureControllerSample(ServiceClient serviceClient, RegistryManager registryManager, string deviceId, ILogger logger)
+        public TemperatureControllerSample(ServiceClient serviceClient, RegistryManager registryManager, string deviceId)
         {
             _serviceClient = serviceClient ?? throw new ArgumentNullException(nameof(serviceClient));
             _registryManager = registryManager ?? throw new ArgumentNullException(nameof(registryManager));
             _deviceId = deviceId ?? throw new ArgumentNullException(nameof(deviceId));
-            _logger = logger ?? LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<TemperatureControllerSample>();
+            _logger = InitializeConsoleDebugLogger();
         }
 
         public async Task RunSampleAsync()
@@ -46,6 +46,21 @@ namespace Microsoft.Azure.Devices.Samples
 
             // Invoke the root-level command reboot on the TemperatureController device twin
             await InvokeRebootCommandAsync();
+        }
+
+        private ILogger InitializeConsoleDebugLogger()
+        {
+            using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder
+                .AddFilter(level => level >= LogLevel.Debug)
+                .AddSimpleConsole(options =>
+                {
+                    options.TimestampFormat = "[MM/dd/yyyy HH:mm:ss]";
+                });
+            });
+
+            return loggerFactory.CreateLogger<TemperatureControllerSample>();
         }
 
         private async Task<Twin> GetAndPrintDeviceTwinAsync()
