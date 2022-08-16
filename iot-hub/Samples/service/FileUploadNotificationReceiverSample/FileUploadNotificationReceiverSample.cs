@@ -20,7 +20,6 @@ namespace Microsoft.Azure.Devices.Samples
         private readonly ILogger _logger;
         private readonly TransportType _transportType;
         private static ServiceClient _serviceClient;
-        private static readonly TimeSpan s_notificationReceiverTimeout = TimeSpan.FromSeconds(5);
 
         public FileUploadNotificationReceiverSample(string iotHubConnectionString, TransportType transportType, ILogger logger)
         {
@@ -79,11 +78,11 @@ namespace Microsoft.Azure.Devices.Samples
             {
                 try
                 {
-                    FileNotification fileUploadNotification = await notificationReceiver.ReceiveAsync(s_notificationReceiverTimeout);
+                    FileNotification fileUploadNotification = await notificationReceiver.ReceiveAsync(cancellationToken);
 
-                    if (fileUploadNotification == null)
+                    if (fileUploadNotification != null)
                     {
-                        _logger.LogInformation($"Did not receive any notification after {s_notificationReceiverTimeout.TotalSeconds} seconds.");
+                        _logger.LogInformation("Did not receive any notification.");
                         continue;
                     }
 
@@ -104,7 +103,7 @@ namespace Microsoft.Azure.Devices.Samples
                     {
                         _logger.LogInformation($"Marking notification for {fileUploadNotification.DeviceId} as Abandoned.");
 
-                        await notificationReceiver.AbandonAsync(fileUploadNotification);
+                        await notificationReceiver.AbandonAsync(fileUploadNotification, cancellationToken);
 
                         _logger.LogInformation($"Successfully marked the notification for device {fileUploadNotification.DeviceId} as Abandoned.");
                         totalNotificationsAbandoned++;
@@ -113,7 +112,7 @@ namespace Microsoft.Azure.Devices.Samples
                     {
                         _logger.LogInformation($"Marking notification for {fileUploadNotification.DeviceId} as Completed.");
 
-                        await notificationReceiver.CompleteAsync(fileUploadNotification);
+                        await notificationReceiver.CompleteAsync(fileUploadNotification, cancellationToken);
 
                         _logger.LogInformation($"Successfully marked the notification for device {fileUploadNotification.DeviceId} as Completed.");
                         totalNotificationsCompleted++;
