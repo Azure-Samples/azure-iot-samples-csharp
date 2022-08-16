@@ -24,20 +24,11 @@ namespace Microsoft.Azure.Devices.Samples
         private readonly string _digitalTwinId;
         private readonly ILogger _logger;
 
-        public TemperatureControllerSample(DigitalTwinClient client, string digitalTwinId, ILogger logger)
+        public TemperatureControllerSample(DigitalTwinClient client, string digitalTwinId)
         {
             _digitalTwinClient = client ?? throw new ArgumentNullException(nameof(client));
             _digitalTwinId = digitalTwinId ?? throw new ArgumentNullException(nameof(digitalTwinId));
-
-            if (logger != null)
-            {
-                _logger = logger;
-            }
-            else
-            {
-                using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-                _logger = loggerFactory.CreateLogger<TemperatureControllerSample>();
-            }
+            _logger = InitializeConsoleDebugLogger();
         }
 
         public async Task RunSampleAsync()
@@ -54,6 +45,20 @@ namespace Microsoft.Azure.Devices.Samples
 
             // Invoke the root-level command reboot on the TemperatureController digital twin
             await InvokeRebootCommandAsync();
+        }
+        private static ILogger InitializeConsoleDebugLogger()
+        {
+            using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder
+                .AddFilter(level => level >= LogLevel.Debug)
+                .AddSimpleConsole(options =>
+                {
+                    options.TimestampFormat = "[MM/dd/yyyy HH:mm:ss]";
+                });
+            });
+
+            return loggerFactory.CreateLogger<TemperatureControllerSample>();
         }
 
         private async Task<T> GetAndPrintDigitalTwinAsync<T>()
