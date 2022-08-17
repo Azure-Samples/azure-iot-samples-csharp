@@ -53,7 +53,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
             Console.WriteLine($"Device {result.DeviceId} registered to {result.AssignedHub}.");
 
             Console.WriteLine("Creating TPM authentication for IoT Hub...");
-            IAuthenticationMethod auth = new DeviceAuthenticationWithTpm(result.DeviceId, security);
+            using DeviceAuthenticationWithTpm auth = new DeviceAuthenticationWithTpm(result.DeviceId, security);
 
             Console.WriteLine($"Testing the provisioned device with IoT Hub...");
             using DeviceClient iotClient = DeviceClient.Create(result.AssignedHub, auth, _parameters.TransportType);
