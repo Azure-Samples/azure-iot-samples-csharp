@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using CommandLine;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
@@ -34,10 +35,29 @@ namespace Microsoft.Azure.Devices.Samples
                 throw new ArgumentException("Required parameters are not set. Please recheck required variables by using \"--help\"");
             }
 
-            using DigitalTwinClient digitalTwinClient = DigitalTwinClient.CreateFromConnectionString(parameters.HubConnectionString);
 
-            var temperatureControllerSample = new TemperatureControllerSample(digitalTwinClient, parameters.DeviceId);
-            await temperatureControllerSample.RunSampleAsync().ConfigureAwait(false);
+            ILogger logger = InitializeConsoleDebugLogger();
+            logger.LogDebug("Set up the digital twin client.");
+            using var digitalTwinClient = DigitalTwinClient.CreateFromConnectionString(parameters.HubConnectionString);
+
+            logger.LogDebug("Set up and start the TemperatureController service sample.");
+            var temperatureControllerSample = new TemperatureControllerSample(digitalTwinClient, parameters.DeviceId, logger);
+            await temperatureControllerSample.RunSampleAsync();
+        }
+
+        private static ILogger InitializeConsoleDebugLogger()
+        {
+            using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder
+                .AddFilter(level => level >= LogLevel.Debug)
+                .AddSimpleConsole(options =>
+                {
+                    options.TimestampFormat = "[MM/dd/yyyy HH:mm:ss]";
+                });
+            });
+
+            return loggerFactory.CreateLogger<TemperatureControllerSample>();
         }
     }
 }

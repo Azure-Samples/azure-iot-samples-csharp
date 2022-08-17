@@ -24,11 +24,11 @@ namespace Microsoft.Azure.Devices.Samples
         private readonly string _digitalTwinId;
         private readonly ILogger _logger;
 
-        public TemperatureControllerSample(DigitalTwinClient client, string digitalTwinId)
+        public TemperatureControllerSample(DigitalTwinClient client, string digitalTwinId, ILogger logger)
         {
             _digitalTwinClient = client ?? throw new ArgumentNullException(nameof(client));
             _digitalTwinId = digitalTwinId ?? throw new ArgumentNullException(nameof(digitalTwinId));
-            _logger = InitializeConsoleDebugLogger();
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task RunSampleAsync()
@@ -45,20 +45,6 @@ namespace Microsoft.Azure.Devices.Samples
 
             // Invoke the root-level command reboot on the TemperatureController digital twin
             await InvokeRebootCommandAsync();
-        }
-        private ILogger InitializeConsoleDebugLogger()
-        {
-            using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
-            {
-                builder
-                .AddFilter(level => level >= LogLevel.Debug)
-                .AddSimpleConsole(options =>
-                {
-                    options.TimestampFormat = "[MM/dd/yyyy HH:mm:ss]";
-                });
-            });
-
-            return loggerFactory.CreateLogger<TemperatureControllerSample>();
         }
 
         private async Task<T> GetAndPrintDigitalTwinAsync<T>()
@@ -111,7 +97,7 @@ namespace Microsoft.Azure.Devices.Samples
             else
             {
                 // Thermostat1 is not present in the TemperatureController twin. We will add the component
-                var componentProperty = new Dictionary<string, object> { { targetTemperaturePropertyName, desiredTargetTemperature }, { "$metadata", new object() } };
+                var componentProperty = new Dictionary<string, object> { { targetTemperaturePropertyName, desiredTargetTemperature } };//, { "$metadata", new object() } };
                 _logger.LogDebug($"The component {Thermostat1Component} does not exist on the {_digitalTwinId} digital twin.");
 
                 // The property path to be replaced should be prepended with a '/'
