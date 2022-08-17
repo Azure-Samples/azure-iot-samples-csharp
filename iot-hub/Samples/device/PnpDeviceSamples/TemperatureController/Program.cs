@@ -78,7 +78,10 @@ namespace Microsoft.Azure.Devices.Client.Samples
             {
                 await sample.PerformOperationsAsync(cts.Token);
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException) 
+            {
+                // User canceled the operation. Nothing to do here.
+            }
 
             // PerformOperationsAsync is designed to run until cancellation has been explicitly requested, either through
             // cancellation token expiration or by Console.CancelKeyPress.
