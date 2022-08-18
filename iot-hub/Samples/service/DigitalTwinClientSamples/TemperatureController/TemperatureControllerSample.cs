@@ -97,7 +97,7 @@ namespace Microsoft.Azure.Devices.Samples
             else
             {
                 // Thermostat1 is not present in the TemperatureController twin. We will add the component
-                var componentProperty = new Dictionary<string, object> { { targetTemperaturePropertyName, desiredTargetTemperature } };//, { "$metadata", new object() } };
+                var componentProperty = new Dictionary<string, object> { { targetTemperaturePropertyName, desiredTargetTemperature }, { "$metadata", new object() } };
                 _logger.LogDebug($"The component {Thermostat1Component} does not exist on the {_digitalTwinId} digital twin.");
 
                 // The property path to be replaced should be prepended with a '/'

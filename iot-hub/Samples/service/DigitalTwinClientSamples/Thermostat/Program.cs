@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using CommandLine;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
@@ -9,6 +10,8 @@ namespace Microsoft.Azure.Devices.Samples
 {
     public class Program
     {
+        private static ILogger s_logger;
+
         /// <summary>
         /// This sample performs root-level operations on a plug and play compatible device.
         /// </summary>
@@ -29,15 +32,33 @@ namespace Microsoft.Azure.Devices.Samples
                     Environment.Exit(1);
                 });
 
+            s_logger = InitializeConsoleDebugLogger();
             if (!parameters.Validate())
             {
                 throw new ArgumentException("Required parameters are not set. Please recheck required variables by using \"--help\"");
             }
 
-            using DigitalTwinClient digitalTwinClient = DigitalTwinClient.CreateFromConnectionString(parameters.HubConnectionString);
+            s_logger.LogDebug("Set up the digital twin client.");
+            using var digitalTwinClient = DigitalTwinClient.CreateFromConnectionString(parameters.HubConnectionString);
 
-            var thermostatSample = new ThermostatSample(digitalTwinClient, parameters.DeviceId);
+            s_logger.LogDebug("Set up and start the Thermostat service sample.");
+            var thermostatSample = new ThermostatSample(digitalTwinClient, parameters.DeviceId, s_logger);
             await thermostatSample.RunSampleAsync().ConfigureAwait(false);
+        }
+
+        private static ILogger InitializeConsoleDebugLogger()
+        {
+            using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder
+                .AddFilter(level => level >= LogLevel.Debug)
+                .AddSimpleConsole(options =>
+                {
+                    options.TimestampFormat = "[MM/dd/yyyy HH:mm:ss]";
+                });
+            });
+
+            return loggerFactory.CreateLogger<ThermostatSample>();
         }
     }
 }

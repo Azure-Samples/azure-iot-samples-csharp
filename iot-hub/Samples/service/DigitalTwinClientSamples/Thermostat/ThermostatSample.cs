@@ -18,11 +18,11 @@ namespace Microsoft.Azure.Devices.Samples
         private readonly string _digitalTwinId;
         public readonly ILogger _logger;
 
-        public ThermostatSample(DigitalTwinClient client, string digitalTwinId)
+        public ThermostatSample(DigitalTwinClient client, string digitalTwinId, ILogger logger)
         {
             _digitalTwinClient = client ?? throw new ArgumentNullException(nameof(client));
             _digitalTwinId = digitalTwinId ?? throw new ArgumentNullException(nameof(digitalTwinId));
-            _logger = InitializeConsoleDebugLogger();
+            _logger = logger ?? throw new ArgumentException(nameof(logger));
         }
 
         public async Task RunSampleAsync()
@@ -41,20 +41,6 @@ namespace Microsoft.Azure.Devices.Samples
 
             // Invoke the root-level command getMaxMinReport command on the digital twin
             await InvokeGetMaxMinReportCommandAsync();
-        }
-        private ILogger InitializeConsoleDebugLogger()
-        {
-            using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
-            {
-                builder
-                .AddFilter(level => level >= LogLevel.Debug)
-                .AddSimpleConsole(options =>
-                {
-                    options.TimestampFormat = "[MM/dd/yyyy HH:mm:ss]";
-                });
-            });
-
-            return loggerFactory.CreateLogger<ThermostatSample>();
         }
 
         private async Task<T> GetAndPrintDigitalTwinAsync<T>()
