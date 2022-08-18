@@ -10,8 +10,6 @@ namespace Microsoft.Azure.Devices.Samples
 {
     public class Program
     {
-        private static ILogger s_logger;
-
         /// <summary>
         /// This sample performs component-level operations on a plug and play compatible device.
         /// </summary>
@@ -32,18 +30,19 @@ namespace Microsoft.Azure.Devices.Samples
                     Environment.Exit(1);
                 });
 
-            s_logger = InitializeConsoleDebugLogger();
             if (!parameters.Validate())
             {
                 throw new ArgumentException("Required parameters are not set. Please recheck required variables by using \"--help\"");
             }
 
-            s_logger.LogDebug("Set up the digital twin client.");
-            using DigitalTwinClient digitalTwinClient = DigitalTwinClient.CreateFromConnectionString(parameters.HubConnectionString);
 
-            s_logger.LogDebug("Set up and start the TemperatureController service sample.");
-            var temperatureControllerSample = new TemperatureControllerSample(digitalTwinClient, parameters.DeviceId, s_logger);
-            await temperatureControllerSample.RunSampleAsync().ConfigureAwait(false);
+            ILogger logger = InitializeConsoleDebugLogger();
+            logger.LogDebug("Set up the digital twin client.");
+            using var digitalTwinClient = DigitalTwinClient.CreateFromConnectionString(parameters.HubConnectionString);
+
+            logger.LogDebug("Set up and start the TemperatureController service sample.");
+            var temperatureControllerSample = new TemperatureControllerSample(digitalTwinClient, parameters.DeviceId, logger);
+            await temperatureControllerSample.RunSampleAsync();
         }
 
         private static ILogger InitializeConsoleDebugLogger()

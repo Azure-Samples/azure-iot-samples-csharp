@@ -10,8 +10,6 @@ namespace Microsoft.Azure.Devices.Samples
 {
     public class Program
     {
-        private static ILogger s_logger;
-
         /// <summary>
         /// This sample performs root-level operations on a plug and play compatible device.
         /// </summary>
@@ -32,27 +30,27 @@ namespace Microsoft.Azure.Devices.Samples
                     Environment.Exit(1);
                 });
 
-            s_logger = InitializeConsoleDebugLogger();
+            ILogger logger = InitializeConsoleDebugLogger();
             if (!parameters.Validate())
             {
                 throw new ArgumentException("Required parameters are not set. Please recheck required variables by using \"--help\"");
             }
 
-            s_logger.LogDebug("Set up the digital twin client.");
-            using DigitalTwinClient digitalTwinClient = DigitalTwinClient.CreateFromConnectionString(parameters.HubConnectionString);
+            logger.LogDebug("Set up the digital twin client.");
+            using var digitalTwinClient = DigitalTwinClient.CreateFromConnectionString(parameters.HubConnectionString);
 
-            s_logger.LogDebug("Set up and start the Thermostat service sample.");
-            var thermostatSample = new ThermostatSample(digitalTwinClient, parameters.DeviceId, s_logger);
-            await thermostatSample.RunSampleAsync().ConfigureAwait(false);
+            logger.LogDebug("Set up and start the Thermostat service sample.");
+            var thermostatSample = new ThermostatSample(digitalTwinClient, parameters.DeviceId, logger);
+            await thermostatSample.RunSampleAsync();
         }
 
         private static ILogger InitializeConsoleDebugLogger()
         {
-            ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+            using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
             {
                 builder
                 .AddFilter(level => level >= LogLevel.Debug)
-                .AddConsole(options =>
+                .AddSimpleConsole(options =>
                 {
                     options.TimestampFormat = "[MM/dd/yyyy HH:mm:ss]";
                 });

@@ -28,16 +28,7 @@ namespace Microsoft.Azure.Devices.Samples
         {
             _digitalTwinClient = client ?? throw new ArgumentNullException(nameof(client));
             _digitalTwinId = digitalTwinId ?? throw new ArgumentNullException(nameof(digitalTwinId));
-
-            if (logger != null)
-            {
-                _logger = logger;
-            }
-            else
-            {
-                using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-                _logger = loggerFactory.CreateLogger<TemperatureControllerSample>();
-            }
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task RunSampleAsync()
