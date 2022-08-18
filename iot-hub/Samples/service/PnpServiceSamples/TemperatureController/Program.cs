@@ -10,8 +10,6 @@ namespace Microsoft.Azure.Devices.Samples
 {
     public class Program
     {
-        private static ILogger s_logger;
-
         /// <summary>
         /// This sample performs component-level operations on an IoT device using the ServiceClient APIs.
         /// </summary>
@@ -32,18 +30,18 @@ namespace Microsoft.Azure.Devices.Samples
                     Environment.Exit(1);
                 });
 
-            s_logger = InitializeConsoleDebugLogger();
+            ILogger logger = InitializeConsoleDebugLogger();
             if (!parameters.Validate())
             {
                 throw new ArgumentException("Required parameters are not set. Please recheck required variables by using \"--help\"");
             }
 
-            s_logger.LogDebug("Set up the IoT Hub service client and registry manager.");
+            logger.LogDebug("Set up the IoT Hub service client and registry manager.");
             using var serviceClient = ServiceClient.CreateFromConnectionString(parameters.HubConnectionString);
             using var registryManager = RegistryManager.CreateFromConnectionString(parameters.HubConnectionString);
 
-            s_logger.LogDebug("Set up and start the TemperatureController service sample.");
-            var temperatureControllerSample = new TemperatureControllerSample(serviceClient, registryManager, parameters.DeviceId, s_logger);
+            logger.LogDebug("Set up and start the TemperatureController service sample.");
+            var temperatureControllerSample = new TemperatureControllerSample(serviceClient, registryManager, parameters.DeviceId, logger);
             await temperatureControllerSample.RunSampleAsync();
         }
 
