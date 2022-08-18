@@ -65,7 +65,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 {
                     logger.LogWarning(FormatRetryOperationLogMessage(operationName, attempt, $"caught a recoverable exception, will retry in {retryInterval}."));
                     await Task.Delay(retryInterval, cancellationToken);
-
                 }
                 else
                 {

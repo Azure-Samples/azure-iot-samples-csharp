@@ -16,17 +16,17 @@ namespace Microsoft.Azure.Devices.Client.Samples
     public class DeviceReconnectionSample
     {
         private const int TemperatureThreshold = 30;
-        private static readonly Random s_randomGenerator = new Random();
+        private static readonly Random s_randomGenerator = new();
         private static readonly TimeSpan s_sleepDuration = TimeSpan.FromSeconds(15);
 
-        private readonly SemaphoreSlim _initSemaphore = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim _initSemaphore = new(1, 1);
         private readonly List<string> _deviceConnectionStrings;
         private readonly TransportType _transportType;
-        private readonly ClientOptions _clientOptions = new ClientOptions { SdkAssignsMessageId = SdkAssignsMessageId.WhenUnset };
+        private readonly ClientOptions _clientOptions = new() { SdkAssignsMessageId = SdkAssignsMessageId.WhenUnset };
 
         // An UnauthorizedException is handled in the connection status change handler through its corresponding status change event.
         // We will ignore this exception when thrown by client API operations.
-        private readonly Dictionary<Type, string> _exceptionsToBeIgnored = new Dictionary<Type, string>
+        private readonly Dictionary<Type, string> _exceptionsToBeIgnored = new()
         {
             { typeof(UnauthorizedException), "Unauthorized exceptions are handled by the ConnectionStatusChangeHandler." }
         };
@@ -85,10 +85,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
                 await Task.WhenAll(SendMessagesAsync(s_cancellationTokenSource.Token), ReceiveMessagesAsync(s_cancellationTokenSource.Token));
             }
-            catch (OperationCanceledException)
-            {
-                // User canceled the operation. Nothing to do here.
-            }
+            catch (OperationCanceledException) { } // User canceled the operation
             catch (Exception ex)
             {
                 _logger.LogError($"Unrecoverable exception caught, user action is required, so exiting: \n{ex}");
@@ -123,7 +120,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                         }
 
                         s_deviceClient = DeviceClient.CreateFromConnectionString(_deviceConnectionStrings.First(), _transportType, _clientOptions);
-                        s_deviceClient.SetConnectionStatusChangesHandler(ConnectionStatusChangeHandler);
+                        s_deviceClient.SetConnectionStatusChangesHandler(ConnectionStatusChangeHandlerAsync);
                         _logger.LogDebug("Initialized the client instance.");
                     }
                 }
@@ -156,11 +153,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
             }
         }
 
-        // It is not generally a good practice to have async void methods, however, DeviceClient.SetConnectionStatusChangesHandler() event handler signature
+        // It is not generally a good practice to have async void methods, however, DeviceClient.ConnectionStatusChangeHandlerAsync() event handler signature
         // has a void return type. As a result, any operation within this block will be executed unmonitored on another thread.
         // To prevent multi-threaded synchronization issues, the async method InitializeClientAsync being called in here first grabs a lock before attempting to
         // initialize or dispose the device client instance; the async method GetTwinAndDetectChangesAsync is implemented similarly for the same purpose.
-        private async void ConnectionStatusChangeHandler(ConnectionStatus status, ConnectionStatusChangeReason reason)
+        private async void ConnectionStatusChangeHandlerAsync(ConnectionStatus status, ConnectionStatusChangeReason reason)
         {
             _logger.LogDebug($"Connection status changed: status={status}, reason={reason}");
             s_connectionStatus = status;
@@ -195,7 +192,13 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             if (_deviceConnectionStrings.Any())
                             {
                                 _logger.LogWarning($"The current connection string is invalid. Trying another.");
-                                await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
+
+                                try
+                                {
+                                    await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
+                                }
+                                catch (OperationCanceledException) { } // User canceled
+
                                 break;
                             }
 
@@ -213,14 +216,24 @@ namespace Microsoft.Azure.Devices.Client.Samples
                             _logger.LogWarning("### The DeviceClient has been disconnected because the retry policy expired." +
                                 "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
 
-                            await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
+                            try
+                            {
+                                await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
+                            }
+                            catch (OperationCanceledException) { } // User canceled
+
                             break;
 
                         case ConnectionStatusChangeReason.Communication_Error:
                             _logger.LogWarning("### The DeviceClient has been disconnected due to a non-retry-able exception. Inspect the exception for details." +
                                 "\nIf you want to perform more operations on the device client, you should dispose (DisposeAsync()) and then open (OpenAsync()) the client.");
 
-                            await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
+                            try
+                            {
+                                await InitializeAndSetupClientAsync(s_cancellationTokenSource.Token);
+                            }
+                            catch (OperationCanceledException) { } // User canceled
+
                             break;
 
                         default:
@@ -270,7 +283,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private async Task HandleTwinUpdateNotificationsAsync(TwinCollection twinUpdateRequest, object userContext)
         {
-            CancellationToken cancellationToken = (CancellationToken)userContext;
+            var cancellationToken = (CancellationToken)userContext;
 
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -384,7 +397,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 string messageData = Encoding.ASCII.GetString(receivedMessage.GetBytes());
                 var formattedMessage = new StringBuilder($"Received message: [{messageData}]");
 
-                foreach (var prop in receivedMessage.Properties)
+                foreach (KeyValuePair<string, string> prop in receivedMessage.Properties)
                 {
                     formattedMessage.AppendLine($"\n\tProperty: key={prop.Key}, value={prop.Value}");
                 }
@@ -401,8 +414,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private static Message PrepareMessage(int messageId)
         {
-            var temperature = s_randomGenerator.Next(20, 35);
-            var humidity = s_randomGenerator.Next(60, 80);
+            int temperature = s_randomGenerator.Next(20, 35);
+            int humidity = s_randomGenerator.Next(60, 80);
             string messagePayload = $"{{\"temperature\":{temperature},\"humidity\":{humidity}}}";
 
             var eventMessage = new Message(Encoding.UTF8.GetBytes(messagePayload))

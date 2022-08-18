@@ -23,8 +23,6 @@ namespace Microsoft.Azure.Devices.Client.Samples
         private const string ModelId = "dtmi:com:example:TemperatureController;2";
         private const string SdkEventProviderPrefix = "Microsoft-Azure-";
 
-        private static ILogger s_logger;
-
         public static async Task Main(string[] args)
         {
             // Parse application parameters
@@ -40,19 +38,12 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 });
 
             // Set up logging
-            using ILoggerFactory loggerFactory = new LoggerFactory();
-            loggerFactory.AddColorConsoleLogger(
-                new ColorConsoleLoggerConfiguration
-                {
-                    // The SDK logs are written at Trace level. Set this to LogLevel.Trace to get ALL logs.
-                    MinLogLevel = LogLevel.Debug,
-                });
-            s_logger = loggerFactory.CreateLogger<Program>();
+            ILogger logger = InitializeConsoleDebugLogger();
 
             // Instantiating this seems to do all we need for outputting SDK events to our console log.
-            using var sdkLog = new ConsoleEventListener(SdkEventProviderPrefix, s_logger);
+            using var sdkLog = new ConsoleEventListener(SdkEventProviderPrefix, logger);
 
-            if (!parameters.Validate(s_logger))
+            if (!parameters.Validate(logger))
             {
                 throw new ArgumentException("Required parameters are not set. Please recheck required variables by using \"--help\"");
             }
@@ -61,18 +52,18 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 ? TimeSpan.FromSeconds((double)parameters.ApplicationRunningTime)
                 : Timeout.InfiniteTimeSpan;
 
-            s_logger.LogInformation("Press Control+C to quit the sample.");
+            logger.LogInformation("Press Control+C to quit the sample.");
             using var cts = new CancellationTokenSource(runningTime);
             Console.CancelKeyPress += (sender, eventArgs) =>
             {
                 eventArgs.Cancel = true;
                 cts.Cancel();
-                s_logger.LogInformation("Sample execution cancellation requested; will exit.");
+                logger.LogInformation("Sample execution cancellation requested; will exit.");
             };
 
-            s_logger.LogDebug($"Set up the device client.");
-            using DeviceClient deviceClient = await SetupDeviceClientAsync(parameters, cts.Token);
-            var sample = new TemperatureControllerSample(deviceClient, s_logger);
+            logger.LogDebug($"Set up the device client.");
+            using DeviceClient deviceClient = await SetupDeviceClientAsync(parameters, logger, cts.Token);
+            var sample = new TemperatureControllerSample(deviceClient, logger);
 
             try
             {
@@ -108,20 +99,20 @@ namespace Microsoft.Azure.Devices.Client.Samples
             return loggerFactory.CreateLogger<TemperatureControllerSample>();
         }
 
-        private static async Task<DeviceClient> SetupDeviceClientAsync(Parameters parameters, CancellationToken cancellationToken)
+        private static async Task<DeviceClient> SetupDeviceClientAsync(Parameters parameters, ILogger logger, CancellationToken cancellationToken)
         {
             DeviceClient deviceClient;
             switch (parameters.DeviceSecurityType.ToLowerInvariant())
             {
                 case "dps":
-                    s_logger.LogDebug($"Initializing via DPS");
+                    logger.LogDebug($"Initializing via DPS");
                     DeviceRegistrationResult dpsRegistrationResult = await ProvisionDeviceAsync(parameters, cancellationToken);
                     var authMethod = new DeviceAuthenticationWithRegistrySymmetricKey(dpsRegistrationResult.DeviceId, parameters.DeviceSymmetricKey);
                     deviceClient = InitializeDeviceClient(dpsRegistrationResult.AssignedHub, authMethod);
                     break;
 
                 case "connectionstring":
-                    s_logger.LogDebug($"Initializing via IoT Hub connection string");
+                    logger.LogDebug($"Initializing via IoT hub connection string");
                     deviceClient = InitializeDeviceClient(parameters.PrimaryConnectionString);
                     break;
 
