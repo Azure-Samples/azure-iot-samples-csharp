@@ -12,18 +12,18 @@ namespace Microsoft.Azure.Devices.Samples
 {
     public class ThermostatSample
     {
-        private static readonly Random Random = new Random();
+        private static readonly Random s_random = new();
         private readonly ServiceClient _serviceClient;
         private readonly RegistryManager _registryManager;
         private readonly string _deviceId;
         private readonly ILogger _logger;
 
-        public ThermostatSample(ServiceClient serviceClient, RegistryManager registryManager, string deviceId)
+        public ThermostatSample(ServiceClient serviceClient, RegistryManager registryManager, string deviceId, ILogger logger)
         {
             _serviceClient = serviceClient ?? throw new ArgumentNullException(nameof(serviceClient));
             _deviceId = deviceId ?? throw new ArgumentNullException(nameof(deviceId));
             _registryManager = registryManager ?? throw new ArgumentNullException(nameof(registryManager));
-            _logger = InitializeConsoleDebugLogger();
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task RunSampleAsync()
@@ -37,21 +37,6 @@ namespace Microsoft.Azure.Devices.Samples
 
             // Invoke the root-level command getMaxMinReport command on the device twin
             await InvokeGetMaxMinReportCommandAsync();
-        }
-
-        private ILogger InitializeConsoleDebugLogger()
-        {
-            using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
-            {
-                builder
-                .AddFilter(level => level >= LogLevel.Debug)
-                .AddSimpleConsole(options =>
-                {
-                    options.TimestampFormat = "[MM/dd/yyyy HH:mm:ss]";
-                });
-            });
-
-            return loggerFactory.CreateLogger<ThermostatSample>();
         }
 
         private async Task<Twin> GetAndPrintDeviceTwinAsync()
@@ -70,7 +55,7 @@ namespace Microsoft.Azure.Devices.Samples
             Twin twin = await _registryManager.GetTwinAsync(_deviceId);
 
             // Choose a random value to assign to the targetTemperature property
-            int desiredTargetTemperature = Random.Next(0, 100);
+            int desiredTargetTemperature = s_random.Next(0, 100);
 
             // Update the twin
             var twinPatch = new Twin();
