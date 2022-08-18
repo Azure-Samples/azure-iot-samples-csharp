@@ -13,10 +13,10 @@ namespace Microsoft.Azure.Devices.Samples
 {
     public class ThermostatSample
     {
-        private static readonly Random Random = new Random();
+        private static readonly Random s_random = new();
         private readonly DigitalTwinClient _digitalTwinClient;
         private readonly string _digitalTwinId;
-        public readonly ILogger _logger;
+        private readonly ILogger _logger;
 
         public ThermostatSample(DigitalTwinClient client, string digitalTwinId, ILogger logger)
         {
@@ -61,7 +61,7 @@ namespace Microsoft.Azure.Devices.Samples
             var updateOperation = new UpdateOperationsUtility();
 
             // Choose a random value to assign to the targetTemperature property
-            int desiredTargetTemperature = Random.Next(0, 100);
+            int desiredTargetTemperature = s_random.Next(0, 100);
 
             // First let's take a look at when the property was updated and what was it set to.
             HttpOperationResponse<ThermostatTwin, DigitalTwinGetHeaders> getDigitalTwinResponse = await _digitalTwinClient
@@ -99,7 +99,7 @@ namespace Microsoft.Azure.Devices.Samples
         private async Task UpdateCurrentTemperaturePropertyAsync()
         {
             // Choose a random value to assign to the currentTemperature property
-            int currentTemperature = Random.Next(0, 100);
+            int currentTemperature = s_random.Next(0, 100);
 
             const string currentTemperaturePropertyName = "currentTemperature";
             var updateOperation = new UpdateOperationsUtility();
@@ -116,7 +116,7 @@ namespace Microsoft.Azure.Devices.Samples
             await GetAndPrintDigitalTwinAsync<ThermostatTwin>();
 
             // Second, replace the property to a different value
-            int newCurrentTemperature = Random.Next(0, 100);
+            int newCurrentTemperature = s_random.Next(0, 100);
 
             updateOperation.AppendReplacePropertyOp($"/{currentTemperaturePropertyName}", newCurrentTemperature);
             _logger.LogDebug($"Replace the {currentTemperaturePropertyName} property on the {_digitalTwinId} digital twin " +

@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Devices.Samples
 {
     public class ThermostatSample
     {
-        private static readonly Random Random = new Random();
+        private static readonly Random s_random = new();
         private readonly ServiceClient _serviceClient;
         private readonly RegistryManager _registryManager;
         private readonly string _deviceId;
@@ -55,7 +55,7 @@ namespace Microsoft.Azure.Devices.Samples
             Twin twin = await _registryManager.GetTwinAsync(_deviceId);
 
             // Choose a random value to assign to the targetTemperature property
-            int desiredTargetTemperature = Random.Next(0, 100);
+            int desiredTargetTemperature = s_random.Next(0, 100);
 
             // Update the twin
             var twinPatch = new Twin();

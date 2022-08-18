@@ -15,7 +15,7 @@ namespace Microsoft.Azure.Devices.Samples
     {
         private const string Thermostat1Component = "thermostat1";
 
-        private static readonly Random Random = new Random();
+        private static readonly Random s_random = new();
         private static readonly string DeviceSampleLink =
             "https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/main/iot-hub/Samples/device/PnpDeviceSamples/TemperatureController";
 
@@ -118,7 +118,7 @@ namespace Microsoft.Azure.Devices.Samples
             const string targetTemperaturePropertyName = "targetTemperature";
 
             // Choose a random value to assign to the targetTemperature property in thermostat1 component
-            int desiredTargetTemperature = Random.Next(0, 100);
+            int desiredTargetTemperature = s_random.Next(0, 100);
 
             var twinPatch = CreatePropertyPatch(targetTemperaturePropertyName, desiredTargetTemperature, Thermostat1Component);
             _logger.LogDebug($"Updating the {targetTemperaturePropertyName} property under component {Thermostat1Component} on the {_deviceId} device twin to { desiredTargetTemperature}.");
