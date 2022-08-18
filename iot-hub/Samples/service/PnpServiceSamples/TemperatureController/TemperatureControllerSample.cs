@@ -15,7 +15,7 @@ namespace Microsoft.Azure.Devices.Samples
     {
         private const string Thermostat1Component = "thermostat1";
 
-        private static readonly Random Random = new Random();
+        private static readonly Random s_random = new();
         private static readonly string DeviceSampleLink =
             "https://github.com/Azure-Samples/azure-iot-samples-csharp/tree/main/iot-hub/Samples/device/PnpDeviceSamples/TemperatureController";
 
@@ -24,12 +24,12 @@ namespace Microsoft.Azure.Devices.Samples
         private readonly string _deviceId;
         private readonly ILogger _logger;
 
-        public TemperatureControllerSample(ServiceClient serviceClient, RegistryManager registryManager, string deviceId)
+        public TemperatureControllerSample(ServiceClient serviceClient, RegistryManager registryManager, string deviceId, ILogger logger)
         {
             _serviceClient = serviceClient ?? throw new ArgumentNullException(nameof(serviceClient));
             _registryManager = registryManager ?? throw new ArgumentNullException(nameof(registryManager));
             _deviceId = deviceId ?? throw new ArgumentNullException(nameof(deviceId));
-            _logger = InitializeConsoleDebugLogger();
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task RunSampleAsync()
@@ -46,21 +46,6 @@ namespace Microsoft.Azure.Devices.Samples
 
             // Invoke the root-level command reboot on the TemperatureController device twin
             await InvokeRebootCommandAsync();
-        }
-
-        private ILogger InitializeConsoleDebugLogger()
-        {
-            using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
-            {
-                builder
-                .AddFilter(level => level >= LogLevel.Debug)
-                .AddSimpleConsole(options =>
-                {
-                    options.TimestampFormat = "[MM/dd/yyyy HH:mm:ss]";
-                });
-            });
-
-            return loggerFactory.CreateLogger<TemperatureControllerSample>();
         }
 
         private async Task<Twin> GetAndPrintDeviceTwinAsync()
@@ -133,7 +118,7 @@ namespace Microsoft.Azure.Devices.Samples
             const string targetTemperaturePropertyName = "targetTemperature";
 
             // Choose a random value to assign to the targetTemperature property in thermostat1 component
-            int desiredTargetTemperature = Random.Next(0, 100);
+            int desiredTargetTemperature = s_random.Next(0, 100);
 
             var twinPatch = CreatePropertyPatch(targetTemperaturePropertyName, desiredTargetTemperature, Thermostat1Component);
             _logger.LogDebug($"Updating the {targetTemperaturePropertyName} property under component {Thermostat1Component} on the {_deviceId} device twin to { desiredTargetTemperature}.");
