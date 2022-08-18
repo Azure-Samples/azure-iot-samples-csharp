@@ -43,7 +43,7 @@ namespace Microsoft.Azure.Devices.Samples
 
             s_logger.LogDebug("Set up and start the Thermostat service sample.");
             var thermostatSample = new ThermostatSample(digitalTwinClient, parameters.DeviceId, s_logger);
-            await thermostatSample.RunSampleAsync().ConfigureAwait(false);
+            await thermostatSample.RunSampleAsync();
         }
 
         private static ILogger InitializeConsoleDebugLogger()

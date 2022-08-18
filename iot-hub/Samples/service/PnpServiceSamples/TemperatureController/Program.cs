@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Devices.Samples
 
             s_logger.LogDebug("Set up and start the TemperatureController service sample.");
             var temperatureControllerSample = new TemperatureControllerSample(serviceClient, registryManager, parameters.DeviceId, s_logger);
-            await temperatureControllerSample.RunSampleAsync().ConfigureAwait(false);
+            await temperatureControllerSample.RunSampleAsync();
         }
 
         private static ILogger InitializeConsoleDebugLogger()
