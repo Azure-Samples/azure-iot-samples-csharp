@@ -435,7 +435,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private async Task CheckEmptyPropertiesAsync(string componentName, CancellationToken cancellationToken)
         {
-            Twin twin = await _deviceClient.GetTwinAsync();
+            Twin twin = await _deviceClient.GetTwinAsync(cancellationToken);
             TwinCollection writableProperty = twin.Properties.Desired;
             TwinCollection reportedProperty = twin.Properties.Reported;
 

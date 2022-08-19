@@ -267,7 +267,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private async Task CheckEmptyPropertiesAsync(CancellationToken cancellationToken)
         {
-            Twin twin = await _deviceClient.GetTwinAsync();
+            Twin twin = await _deviceClient.GetTwinAsync(cancellationToken);
             TwinCollection writableProperty = twin.Properties.Desired;
             TwinCollection reportedProperty = twin.Properties.Reported;
 
@@ -286,7 +286,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     $"\"av\": {DefaultAckVersion}, \"ad\": \"Initialized with default value\"}} }}";
 
             var reportedProperty = new TwinCollection(jsonProperty);
-            await _deviceClient.UpdateReportedPropertiesAsync(reportedProperty);
+            await _deviceClient.UpdateReportedPropertiesAsync(reportedProperty, cancellationToken);
             _logger.LogDebug($"Report the default values.\nProperty: Update - {jsonProperty} is {StatusCode.Completed}.");
         }
     }
