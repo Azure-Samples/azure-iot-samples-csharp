@@ -60,7 +60,7 @@ namespace SimulatedDevice
                   new DeviceAuthenticationWithRegistrySymmetricKey(s_myDeviceId, s_deviceKey), TransportType.Mqtt);
 
                 using var cts = new CancellationTokenSource();
-                var messages = SendDeviceToCloudMessagesAsync(cts.Token);
+                Task messages = SendDeviceToCloudMessagesAsync(cts.Token);
                 Console.WriteLine("Press the Enter key to stop.");
                 Console.ReadLine();
                 await s_deviceClient.CloseAsync(cts.Token);
@@ -128,12 +128,20 @@ namespace SimulatedDevice
                 message.Properties.Add("level", levelValue);
 
                 // Submit the message to the hub.
-                await s_deviceClient.SendEventAsync(message);
+                try
+                {
+                    await s_deviceClient.SendEventAsync(message, token);
+                }
+                catch (OperationCanceledException) { }
 
                 // Print out the message.
                 Console.WriteLine("{0} > Sent message: {1}", DateTime.UtcNow, telemetryDataString);
 
-                await Task.Delay(1000);
+                try
+                {
+                    await Task.Delay(1000, token);
+                }
+                catch (OperationCanceledException) { }
             }
         }
 
