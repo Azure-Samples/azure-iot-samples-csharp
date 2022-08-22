@@ -4,7 +4,7 @@
 using System;
 using CommandLine;
 
-namespace SimulatedDeviceWithCommand.Properties
+namespace SimulatedDeviceWithCommand
 {
     /// <summary>
     /// Command line parameters for the SimulatedDevice sample
