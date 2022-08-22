@@ -38,7 +38,7 @@ namespace SimulatedDevice
             // This sample accepts the device connection string as a parameter, if present
             //ValidateConnectionString(args);
 
-            // Either the connection string must be supplied, or the set of endpoint, name, and shared access key must be.
+            // The connection string must be specified in Parameters, or program will exit
             if (string.IsNullOrWhiteSpace(s_parameters.HubConnectionString))
             {
                 Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null));
