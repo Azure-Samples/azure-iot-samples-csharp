@@ -35,10 +35,7 @@ namespace SimulatedDevice
                 .WithParsed(parsedParams => s_parameters = parsedParams)
                 .WithNotParsed(errors => Environment.Exit(1));
 
-            // This sample accepts the device connection string as a parameter, if present
-            //ValidateConnectionString(args);
-
-            // The connection string must be specified in Parameters, or program will exit
+            // The device connection string must be specified in Parameters, or program will exit
             if (string.IsNullOrWhiteSpace(s_parameters.HubConnectionString))
             {
                 Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null));
@@ -76,35 +73,6 @@ namespace SimulatedDevice
             s_deviceClient.Dispose();
             Console.WriteLine("Device simulator finished.");
         }
-
-/*        private static void ValidateConnectionString(string[] args)
-        {
-            if (args.Any())
-            {
-                try
-                {
-                    var cs = IotHubConnectionStringBuilder.Create(args[0]);
-                    s_connectionString = cs.ToString();
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine($"Error: Unrecognizable parameter '{args[0]}' as connection string.");
-                    Environment.Exit(1);
-                }
-            }
-            else
-            {
-                try
-                {
-                    _ = IotHubConnectionStringBuilder.Create(s_connectionString);
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine("This sample needs a device connection string to run. Program.cs can be edited to specify it, or it can be included on the command-line as the only parameter.");
-                    Environment.Exit(1);
-                }
-            }
-        }*/
 
         // Async method to send simulated telemetry
         private static async Task SendDeviceToCloudMessagesAsync(CancellationToken ct)

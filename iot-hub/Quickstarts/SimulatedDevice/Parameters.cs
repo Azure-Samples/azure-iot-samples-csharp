@@ -7,15 +7,15 @@ using CommandLine;
 namespace SimulatedDevice
 {
     /// <summary>
-    /// Command line parameters for the InvokeDeviceMethod sample
+    /// Command line parameters for the SimulatedDevice sample
     /// </summary>
     internal class Parameters
     {
         [Option(
-           'c',
-           "HubConnectionString",
-           HelpText = "The IoT hub connection string. This is available under the \"Shared access policies\" in the Azure portal." +
-           "\nDefaults to value of environment variable IOTHUB_CONNECTION_STRING.")]
-        public string HubConnectionString { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_CONNECTION_STRING");
+           'p',
+           "DeviceConnectionString",
+           HelpText = "The IoT hub device connection string. This is available under the \"Devices\" in the Azure portal." +
+           "\nDefaults to value of environment variable IOTHUB_DEVICE_CONNECTION_STRING.")]
+        public string HubConnectionString { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_DEVICE_CONNECTION_STRING");
     }
 }
