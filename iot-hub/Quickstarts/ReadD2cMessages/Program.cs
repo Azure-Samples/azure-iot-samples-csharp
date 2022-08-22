@@ -50,14 +50,14 @@ namespace ReadD2cMessages
             };
 
             // Run the sample
-            await ReceiveMessagesFromDeviceAsync(cts.Token, parameters);
+            await ReceiveMessagesFromDeviceAsync(parameters, cts.Token);
 
             Console.WriteLine("Cloud message reader finished.");
         }
 
         // Asynchronously create a PartitionReceiver for a partition and then start
         // reading any messages sent from the simulated client.
-        private static async Task ReceiveMessagesFromDeviceAsync(CancellationToken ct, Parameters parameters)
+        private static async Task ReceiveMessagesFromDeviceAsync(Parameters parameters, CancellationToken ct)
         {
             string connectionString = parameters.GetEventHubConnectionString();
 

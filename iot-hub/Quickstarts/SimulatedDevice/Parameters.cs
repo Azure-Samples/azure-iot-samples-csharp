@@ -14,7 +14,8 @@ namespace SimulatedDevice
         [Option(
            'p',
            "DeviceConnectionString",
-           HelpText = "The IoT hub device connection string. This is available under the \"Devices\" in the Azure portal." +
+            Required = true,   
+           HelpText = "The IoT hub device connection string. This is available under \"Devices\\deviceId\" in the Azure portal." +
            "\nDefaults to value of environment variable IOTHUB_DEVICE_CONNECTION_STRING.")]
         public string DeviceConnectionString { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_DEVICE_CONNECTION_STRING");
     }
