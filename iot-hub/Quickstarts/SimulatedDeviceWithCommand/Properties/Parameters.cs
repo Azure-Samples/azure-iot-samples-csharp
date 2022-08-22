@@ -19,4 +19,3 @@ namespace SimulatedDeviceWithCommand.Properties
         public string DeviceConnectionString { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_DEVICE_CONNECTION_STRING");
     }
 }
-
