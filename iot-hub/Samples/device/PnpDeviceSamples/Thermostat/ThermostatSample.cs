@@ -97,7 +97,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     temperatureReset = false;
                 }
 
-                await SendTemperatureAsync();
+                await SendTemperatureAsync(cancellationToken);
                 await Task.Delay(5 * 1000, cancellationToken);
             }
         }
@@ -223,20 +223,20 @@ namespace Microsoft.Azure.Devices.Client.Samples
         }
 
         // Send temperature updates over telemetry. The sample also sends the value of max temperature since last reboot over reported property update.
-        private async Task SendTemperatureAsync()
+        private async Task SendTemperatureAsync(CancellationToken cancellationToken)
         {
-            await SendTemperatureTelemetryAsync();
+            await SendTemperatureTelemetryAsync(cancellationToken);
 
             double maxTemp = _temperatureReadingsDateTimeOffset.Values.Max<double>();
             if (maxTemp > _maxTemp)
             {
                 _maxTemp = maxTemp;
-                await UpdateMaxTemperatureSinceLastRebootAsync();
+                await UpdateMaxTemperatureSinceLastRebootAsync(cancellationToken);
             }
         }
 
         // Send temperature update over telemetry.
-        private async Task SendTemperatureTelemetryAsync()
+        private async Task SendTemperatureTelemetryAsync(CancellationToken cancellationToken)
         {
             const string telemetryName = "temperature";
 
@@ -247,21 +247,21 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 ContentType = "application/json",
             };
 
-            await _deviceClient.SendEventAsync(message);
+            await _deviceClient.SendEventAsync(message, cancellationToken);
             _logger.LogDebug($"Telemetry: Sent - {{ \"{telemetryName}\": {_temperature}°C }}.");
 
             _temperatureReadingsDateTimeOffset.Add(DateTimeOffset.Now, _temperature);
         }
 
         // Send temperature over reported property update.
-        private async Task UpdateMaxTemperatureSinceLastRebootAsync()
+        private async Task UpdateMaxTemperatureSinceLastRebootAsync(CancellationToken cancellationToken)
         {
             const string propertyName = "maxTempSinceLastReboot";
 
             var reportedProperties = new TwinCollection();
             reportedProperties[propertyName] = _maxTemp;
 
-            await _deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
+            await _deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken);
             _logger.LogDebug($"Property: Update - {{ \"{propertyName}\": {_maxTemp}°C }} is {StatusCode.Completed}.");
         }
 

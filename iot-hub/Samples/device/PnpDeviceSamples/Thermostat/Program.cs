@@ -44,12 +44,11 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 throw new ArgumentException("Required parameters are not set. Please recheck required variables by using \"--help\"");
             }
 
-            var runningTime = parameters.ApplicationRunningTime != null
-                ? TimeSpan.FromSeconds((double)parameters.ApplicationRunningTime)
-                : Timeout.InfiniteTimeSpan;
-
             logger.LogInformation("Press Control+C to quit the sample.");
-            using var cts = new CancellationTokenSource(runningTime);
+            using var cts = parameters.ApplicationRunningTime.HasValue
+                ? new CancellationTokenSource(TimeSpan.FromSeconds(parameters.ApplicationRunningTime.Value))
+                : new CancellationTokenSource();
+
             Console.CancelKeyPress += (sender, eventArgs) =>
             {
                 eventArgs.Cancel = true;
@@ -58,23 +57,24 @@ namespace Microsoft.Azure.Devices.Client.Samples
             };
 
             logger.LogDebug($"Set up the device client.");
-            using DeviceClient deviceClient = await SetupDeviceClientAsync(parameters, logger, cts.Token);
-            var sample = new ThermostatSample(deviceClient, logger);
             
             try
             {
+                using DeviceClient deviceClient = await SetupDeviceClientAsync(parameters, logger, cts.Token);
+                var sample = new ThermostatSample(deviceClient, logger);
                 await sample.PerformOperationsAsync(cts.Token);
-            }
-            catch (OperationCanceledException) { }
 
-            // PerformOperationsAsync is designed to run until cancellation has been explicitly requested, either through
-            // cancellation token expiration or by Console.CancelKeyPress.
-            // As a result, by the time the control reaches the call to close the device client, the cancellation token source would
-            // have already had cancellation requested.
-            // Hence, if you want to pass a cancellation token to any subsequent calls, a new token needs to be generated.
-            // For device client APIs, you can also call them without a cancellation token, which will set a default
-            // cancellation timeout of 4 minutes: https://github.com/Azure/azure-iot-sdk-csharp/blob/64f6e9f24371bc40ab3ec7a8b8accbfb537f0fe1/iothub/device/src/InternalClient.cs#L1922
-            await deviceClient.CloseAsync();
+                // PerformOperationsAsync is designed to run until cancellation has been explicitly requested, either through
+                // cancellation token expiration or by Console.CancelKeyPress.
+                // As a result, by the time the control reaches the call to close the device client, the cancellation token source would
+                // have already had cancellation requested.
+                // Hence, if you want to pass a cancellation token to any subsequent calls, a new token needs to be generated.
+                // For device client APIs, you can also call them without a cancellation token, which will set a default
+                // cancellation timeout of 4 minutes: https://github.com/Azure/azure-iot-sdk-csharp/blob/64f6e9f24371bc40ab3ec7a8b8accbfb537f0fe1/iothub/device/src/InternalClient.cs#L1922
+                await deviceClient.CloseAsync(CancellationToken.None);
+            }
+            catch (OperationCanceledException) { } // User canceled operation
+
         }
 
         private static ILogger InitializeConsoleDebugLogger()
