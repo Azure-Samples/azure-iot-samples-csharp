@@ -7,7 +7,7 @@ using CommandLine;
 namespace SimulatedDevice
 {
     /// <summary>
-    /// Command line parameters for the SimulatedDevice sample
+    /// Command line parameters for the SimulatedDevice sample.
     /// </summary>
     internal class Parameters
     {
