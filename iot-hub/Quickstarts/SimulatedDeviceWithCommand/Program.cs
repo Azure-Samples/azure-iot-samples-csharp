@@ -10,7 +10,9 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using CommandLine;
 using Microsoft.Azure.Devices.Client;
+using SimulatedDeviceWithCommand.Properties;
 
 namespace SimulatedDevice
 {
@@ -21,22 +23,36 @@ namespace SimulatedDevice
     /// </summary>
     internal class Program
     {
+        private static Parameters s_parameters;
         private static DeviceClient s_deviceClient;
         private static readonly TransportType s_transportType = TransportType.Mqtt;
 
         // The device connection string to authenticate the device with your IoT hub.
         // Using the Azure CLI:
         // az iot hub device-identity show-connection-string --hub-name {YourIoTHubName} --device-id MyDotnetDevice --output table
-        private static string s_connectionString = "{Your device connection string here}";
+        private static string s_connectionString;
 
         private static TimeSpan s_telemetryInterval = TimeSpan.FromSeconds(1); // Seconds
 
         private static async Task Main(string[] args)
         {
-            Console.WriteLine("IoT Hub Quickstarts #1 - Simulated device.");
+            // The device connection string to authenticate the device with your IoT hub.
+            // Using the Azure CLI:
+            // az iot hub device-identity show-connection-string --hub-name {YourIoTHubName} --device-id MyDotnetDevice --output table
+            ParserResult<Parameters> result = Parser.Default.ParseArguments<Parameters>(args)
+                .WithParsed(parsedParams => s_parameters = parsedParams)
+                .WithNotParsed(errors => Environment.Exit(1));
 
-            // This sample accepts the device connection string as a parameter, if present
-            ValidateConnectionString(args);
+            // The device connection string must be specified in Parameters, or program will exit
+            if (string.IsNullOrWhiteSpace(s_parameters.DeviceConnectionString))
+            {
+                Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null));
+                Environment.Exit(1);
+            }
+
+            s_connectionString = s_parameters.DeviceConnectionString;
+
+            Console.WriteLine("IoT Hub Quickstarts - Simulated device with command.");
 
             // Connect to the IoT hub using the MQTT protocol
             s_deviceClient = DeviceClient.CreateFromConnectionString(s_connectionString, s_transportType);
@@ -67,35 +83,6 @@ namespace SimulatedDevice
 
             s_deviceClient.Dispose();
             Console.WriteLine("Device simulator finished.");
-        }
-
-        private static void ValidateConnectionString(string[] args)
-        {
-            if (args.Any())
-            {
-                try
-                {
-                    var cs = IotHubConnectionStringBuilder.Create(args[0]);
-                    s_connectionString = cs.ToString();
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine($"Error: Unrecognizable parameter '{args[0]}' as connection string.");
-                    Environment.Exit(1);
-                }
-            }
-            else
-            {
-                try
-                {
-                    _ = IotHubConnectionStringBuilder.Create(s_connectionString);
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine("This sample needs a device connection string to run. Program.cs can be edited to specify it, or it can be included on the command-line as the only parameter.");
-                    Environment.Exit(1);
-                }
-            }
         }
 
         // Handle the direct method call.

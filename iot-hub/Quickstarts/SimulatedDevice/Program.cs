@@ -24,25 +24,26 @@ namespace SimulatedDevice
         private static Parameters s_parameters;
         private static DeviceClient s_deviceClient;
         private static readonly TransportType s_transportType = TransportType.Mqtt;
+
+        // The device connection string to authenticate the device with your IoT hub.
+        // Using the Azure CLI:
+        // az iot hub device-identity show-connection-string --hub-name {YourIoTHubName} --device-id MyDotnetDevice --output table
         private static string s_connectionString;
 
         private static async Task Main(string[] args)
         {
-            // The device connection string to authenticate the device with your IoT hub.
-            // Using the Azure CLI:
-            // az iot hub device-identity show-connection-string --hub-name {YourIoTHubName} --device-id MyDotnetDevice --output table
             ParserResult<Parameters> result = Parser.Default.ParseArguments<Parameters>(args)
                 .WithParsed(parsedParams => s_parameters = parsedParams)
                 .WithNotParsed(errors => Environment.Exit(1));
 
             // The device connection string must be specified in Parameters, or program will exit
-            if (string.IsNullOrWhiteSpace(s_parameters.HubConnectionString))
+            if (string.IsNullOrWhiteSpace(s_parameters.DeviceConnectionString))
             {
                 Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null));
                 Environment.Exit(1);
             }
 
-            s_connectionString = s_parameters.HubConnectionString;
+            s_connectionString = s_parameters.DeviceConnectionString;
 
             Console.WriteLine("IoT Hub Quickstarts #1 - Simulated device.");
 

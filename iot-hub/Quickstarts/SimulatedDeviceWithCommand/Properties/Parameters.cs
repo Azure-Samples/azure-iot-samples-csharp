@@ -4,7 +4,7 @@
 using System;
 using CommandLine;
 
-namespace SimulatedDevice
+namespace SimulatedDeviceWithCommand.Properties
 {
     /// <summary>
     /// Command line parameters for the SimulatedDevice sample
@@ -19,3 +19,4 @@ namespace SimulatedDevice
         public string DeviceConnectionString { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_DEVICE_CONNECTION_STRING");
     }
 }
+
