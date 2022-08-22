@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Devices.Client;
+using CommandLine;
 
 namespace SimulatedDevice
 {
@@ -20,20 +21,33 @@ namespace SimulatedDevice
     /// </summary>
     internal class Program
     {
+        private static Parameters s_parameters;
         private static DeviceClient s_deviceClient;
         private static readonly TransportType s_transportType = TransportType.Mqtt;
-
-        // The device connection string to authenticate the device with your IoT hub.
-        // Using the Azure CLI:
-        // az iot hub device-identity show-connection-string --hub-name {YourIoTHubName} --device-id MyDotnetDevice --output table
-        private static string s_connectionString = "{Your device connection string here}";
+        private static string s_connectionString;
 
         private static async Task Main(string[] args)
         {
-            Console.WriteLine("IoT Hub Quickstarts #1 - Simulated device.");
+            // The device connection string to authenticate the device with your IoT hub.
+            // Using the Azure CLI:
+            // az iot hub device-identity show-connection-string --hub-name {YourIoTHubName} --device-id MyDotnetDevice --output table
+            ParserResult<Parameters> result = Parser.Default.ParseArguments<Parameters>(args)
+                .WithParsed(parsedParams => s_parameters = parsedParams)
+                .WithNotParsed(errors => Environment.Exit(1));
 
             // This sample accepts the device connection string as a parameter, if present
-            ValidateConnectionString(args);
+            //ValidateConnectionString(args);
+
+            // Either the connection string must be supplied, or the set of endpoint, name, and shared access key must be.
+            if (string.IsNullOrWhiteSpace(s_parameters.HubConnectionString))
+            {
+                Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null));
+                Environment.Exit(1);
+            }
+
+            s_connectionString = s_parameters.HubConnectionString;
+
+            Console.WriteLine("IoT Hub Quickstarts #1 - Simulated device.");
 
             // Connect to the IoT hub using the MQTT protocol
             s_deviceClient = DeviceClient.CreateFromConnectionString(s_connectionString, s_transportType);
@@ -63,7 +77,7 @@ namespace SimulatedDevice
             Console.WriteLine("Device simulator finished.");
         }
 
-        private static void ValidateConnectionString(string[] args)
+/*        private static void ValidateConnectionString(string[] args)
         {
             if (args.Any())
             {
@@ -90,7 +104,7 @@ namespace SimulatedDevice
                     Environment.Exit(1);
                 }
             }
-        }
+        }*/
 
         // Async method to send simulated telemetry
         private static async Task SendDeviceToCloudMessagesAsync(CancellationToken ct)

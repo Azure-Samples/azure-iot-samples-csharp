@@ -20,20 +20,20 @@ namespace ReadD2cMessages
     /// </summary>
     internal class Program
     {
-        private static Parameters _parameters;
+        private static Parameters s_parameters;
 
         public static async Task Main(string[] args)
         {
             // Parse application parameters
             ParserResult<Parameters> result = Parser.Default.ParseArguments<Parameters>(args)
-                .WithParsed(parsedParams => _parameters = parsedParams)
+                .WithParsed(parsedParams => s_parameters = parsedParams)
                 .WithNotParsed(errors => Environment.Exit(1));
 
             // Either the connection string must be supplied, or the set of endpoint, name, and shared access key must be.
-            if (string.IsNullOrWhiteSpace(_parameters.EventHubConnectionString)
-                && (string.IsNullOrWhiteSpace(_parameters.EventHubCompatibleEndpoint)
-                    || string.IsNullOrWhiteSpace(_parameters.EventHubName)
-                    || string.IsNullOrWhiteSpace(_parameters.SharedAccessKey)))
+            if (string.IsNullOrWhiteSpace(s_parameters.EventHubConnectionString)
+                && (string.IsNullOrWhiteSpace(s_parameters.EventHubCompatibleEndpoint)
+                    || string.IsNullOrWhiteSpace(s_parameters.EventHubName)
+                    || string.IsNullOrWhiteSpace(s_parameters.SharedAccessKey)))
             {
                 Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null));
                 Environment.Exit(1);
@@ -60,7 +60,7 @@ namespace ReadD2cMessages
         // reading any messages sent from the simulated client.
         private static async Task ReceiveMessagesFromDeviceAsync(CancellationToken ct)
         {
-            string connectionString = _parameters.GetEventHubConnectionString();
+            string connectionString = s_parameters.GetEventHubConnectionString();
 
             // Create the consumer using the default consumer group using a direct connection to the service.
             // Information on using the client with a proxy can be found in the README for this quick start, here:
@@ -68,7 +68,7 @@ namespace ReadD2cMessages
             await using var consumer = new EventHubConsumerClient(
                 EventHubConsumerClient.DefaultConsumerGroupName,
                 connectionString,
-                _parameters.EventHubName);
+                s_parameters.EventHubName);
 
             Console.WriteLine("Listening for messages on all partitions.");
 
