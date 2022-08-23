@@ -37,8 +37,8 @@ namespace X509DeviceCertWithChainSample
             chainCerts.Add(new X509Certificate2(parameters.RootCertPath));
             chainCerts.Add(new X509Certificate2(parameters.Intermediate1CertPath));
             chainCerts.Add(new X509Certificate2(parameters.Intermediate2CertPath));
-            var deviceCert = new X509Certificate2(parameters.DevicePfxPath, parameters.DevicePfxPassword);
-            var auth = new DeviceAuthenticationWithX509Certificate(parameters.DeviceName, deviceCert, chainCerts);
+            using var deviceCert = new X509Certificate2(parameters.DevicePfxPath, parameters.DevicePfxPassword);
+            using var auth = new DeviceAuthenticationWithX509Certificate(parameters.DeviceName, deviceCert, chainCerts);
 
             using var deviceClient = DeviceClient.Create(
                 parameters.HostName,
