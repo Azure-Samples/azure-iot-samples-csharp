@@ -35,8 +35,7 @@ namespace SimulatedDeviceWithCommand
             Console.WriteLine("IoT Hub Quickstarts - Simulated device with command.");
 
             // Connect to the IoT hub using the MQTT protocol by default
-            TransportType transportType = parameters.TransportType;
-            s_deviceClient = DeviceClient.CreateFromConnectionString(parameters.DeviceConnectionString, transportType);
+            s_deviceClient = DeviceClient.CreateFromConnectionString(parameters.DeviceConnectionString, parameters.TransportType);
 
             // Create a handler for the direct method call
             await s_deviceClient.SetMethodHandlerAsync("SetTelemetryInterval", SetTelemetryInterval, null);

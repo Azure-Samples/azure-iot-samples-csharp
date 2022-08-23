@@ -34,8 +34,7 @@ namespace SimulatedDevice
             Console.WriteLine("IoT Hub Quickstarts #1 - Simulated device.");
 
             // Connect to the IoT hub using the MQTT protocol by default
-            TransportType transportType = parameters.TransportType;
-            s_deviceClient = DeviceClient.CreateFromConnectionString(parameters.DeviceConnectionString, transportType);
+            s_deviceClient = DeviceClient.CreateFromConnectionString(parameters.DeviceConnectionString, parameters.TransportType);
 
             // Set up a condition to quit the sample
             Console.WriteLine("Press control-C to exit.");
