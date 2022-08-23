@@ -68,8 +68,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         public TemperatureControllerSample(DeviceClient deviceClient, ILogger logger)
         {
-            _deviceClient = deviceClient ?? throw new ArgumentNullException($"{nameof(deviceClient)} cannot be null.");
-            _logger = logger ?? LoggerFactory.Create(builer => builer.AddConsole()).CreateLogger<TemperatureControllerSample>();
+            _deviceClient = deviceClient ?? throw new ArgumentNullException(nameof(deviceClient));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task PerformOperationsAsync(CancellationToken cancellationToken)
@@ -135,7 +135,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 await SendDeviceMemoryAsync(cancellationToken);
 
                 temperatureReset = _temperature[Thermostat1] == 0 && _temperature[Thermostat2] == 0;
-                await Task.Delay(5 * 1000);
+                await Task.Delay(5 * 1000, cancellationToken);
             }
         }
 
@@ -435,7 +435,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private async Task CheckEmptyPropertiesAsync(string componentName, CancellationToken cancellationToken)
         {
-            Twin twin = await _deviceClient.GetTwinAsync();
+            Twin twin = await _deviceClient.GetTwinAsync(cancellationToken);
             TwinCollection writableProperty = twin.Properties.Desired;
             TwinCollection reportedProperty = twin.Properties.Reported;
 

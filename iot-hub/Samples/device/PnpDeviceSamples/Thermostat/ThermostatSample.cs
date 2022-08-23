@@ -33,8 +33,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         private readonly Random _random = new Random();
 
-        private double _temperature = 0d;
-        private double _maxTemp = 0d;
+        private double _temperature;
+        private double _maxTemp;
 
         // Dictionary to hold the temperature updates sent over.
         // NOTE: Memory constrained devices should leverage storage capabilities of an external service to store this information and perform computation.
@@ -52,8 +52,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
         public ThermostatSample(DeviceClient deviceClient, ILogger logger)
         {
-            _deviceClient = deviceClient ?? throw new ArgumentNullException($"{nameof(deviceClient)} cannot be null.");
-            _logger = logger ?? LoggerFactory.Create(builer => builer.AddConsole()).CreateLogger<ThermostatSample>();
+            _deviceClient = deviceClient ?? throw new ArgumentNullException(nameof(deviceClient));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task PerformOperationsAsync(CancellationToken cancellationToken)
@@ -97,8 +97,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     temperatureReset = false;
                 }
 
-                await SendTemperatureAsync();
-                await Task.Delay(5 * 1000);
+                await SendTemperatureAsync(cancellationToken);
+                await Task.Delay(5 * 1000, cancellationToken);
             }
         }
 
@@ -223,20 +223,20 @@ namespace Microsoft.Azure.Devices.Client.Samples
         }
 
         // Send temperature updates over telemetry. The sample also sends the value of max temperature since last reboot over reported property update.
-        private async Task SendTemperatureAsync()
+        private async Task SendTemperatureAsync(CancellationToken cancellationToken)
         {
-            await SendTemperatureTelemetryAsync();
+            await SendTemperatureTelemetryAsync(cancellationToken);
 
             double maxTemp = _temperatureReadingsDateTimeOffset.Values.Max<double>();
             if (maxTemp > _maxTemp)
             {
                 _maxTemp = maxTemp;
-                await UpdateMaxTemperatureSinceLastRebootAsync();
+                await UpdateMaxTemperatureSinceLastRebootAsync(cancellationToken);
             }
         }
 
         // Send temperature update over telemetry.
-        private async Task SendTemperatureTelemetryAsync()
+        private async Task SendTemperatureTelemetryAsync(CancellationToken cancellationToken)
         {
             const string telemetryName = "temperature";
 
@@ -247,27 +247,27 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 ContentType = "application/json",
             };
 
-            await _deviceClient.SendEventAsync(message);
+            await _deviceClient.SendEventAsync(message, cancellationToken);
             _logger.LogDebug($"Telemetry: Sent - {{ \"{telemetryName}\": {_temperature}°C }}.");
 
             _temperatureReadingsDateTimeOffset.Add(DateTimeOffset.Now, _temperature);
         }
 
         // Send temperature over reported property update.
-        private async Task UpdateMaxTemperatureSinceLastRebootAsync()
+        private async Task UpdateMaxTemperatureSinceLastRebootAsync(CancellationToken cancellationToken)
         {
             const string propertyName = "maxTempSinceLastReboot";
 
             var reportedProperties = new TwinCollection();
             reportedProperties[propertyName] = _maxTemp;
 
-            await _deviceClient.UpdateReportedPropertiesAsync(reportedProperties);
+            await _deviceClient.UpdateReportedPropertiesAsync(reportedProperties, cancellationToken);
             _logger.LogDebug($"Property: Update - {{ \"{propertyName}\": {_maxTemp}°C }} is {StatusCode.Completed}.");
         }
 
         private async Task CheckEmptyPropertiesAsync(CancellationToken cancellationToken)
         {
-            Twin twin = await _deviceClient.GetTwinAsync();
+            Twin twin = await _deviceClient.GetTwinAsync(cancellationToken);
             TwinCollection writableProperty = twin.Properties.Desired;
             TwinCollection reportedProperty = twin.Properties.Reported;
 
@@ -286,7 +286,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                     $"\"av\": {DefaultAckVersion}, \"ad\": \"Initialized with default value\"}} }}";
 
             var reportedProperty = new TwinCollection(jsonProperty);
-            await _deviceClient.UpdateReportedPropertiesAsync(reportedProperty);
+            await _deviceClient.UpdateReportedPropertiesAsync(reportedProperty, cancellationToken);
             _logger.LogDebug($"Report the default values.\nProperty: Update - {jsonProperty} is {StatusCode.Completed}.");
         }
     }
