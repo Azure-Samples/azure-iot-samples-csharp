@@ -46,7 +46,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         {
             Console.WriteLine("\nCreating a new set of individualEnrollments...");
             var individualEnrollments = new List<IndividualEnrollment>();
-            foreach (var item in s_registrationIds)
+            foreach (KeyValuePair<string, string> item in s_registrationIds)
             {
                 Attestation attestation = new TpmAttestation(item.Value);
                 individualEnrollments.Add(new IndividualEnrollment(item.Key, attestation));
@@ -67,8 +67,9 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
             {
                 string registrationId = individualEnrollment.RegistrationId;
                 Console.WriteLine($"\nGetting the {nameof(individualEnrollment)} information for {registrationId}...");
-                IndividualEnrollment getResult =
-                    await _provisioningServiceClient.GetIndividualEnrollmentAsync(registrationId).ConfigureAwait(false);
+                IndividualEnrollment getResult = await _provisioningServiceClient
+                    .GetIndividualEnrollmentAsync(registrationId)
+                    .ConfigureAwait(false);
                 Console.WriteLine(getResult);
             }
         }
@@ -76,8 +77,9 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         public async Task DeleteIndividualEnrollmentsAsync(List<IndividualEnrollment> individualEnrollments)
         {
             Console.WriteLine("\nDeleting the set of individualEnrollments...");
-            BulkEnrollmentOperationResult bulkEnrollmentOperationResult =
-                await _provisioningServiceClient.RunBulkEnrollmentOperationAsync(BulkOperationMode.Delete, individualEnrollments).ConfigureAwait(false);
+            BulkEnrollmentOperationResult bulkEnrollmentOperationResult = await _provisioningServiceClient
+                .RunBulkEnrollmentOperationAsync(BulkOperationMode.Delete, individualEnrollments)
+                .ConfigureAwait(false);
             Console.WriteLine(bulkEnrollmentOperationResult);
         }
 

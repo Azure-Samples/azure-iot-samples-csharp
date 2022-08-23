@@ -15,9 +15,6 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
             HelpText = "The path to X509 certificate.")]
         public string CertificatePath { get; set; }
 
-        // The ProvisioningConnectionString argument is not required when either:
-        // - set the PROVISIONING_CONNECTION_STRING environment variable
-        // - create a launchSettings.json (see launchSettings.json.template) containing the variable
         [Option(
             'p',
             "ProvisioningConnectionString",

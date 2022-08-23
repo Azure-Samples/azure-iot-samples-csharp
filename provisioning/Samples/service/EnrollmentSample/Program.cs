@@ -23,16 +23,15 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
                     Environment.Exit(1);
                 });
 
-            if (string.IsNullOrEmpty(parameters.ProvisioningConnectionString) && args.Length > 0)
+            if (string.IsNullOrWhiteSpace(parameters.ProvisioningConnectionString))
             {
-                parameters.ProvisioningConnectionString = args[0];
+                Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null));
+                Environment.Exit(1);
             }
 
-            using (var provisioningServiceClient = ProvisioningServiceClient.CreateFromConnectionString(parameters.ProvisioningConnectionString))
-            {
-                var sample = new EnrollmentSample(provisioningServiceClient);
-                sample.RunSampleAsync().GetAwaiter().GetResult();
-            }
+            using var provisioningServiceClient = ProvisioningServiceClient.CreateFromConnectionString(parameters.ProvisioningConnectionString);
+            var sample = new EnrollmentSample(provisioningServiceClient);
+            sample.RunSampleAsync().GetAwaiter().GetResult();
 
             Console.WriteLine("Done.\n");
             return 0;

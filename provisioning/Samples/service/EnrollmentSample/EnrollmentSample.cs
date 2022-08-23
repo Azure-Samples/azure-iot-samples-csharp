@@ -56,24 +56,23 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         {
             Console.WriteLine("\nCreating a new individualEnrollment...");
             Attestation attestation = new TpmAttestation(TpmEndorsementKey);
-            var individualEnrollment =
-                    new IndividualEnrollment(
-                            RegistrationId,
-                            attestation)
+            var individualEnrollment = new IndividualEnrollment(
+                RegistrationId,
+                attestation)
+            {
+                // The following parameters are optional:
+                DeviceId = OptionalDeviceId,
+                ProvisioningStatus = OptionalProvisioningStatus,
+                Capabilities = _optionalEdgeCapabilityEnabled,
+                InitialTwinState = new TwinState(
+                    tags: null,
+                    desiredProperties: new TwinCollection()
                     {
-                        // The following parameters are optional:
-                        DeviceId = OptionalDeviceId,
-                        ProvisioningStatus = OptionalProvisioningStatus,
-                        InitialTwinState = new TwinState(
-                null,
-                new TwinCollection()
-                {
-                    ["Brand"] = "Contoso",
-                    ["Model"] = "SSC4",
-                    ["Color"] = "White",
-                }),
-                        Capabilities = _optionalEdgeCapabilityEnabled
-                    };
+                        ["Brand"] = "Contoso",
+                        ["Model"] = "SSC4",
+                        ["Color"] = "White",
+                    })
+            };
 
             Console.WriteLine("\nAdding new individualEnrollment...");
             IndividualEnrollment individualEnrollmentResult =

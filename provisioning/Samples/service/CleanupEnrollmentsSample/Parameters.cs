@@ -8,9 +8,6 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
     /// </summary>
     internal class Parameters
     {
-        // The ProvisioningConnectionString argument is not required when either:
-        // - set the PROVISIONING_CONNECTION_STRING environment variable 
-        // - create a launchSettings.json (see launchSettings.json.template) containing the variable
         [Option(
             'p',
             "ProvisioningConnectionString",

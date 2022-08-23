@@ -38,11 +38,9 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
 
             var certificate = new X509Certificate2(parameters.CertificatePath);
 
-            using (var provisioningServiceClient = ProvisioningServiceClient.CreateFromConnectionString(parameters.ProvisioningConnectionString))
-            {
-                var sample = new EnrollmentGroupSample(provisioningServiceClient, certificate);
-                sample.RunSampleAsync().GetAwaiter().GetResult();
-            }
+            using var provisioningServiceClient = ProvisioningServiceClient.CreateFromConnectionString(parameters.ProvisioningConnectionString);
+            var sample = new EnrollmentGroupSample(provisioningServiceClient, certificate);
+            sample.RunSampleAsync().GetAwaiter().GetResult();
 
             Console.WriteLine("Done.\n");
             return 0;
