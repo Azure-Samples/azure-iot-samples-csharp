@@ -38,7 +38,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
 
             using var transportHandler = GetTransportHandler();
 
-            ProvisioningDeviceClient provClient = ProvisioningDeviceClient.Create(
+            var provClient = ProvisioningDeviceClient.Create(
                 _parameters.GlobalDeviceEndpoint,
                 _parameters.IdScope,
                 security,
@@ -64,7 +64,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
                 security.GetPrimaryKey());
 
             Console.WriteLine($"Testing the provisioned device with IoT Hub...");
-            using DeviceClient iotClient = DeviceClient.Create(result.AssignedHub, auth, _parameters.TransportType);
+            using var iotClient = DeviceClient.Create(result.AssignedHub, auth, _parameters.TransportType);
 
             Console.WriteLine("Sending a telemetry message...");
             using var message = new Message(Encoding.UTF8.GetBytes("TestMessage"));

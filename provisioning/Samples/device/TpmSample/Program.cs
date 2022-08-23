@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
     /// <summary>
     /// A sample to illustrate connecting a device to hub using the device provisioning service and a certificate.
     /// </summary>
-    public static class Program
+    internal class Program
     {
         public static async Task<int> Main(string[] args)
         {
