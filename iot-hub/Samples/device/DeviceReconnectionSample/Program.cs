@@ -35,7 +35,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
                 });
 
             // Set up logging
-            ILoggerFactory loggerFactory = new LoggerFactory();
+            using ILoggerFactory loggerFactory = new LoggerFactory();
             loggerFactory.AddColorConsoleLogger(
                 new ColorConsoleLoggerConfiguration
                 {
@@ -45,7 +45,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             var logger = loggerFactory.CreateLogger<Program>();
 
             // Instantiating this seems to do all we need for outputting SDK events to our console log.
-            _ = new ConsoleEventListener(SdkEventProviderPrefix, logger);
+            using var sdkLogs = new ConsoleEventListener(SdkEventProviderPrefix, logger);
 
             // Run the sample
             var runningTime = parameters.ApplicationRunningTime != null
