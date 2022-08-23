@@ -4,9 +4,9 @@ using System;
 
 namespace ComputeDerivedSymmetricKeySample
 {
-    class Program
+    internal class Program
     {
-        static int Main(string[] args)
+        private static int Main(string[] args)
         {
             // Parse application parameters
             Parameters parameters = null;
