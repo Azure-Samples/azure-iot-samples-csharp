@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
 {
-    public class EnrollmentSample
+    internal class EnrollmentSample
     {
         private const string RegistrationId = "myvalid-registratioid-csharp";
         private const string TpmEndorsementKey =
@@ -20,10 +20,10 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         // Optional parameters
         private const string OptionalDeviceId = "myCSharpDevice";
         private const ProvisioningStatus OptionalProvisioningStatus = ProvisioningStatus.Enabled;
-        private DeviceCapabilities OptionalEdgeCapabilityEnabled = new DeviceCapabilities {IotEdge = true };
-        private DeviceCapabilities OptionalEdgeCapabilityDisabled = new DeviceCapabilities { IotEdge = false };
+        private readonly DeviceCapabilities _optionalEdgeCapabilityEnabled = new DeviceCapabilities {IotEdge = true };
+        private readonly DeviceCapabilities _optionalEdgeCapabilityDisabled = new DeviceCapabilities { IotEdge = false };
 
-        ProvisioningServiceClient _provisioningServiceClient;
+        private readonly ProvisioningServiceClient _provisioningServiceClient;
 
         public EnrollmentSample(ProvisioningServiceClient provisioningServiceClient)
         {
@@ -42,15 +42,13 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         public async Task QueryIndividualEnrollmentsAsync()
         {
             Console.WriteLine("\nCreating a query for enrollments...");
-            QuerySpecification querySpecification = new QuerySpecification("SELECT * FROM enrollments");
-            using (Query query = _provisioningServiceClient.CreateIndividualEnrollmentQuery(querySpecification))
+            var querySpecification = new QuerySpecification("SELECT * FROM enrollments");
+            using Query query = _provisioningServiceClient.CreateIndividualEnrollmentQuery(querySpecification);
+            while (query.HasNext())
             {
-                while (query.HasNext())
-                {
-                    Console.WriteLine("\nQuerying the next enrollments...");
-                    QueryResult queryResult = await query.NextAsync().ConfigureAwait(false);
-                    Console.WriteLine(queryResult);
-                }
+                Console.WriteLine("\nQuerying the next enrollments...");
+                QueryResult queryResult = await query.NextAsync().ConfigureAwait(false);
+                Console.WriteLine(queryResult);
             }
         }
 
@@ -58,24 +56,24 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         {
             Console.WriteLine("\nCreating a new individualEnrollment...");
             Attestation attestation = new TpmAttestation(TpmEndorsementKey);
-            IndividualEnrollment individualEnrollment =
-                    new IndividualEnrollment(
-                            RegistrationId,
-                            attestation);
+            var individualEnrollment = new IndividualEnrollment(
+                RegistrationId,
+                attestation)
+            {
+                // The following parameters are optional:
+                DeviceId = OptionalDeviceId,
+                ProvisioningStatus = OptionalProvisioningStatus,
+                Capabilities = _optionalEdgeCapabilityEnabled,
+                InitialTwinState = new TwinState(
+                    tags: null,
+                    desiredProperties: new TwinCollection()
+                    {
+                        ["Brand"] = "Contoso",
+                        ["Model"] = "SSC4",
+                        ["Color"] = "White",
+                    })
+            };
 
-            // The following parameters are optional:
-            individualEnrollment.DeviceId = OptionalDeviceId;
-            individualEnrollment.ProvisioningStatus = OptionalProvisioningStatus;
-            individualEnrollment.InitialTwinState = new TwinState(
-                null,
-                new TwinCollection()
-                {
-                    ["Brand"] = "Contoso",
-                    ["Model"] = "SSC4",
-                    ["Color"] = "White",
-                });
-            individualEnrollment.Capabilities = OptionalEdgeCapabilityEnabled;
-            
             Console.WriteLine("\nAdding new individualEnrollment...");
             IndividualEnrollment individualEnrollmentResult =
                 await _provisioningServiceClient.CreateOrUpdateIndividualEnrollmentAsync(individualEnrollment).ConfigureAwait(false);
@@ -96,7 +94,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         {
             var individualEnrollment = await GetIndividualEnrollmentInfoAsync().ConfigureAwait(false);
             individualEnrollment.InitialTwinState.DesiredProperties["Color"] = "Yellow";
-            individualEnrollment.Capabilities = OptionalEdgeCapabilityDisabled;
+            individualEnrollment.Capabilities = _optionalEdgeCapabilityDisabled;
 
             IndividualEnrollment individualEnrollmentResult =
                 await _provisioningServiceClient.CreateOrUpdateIndividualEnrollmentAsync(individualEnrollment).ConfigureAwait(false);

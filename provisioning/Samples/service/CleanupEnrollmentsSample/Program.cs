@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
 {
-    public class Program
+    internal class Program
     {
         /// <summary>
         /// A sample to manage enrollment groups in device provisioning service.

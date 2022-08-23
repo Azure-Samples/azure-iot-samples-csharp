@@ -2,31 +2,37 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Reflection.Metadata.Ecma335;
+using BulkOperationSample;
+using CommandLine;
 
 namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
 {
-    public class Program
+    internal class Program
     {
-        // The Provisioning Service connection string. This is available under the "Shared access policies" in the Azure portal.
-
-        // For this sample either:
-        // - pass this value as a command-prompt argument
-        // - set the PROVISIONING_CONNECTION_STRING environment variable 
-        // - create a launchSettings.json (see launchSettings.json.template) containing the variable
-        private static string s_connectionString = Environment.GetEnvironmentVariable("PROVISIONING_CONNECTION_STRING");
-
         public static int Main(string[] args)
         {
-            if (string.IsNullOrEmpty(s_connectionString) && args.Length > 0)
+            // Parse application parameters
+            Parameters parameters = null;
+            ParserResult<Parameters> result = Parser.Default.ParseArguments<Parameters>(args)
+               .WithParsed(parsedParams =>
+               {
+                   parameters = parsedParams;
+               })
+               .WithNotParsed(errors =>
+               {
+                   Environment.Exit(1);
+               });
+
+            if (string.IsNullOrWhiteSpace(parameters.ProvisioningConnectionString))
             {
-                s_connectionString = args[0];
+                Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null));
+                Environment.Exit(1);
             }
 
-            using (var provisioningServiceClient = ProvisioningServiceClient.CreateFromConnectionString(s_connectionString))
-            {
-                var sample = new BulkOperationSample(provisioningServiceClient);
-                sample.RunSampleAsync().GetAwaiter().GetResult();
-            }
+            using var provisioningServiceClient = ProvisioningServiceClient.CreateFromConnectionString(parameters.ProvisioningConnectionString);
+            var sample = new BulkOperationSample(provisioningServiceClient);
+            sample.RunSampleAsync().GetAwaiter().GetResult();
 
             Console.WriteLine("Done.\n");
             return 0;

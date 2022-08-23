@@ -1,20 +1,14 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using CommandLine.Text;
 using CommandLine;
-using System;
+using Newtonsoft.Json;
 
-namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
+namespace EnrollmentSample
 {
-    /// <summary>
-    /// Parameters for the application
-    /// </summary>
     internal class Parameters
     {
-        [Option(
-            'c',
-            "CertificatePath",
-            Required = true,
-            HelpText = "The path to X509 certificate.")]
-        public string CertificatePath { get; set; }
-
         [Option(
             'p',
             "ProvisioningConnectionString",
