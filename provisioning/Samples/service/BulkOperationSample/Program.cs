@@ -5,7 +5,7 @@ using System;
 
 namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
 {
-    public class Program
+    internal class Program
     {
         // The Provisioning Service connection string. This is available under the "Shared access policies" in the Azure portal.
 

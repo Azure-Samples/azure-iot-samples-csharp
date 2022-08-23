@@ -9,7 +9,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
 {
     public class BulkOperationSample
     {
-        private ProvisioningServiceClient _provisioningServiceClient;
+        private readonly ProvisioningServiceClient _provisioningServiceClient;
         private const string SampleRegistrationId1 = "myvalid-registratioid-csharp-1";
         private const string SampleRegistrationId2 = "myvalid-registratioid-csharp-2";
         private const string SampleTpmEndorsementKey =
@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         // Maximum number of elements per query.
         private const int QueryPageSize = 100;
 
-        private static IDictionary<string, string> _registrationIds = new Dictionary<string, string>
+        private static readonly IDictionary<string, string> s_registrationIds = new Dictionary<string, string>
         {
             { SampleRegistrationId1, SampleTpmEndorsementKey },
             { SampleRegistrationId2, SampleTpmEndorsementKey }
@@ -45,8 +45,8 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         public async Task<List<IndividualEnrollment>> CreateBulkIndividualEnrollmentsAsync()
         {
             Console.WriteLine("\nCreating a new set of individualEnrollments...");
-            List<IndividualEnrollment> individualEnrollments = new List<IndividualEnrollment>();
-            foreach (var item in _registrationIds)
+            var individualEnrollments = new List<IndividualEnrollment>();
+            foreach (var item in s_registrationIds)
             {
                 Attestation attestation = new TpmAttestation(item.Value);
                 individualEnrollments.Add(new IndividualEnrollment(item.Key, attestation));
@@ -65,7 +65,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         {
             foreach (IndividualEnrollment individualEnrollment in individualEnrollments)
             {
-                String registrationId = individualEnrollment.RegistrationId;
+                string registrationId = individualEnrollment.RegistrationId;
                 Console.WriteLine($"\nGetting the {nameof(individualEnrollment)} information for {registrationId}...");
                 IndividualEnrollment getResult =
                     await _provisioningServiceClient.GetIndividualEnrollmentAsync(registrationId).ConfigureAwait(false);
@@ -84,16 +84,14 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         public async Task QueryIndividualEnrollmentsAsync()
         {
             Console.WriteLine("\nCreating a query for enrollments...");
-            QuerySpecification querySpecification = new QuerySpecification("SELECT * FROM enrollments");
+            var querySpecification = new QuerySpecification("SELECT * FROM enrollments");
 
-            using (Query query = _provisioningServiceClient.CreateIndividualEnrollmentQuery(querySpecification, QueryPageSize))
+            using Query query = _provisioningServiceClient.CreateIndividualEnrollmentQuery(querySpecification, QueryPageSize);
+            while (query.HasNext())
             {
-                while (query.HasNext())
-                {
-                    Console.WriteLine("\nQuerying the next enrollments...");
-                    QueryResult queryResult = await query.NextAsync().ConfigureAwait(false);
-                    Console.WriteLine(queryResult);
-                }
+                Console.WriteLine("\nQuerying the next enrollments...");
+                QueryResult queryResult = await query.NextAsync().ConfigureAwait(false);
+                Console.WriteLine(queryResult);
             }
         }
     }

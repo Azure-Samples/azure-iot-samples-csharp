@@ -8,7 +8,7 @@ using System.Security.Cryptography.X509Certificates;
 namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
 {
 
-    public class Program
+    internal class Program
     {
         /// <summary>
         /// A sample to manage enrollment groups in device provisioning service.
@@ -36,7 +36,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
                 Environment.Exit(1);
             }
 
-            X509Certificate2 certificate = new X509Certificate2(parameters.CertificatePath);
+            var certificate = new X509Certificate2(parameters.CertificatePath);
 
             using (var provisioningServiceClient = ProvisioningServiceClient.CreateFromConnectionString(parameters.ProvisioningConnectionString))
             {
