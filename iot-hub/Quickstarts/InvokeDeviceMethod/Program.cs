@@ -69,8 +69,8 @@ namespace InvokeDeviceMethod
             catch (Exception)
             {
                 Console.WriteLine("An IoT hub connection string needs to be specified, " +
-                    "please set the environment variable \"IOTHUB_CONNECTION_STRING\" " +
-                    "or pass in \"-s | --HubConnectionString\" through command line.");
+                    "please set the environment variable \"IOTHUB_DEVICE_CONNECTION_STRING\" " +
+                    "or pass in \"-c | --DeviceConnectionString\" through command line.");
                 Environment.Exit(1);
             }
         }

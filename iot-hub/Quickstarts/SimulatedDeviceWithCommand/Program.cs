@@ -10,9 +10,10 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using CommandLine;
 using Microsoft.Azure.Devices.Client;
 
-namespace SimulatedDevice
+namespace SimulatedDeviceWithCommand
 {
     /// <summary>
     /// This sample illustrates the very basics of a device app sending telemetry and receiving a command.
@@ -22,24 +23,19 @@ namespace SimulatedDevice
     internal class Program
     {
         private static DeviceClient s_deviceClient;
-        private static readonly TransportType s_transportType = TransportType.Mqtt;
-
-        // The device connection string to authenticate the device with your IoT hub.
-        // Using the Azure CLI:
-        // az iot hub device-identity show-connection-string --hub-name {YourIoTHubName} --device-id MyDotnetDevice --output table
-        private static string s_connectionString = "{Your device connection string here}";
-
         private static TimeSpan s_telemetryInterval = TimeSpan.FromSeconds(1); // Seconds
 
         private static async Task Main(string[] args)
         {
-            Console.WriteLine("IoT Hub Quickstarts #1 - Simulated device.");
+            Parameters parameters = null;
+            ParserResult<Parameters> result = Parser.Default.ParseArguments<Parameters>(args)
+                    .WithParsed(parsedParams => parameters = parsedParams)
+                    .WithNotParsed(errors => Environment.Exit(1));
 
-            // This sample accepts the device connection string as a parameter, if present
-            ValidateConnectionString(args);
+            Console.WriteLine("IoT Hub Quickstarts - Simulated device with command.");
 
-            // Connect to the IoT hub using the MQTT protocol
-            s_deviceClient = DeviceClient.CreateFromConnectionString(s_connectionString, s_transportType);
+            // Connect to the IoT hub using the MQTT protocol by default
+            s_deviceClient = DeviceClient.CreateFromConnectionString(parameters.DeviceConnectionString, parameters.TransportType);
 
             // Create a handler for the direct method call
             await s_deviceClient.SetMethodHandlerAsync("SetTelemetryInterval", SetTelemetryInterval, null);
@@ -67,35 +63,6 @@ namespace SimulatedDevice
 
             s_deviceClient.Dispose();
             Console.WriteLine("Device simulator finished.");
-        }
-
-        private static void ValidateConnectionString(string[] args)
-        {
-            if (args.Any())
-            {
-                try
-                {
-                    var cs = IotHubConnectionStringBuilder.Create(args[0]);
-                    s_connectionString = cs.ToString();
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine($"Error: Unrecognizable parameter '{args[0]}' as connection string.");
-                    Environment.Exit(1);
-                }
-            }
-            else
-            {
-                try
-                {
-                    _ = IotHubConnectionStringBuilder.Create(s_connectionString);
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine("This sample needs a device connection string to run. Program.cs can be edited to specify it, or it can be included on the command-line as the only parameter.");
-                    Environment.Exit(1);
-                }
-            }
         }
 
         // Handle the direct method call.

@@ -20,20 +20,19 @@ namespace ReadD2cMessages
     /// </summary>
     internal class Program
     {
-        private static Parameters _parameters;
-
         public static async Task Main(string[] args)
         {
+            Parameters parameters = null;
             // Parse application parameters
             ParserResult<Parameters> result = Parser.Default.ParseArguments<Parameters>(args)
-                .WithParsed(parsedParams => _parameters = parsedParams)
+                .WithParsed(parsedParams => parameters = parsedParams)
                 .WithNotParsed(errors => Environment.Exit(1));
 
             // Either the connection string must be supplied, or the set of endpoint, name, and shared access key must be.
-            if (string.IsNullOrWhiteSpace(_parameters.EventHubConnectionString)
-                && (string.IsNullOrWhiteSpace(_parameters.EventHubCompatibleEndpoint)
-                    || string.IsNullOrWhiteSpace(_parameters.EventHubName)
-                    || string.IsNullOrWhiteSpace(_parameters.SharedAccessKey)))
+            if (string.IsNullOrWhiteSpace(parameters.EventHubConnectionString)
+                && (string.IsNullOrWhiteSpace(parameters.EventHubCompatibleEndpoint)
+                    || string.IsNullOrWhiteSpace(parameters.EventHubName)
+                    || string.IsNullOrWhiteSpace(parameters.SharedAccessKey)))
             {
                 Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null));
                 Environment.Exit(1);
@@ -51,16 +50,16 @@ namespace ReadD2cMessages
             };
 
             // Run the sample
-            await ReceiveMessagesFromDeviceAsync(cts.Token);
+            await ReceiveMessagesFromDeviceAsync(parameters, cts.Token);
 
             Console.WriteLine("Cloud message reader finished.");
         }
 
         // Asynchronously create a PartitionReceiver for a partition and then start
         // reading any messages sent from the simulated client.
-        private static async Task ReceiveMessagesFromDeviceAsync(CancellationToken ct)
+        private static async Task ReceiveMessagesFromDeviceAsync(Parameters parameters, CancellationToken ct)
         {
-            string connectionString = _parameters.GetEventHubConnectionString();
+            string connectionString = parameters.GetEventHubConnectionString();
 
             // Create the consumer using the default consumer group using a direct connection to the service.
             // Information on using the client with a proxy can be found in the README for this quick start, here:
@@ -68,7 +67,7 @@ namespace ReadD2cMessages
             await using var consumer = new EventHubConsumerClient(
                 EventHubConsumerClient.DefaultConsumerGroupName,
                 connectionString,
-                _parameters.EventHubName);
+                parameters.EventHubName);
 
             Console.WriteLine("Listening for messages on all partitions.");
 
