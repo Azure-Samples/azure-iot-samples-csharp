@@ -1,0 +1,22 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using CommandLine.Text;
+using CommandLine;
+using Newtonsoft.Json;
+
+namespace EnrollmentSample
+{
+    internal class Parameters
+    {
+        // The ProvisioningConnectionString argument is not required when either:
+        // - set the PROVISIONING_CONNECTION_STRING environment variable 
+        // - create a launchSettings.json (see launchSettings.json.template) containing the variable
+        [Option(
+            'p',
+            "ProvisioningConnectionString",
+            Required = false,
+            HelpText = "The primary connection string of device provisioning service. Not required when the PROVISIONING_CONNECTION_STRING environment variable is set.")]
+        public string ProvisioningConnectionString { get; set; } = Environment.GetEnvironmentVariable("PROVISIONING_CONNECTION_STRING");
+    }
+}
