@@ -12,9 +12,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommandLine;
 using Microsoft.Azure.Devices.Client;
-using SimulatedDeviceWithCommand;
 
-namespace SimulatedDevice
+namespace SimulatedDeviceWithCommand
 {
     /// <summary>
     /// This sample illustrates the very basics of a device app sending telemetry and receiving a command.
@@ -24,7 +23,6 @@ namespace SimulatedDevice
     internal class Program
     {
         private static DeviceClient s_deviceClient;
-        private static readonly TransportType s_transportType = TransportType.Mqtt;
         private static TimeSpan s_telemetryInterval = TimeSpan.FromSeconds(1); // Seconds
 
         private static async Task Main(string[] args)
@@ -36,8 +34,9 @@ namespace SimulatedDevice
 
             Console.WriteLine("IoT Hub Quickstarts - Simulated device with command.");
 
-            // Connect to the IoT hub using the MQTT protocol
-            s_deviceClient = DeviceClient.CreateFromConnectionString(parameters.DeviceConnectionString, s_transportType);
+            // Connect to the IoT hub using the MQTT protocol by default
+            TransportType transportType = parameters.TransportType;
+            s_deviceClient = DeviceClient.CreateFromConnectionString(parameters.DeviceConnectionString, transportType);
 
             // Create a handler for the direct method call
             await s_deviceClient.SetMethodHandlerAsync("SetTelemetryInterval", SetTelemetryInterval, null);
