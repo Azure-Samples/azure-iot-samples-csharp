@@ -3,28 +3,32 @@
 
 using System;
 using System.Threading.Tasks;
+using CommandLine;
 
 namespace Microsoft.Azure.Devices.Samples
 {
     public class Program
     {
-        // The IoT Hub connection string. This is available under the "Shared access policies" in the Azure portal.
-
-        // For this sample either:
-        // - pass this value as a command-prompt argument
-        // - set the IOTHUB_CONNECTION_STRING environment variable 
-        // - create a launchSettings.json (see launchSettings.json.template) containing the variable
-
-        private static string s_connectionString = Environment.GetEnvironmentVariable("IOTHUB_CONNECTION_STRING");
-
         public static async Task Main(string[] args)
         {
-            if (string.IsNullOrEmpty(s_connectionString) && args.Length > 0)
+            // Parse application parameters
+            Parameters parameters = null;
+            ParserResult<Parameters> result = Parser.Default.ParseArguments<Parameters>(args)
+                .WithParsed(parsedParams =>
+                {
+                    parameters = parsedParams;
+                })
+                .WithNotParsed(errors =>
+                {
+                    Environment.Exit(1);
+                });
+
+            if (!parameters.Validate())
             {
-                s_connectionString = args[0];
+                throw new ArgumentException("Required parameters are not set. Please recheck required variables by using \"--help\"");
             }
 
-            using var registryManager = RegistryManager.CreateFromConnectionString(s_connectionString);
+            using var registryManager = RegistryManager.CreateFromConnectionString(parameters.HubConnectionString);
 
             var sample = new AutomaticDeviceManagementSample(registryManager);
 
