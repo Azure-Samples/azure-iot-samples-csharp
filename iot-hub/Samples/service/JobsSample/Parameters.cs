@@ -1,7 +1,7 @@
 ﻿using System;
 using CommandLine;
 
-namespace JobsSample
+namespace Microsoft.Azure.Devices.Samples.JobsSample
 {
     /// <summary>
     /// Parameters for the application.
@@ -9,10 +9,10 @@ namespace JobsSample
     internal class Parameters
     {
         [Option(
-            'c',
+            'p',
             "HubConnectionString",
-            Required = true,
-            HelpText = "The connection string of the IoT Hub instance to connect to.")]
+            Required = false,
+            HelpText = "The connection string of the IoT hub instance to connect to. This can be located under \"Shared Access Policies\" in the Iot hub.")]
         public string HubConnectionString { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_CONNECTION_STRING");
     }
 }

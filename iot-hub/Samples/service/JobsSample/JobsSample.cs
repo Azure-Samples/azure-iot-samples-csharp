@@ -8,7 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Azure.Devices.Shared;
 
-namespace Microsoft.Azure.Devices.Samples
+namespace Microsoft.Azure.Devices.Samples.JobsSample
 {
     public class JobsSample
     {
@@ -57,7 +57,7 @@ namespace Microsoft.Azure.Devices.Samples
             // *************************************** Get all Jobs ***************************************
             IEnumerable<JobResponse> queryResults = await _jobClient.CreateQuery().GetNextAsJobResponseAsync().ConfigureAwait(false);
 
-            var getJobs = queryResults.ToList();
+            List<JobResponse> getJobs = queryResults.ToList();
             Console.WriteLine($"getJobs return {getJobs.Count} result(s)");
 
             foreach (JobResponse job in getJobs)

@@ -4,9 +4,8 @@
 using System;
 using System.Threading.Tasks;
 using CommandLine;
-using JobsSample;
 
-namespace Microsoft.Azure.Devices.Samples
+namespace Microsoft.Azure.Devices.Samples.JobsSample
 {
     internal class Program
     {
