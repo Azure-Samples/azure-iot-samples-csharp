@@ -57,7 +57,7 @@ namespace Microsoft.Azure.Devices.Samples
             // *************************************** Get all Jobs ***************************************
             IEnumerable<JobResponse> queryResults = await _jobClient.CreateQuery().GetNextAsJobResponseAsync().ConfigureAwait(false);
 
-            List<JobResponse> getJobs = queryResults.ToList();
+            var getJobs = queryResults.ToList();
             Console.WriteLine($"getJobs return {getJobs.Count} result(s)");
 
             foreach (JobResponse job in getJobs)

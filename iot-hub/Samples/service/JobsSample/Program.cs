@@ -3,27 +3,28 @@
 
 using System;
 using System.Threading.Tasks;
+using CommandLine;
+using JobsSample;
 
 namespace Microsoft.Azure.Devices.Samples
 {
-    public class Program
+    internal class Program
     {
-        // The IoT Hub connection string. This is available under the "Shared access policies" in the Azure portal.
-
-        // For this sample either:
-        // - pass this value as a command-prompt argument
-        // - set the IOTHUB_CONNECTION_STRING environment variable 
-        // - create a launchSettings.json (see launchSettings.json.template) containing the variable
-        private static string s_connectionString = Environment.GetEnvironmentVariable("IOTHUB_CONNECTION_STRING");
-
         public static async Task<int> Main(string[] args)
         {
-            if (string.IsNullOrEmpty(s_connectionString) && args.Length > 0)
-            {
-                s_connectionString = args[0];
-            }
+            // Parse application parameters
+            Parameters parameters = null;
+            ParserResult<Parameters> result = Parser.Default.ParseArguments<Parameters>(args)
+                .WithParsed(parsedParams =>
+                {
+                    parameters = parsedParams;
+                })
+                .WithNotParsed(errors =>
+                {
+                    Environment.Exit(1);
+                });
 
-            using JobClient jobClient = JobClient.CreateFromConnectionString(s_connectionString);
+            using var jobClient = JobClient.CreateFromConnectionString(parameters.HubConnectionString);
 
             var sample = new JobsSample(jobClient);
             await sample.RunSampleAsync().ConfigureAwait(false);
