@@ -11,4 +11,8 @@
     <PackageReference Include="Microsoft.Azure.Devices" Version="1.38.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
 </Project>

@@ -27,24 +27,24 @@ namespace Microsoft.Azure.Devices.Samples
             try
             {
                 IEnumerable<Device> devices = GenerateEdgeDevices(DeviceIdPrefix, NumOfEdgeDevices);
-                var conditionPropertyName = "condition-" + Guid.NewGuid().ToString("N");
-                var conditionPropertyValue = Guid.NewGuid().ToString();
-                var targetCondition = $"tags.{conditionPropertyName}='{conditionPropertyValue}'";
+                string conditionPropertyName = "condition-" + Guid.NewGuid().ToString("N");
+                string conditionPropertyValue = Guid.NewGuid().ToString();
+                string targetCondition = $"tags.{conditionPropertyName}='{conditionPropertyValue}'";
 
                 var edgeDevices = devices.ToList();
                 BulkRegistryOperationResult createResult = await CreateEdgeDevicesAsync(edgeDevices).ConfigureAwait(false);
                 if (createResult.Errors.Length > 0)
                 {
-                    foreach (var err in createResult.Errors)
+                    foreach (DeviceRegistryOperationError err in createResult.Errors)
                     {
                         Console.WriteLine($"Create failed: {err.DeviceId}-{err.ErrorCode}-{err.ErrorStatus}");
                     }
                 }
 
-                foreach (var device in edgeDevices)
+                foreach (Device device in edgeDevices)
                 {
                     Console.WriteLine($"Created edge device {device.Id}");
-                    var twin = await _registryManager.GetTwinAsync(device.Id).ConfigureAwait(false);
+                    Twin twin = await _registryManager.GetTwinAsync(device.Id).ConfigureAwait(false);
                     Console.WriteLine($"\tTwin is {twin.ToJson()}");
 
                     twin.Tags[conditionPropertyName] = conditionPropertyValue;
@@ -80,8 +80,8 @@ namespace Microsoft.Azure.Devices.Samples
                 Console.WriteLine($"Adding add-on configuration {JsonSerializer.Serialize(addOnConfiguration)}");
                 Console.WriteLine();
 
-                var baseConfigTask = _registryManager.AddConfigurationAsync(baseConfiguration);
-                var addOnConfigTask = _registryManager.AddConfigurationAsync(addOnConfiguration);
+                Task<Configuration> baseConfigTask = _registryManager.AddConfigurationAsync(baseConfiguration);
+                Task<Configuration> addOnConfigTask = _registryManager.AddConfigurationAsync(addOnConfiguration);
                 await Task.WhenAll(baseConfigTask, addOnConfigTask).ConfigureAwait(false);
 
                 Console.WriteLine($"Cleaning up configuration created...");
@@ -97,9 +97,9 @@ namespace Microsoft.Azure.Devices.Samples
 
         private async Task CleanUpConfigurationsAsync()
         {
-            var configurations = await _registryManager.GetConfigurationsAsync(100).ConfigureAwait(false);
+            IEnumerable<Configuration> configurations = await _registryManager.GetConfigurationsAsync(100).ConfigureAwait(false);
             {
-                foreach (var configuration in configurations)
+                foreach (Configuration configuration in configurations)
                 {
                     string configurationId = configuration.Id;
                     if (configurationId.StartsWith(ConfigurationIdPrefix))
@@ -125,7 +125,7 @@ namespace Microsoft.Azure.Devices.Samples
         {
             IList<Device> edgeDevices = new List<Device>();
 
-            for (var i = 0; i < numToAdd; i++)
+            for (int i = 0; i < numToAdd; i++)
             {
                 string deviceName = $"{deviceIdPrefix}_{i:D8}-{Guid.NewGuid()}";
                 var device = new Device(deviceName)
