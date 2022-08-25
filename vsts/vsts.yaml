@@ -37,7 +37,7 @@ jobs:
           version: 2.1.x
           performMultiLevelLookup: true
           installationPath: $(Agent.ToolsDirectory)/dotnet
-      - powershell: ./build.ps1 -clean -configuration Release -build -clear
+      - powershell: ./build.ps1 -clean -configuration Release -build $(RUN-CONFIG)
         displayName: build and run
         env:
           # Environment variables for IoT hub device samples
@@ -106,7 +106,7 @@ jobs:
           version: 2.1.x
           performMultiLevelLookup: true
           installationPath: $(Agent.ToolsDirectory)/dotnet
-      - powershell: ./build.ps1 -clean -configuration Release -clear
+      - powershell: ./build.ps1 -clean -configuration Release -build $(RUN-CONFIG)
         displayName: build and run
         env:
           # Environment variables for IoT hub device samples
