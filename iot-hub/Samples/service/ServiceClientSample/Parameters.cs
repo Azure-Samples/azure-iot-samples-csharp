@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Devices.Samples
             'c',
             "IoTHubConnectionString",
             Required = true,
-            HelpText = "The connection string of the IoT Hub instance to connect to.")]
+            HelpText = "The connection string of the IoT hub instance to connect to.")]
         public string IoTHubConnectionString { get; set; }
 
         [Option(
@@ -29,7 +29,7 @@ namespace Microsoft.Azure.Devices.Samples
             "TransportType",
             Default = TransportType.Amqp,
             Required = false,
-            HelpText = "The transport to use to communicate with the IoT Hub. Possible values include Amqp and Amqp_WebSocket_Only.")]
+            HelpText = "The transport to use to communicate with the IoT hub. Possible values include Amqp and Amqp_WebSocket_Only.")]
         public TransportType TransportType { get; set; }
 
         [Option(

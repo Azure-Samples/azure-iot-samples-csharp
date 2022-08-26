@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Devices.Samples
 {
     public class Program
     {
-        // The IoT Hub connection string. This is available under the "Shared access policies" in the Azure portal.
+        // The IoT hub connection string. This is available under the "Shared access policies" in the Azure portal.
 
         // For this sample either:
         // - pass this value as a command-prompt argument

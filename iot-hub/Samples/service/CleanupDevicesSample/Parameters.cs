@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
             'c',
             "HubConnectionString",
             Required = true,
-            HelpText = "The connection string of the IoT Hub instance to connect to.")]
+            HelpText = "The connection string of the IoT hub instance to connect to.")]
         public string HubConnectionString { get; set; }
 
         [Option(

@@ -36,7 +36,7 @@ namespace Microsoft.Azure.Devices.Samples
                 throw new ArgumentException("Required parameters are not set. Please recheck required variables by using \"--help\"");
             }
 
-            logger.LogDebug("Set up the IoT Hub service client and registry manager.");
+            logger.LogDebug("Set up the IoT hub service client and registry manager.");
             using var serviceClient = ServiceClient.CreateFromConnectionString(parameters.HubConnectionString);
             using var registryManager = RegistryManager.CreateFromConnectionString(parameters.HubConnectionString);
 

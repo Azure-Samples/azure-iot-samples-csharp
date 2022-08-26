@@ -29,7 +29,7 @@ namespace Microsoft.Azure.Devices.Samples
 
             // The query condition can also be on a single device Id or on a list of device Ids.
             // https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-query-language covers 
-            //   IoT Hub query language in additional detail.
+            //   IoT hub query language in additional detail.
             string query = $"DeviceId IN ['{DeviceId}']";
 
             var twin = new Twin(DeviceId)

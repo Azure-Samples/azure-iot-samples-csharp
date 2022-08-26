@@ -29,7 +29,7 @@ namespace Microsoft.Azure.Devices.Samples
         }
 
         /// <summary>
-        /// Listens on file upload notifications on the IoT Hub.
+        /// Listens on file upload notifications on the IoT hub.
         /// </summary>
         /// <param name="targetDeviceId">Device Id used to filter which notifications to complete. Use null to complete all notifications.</param>
         /// <param name="runningTime">Amount of time the method will listen for notifications.</param>

@@ -32,7 +32,7 @@ namespace RoleBasedAuthenticationSample
             "TransportType",
             Default = TransportType.Amqp,
             Required = false,
-            HelpText = "The transport to use to communicate with the IoT Hub. Possible values include Amqp and Amqp_WebSocket_Only.")]
+            HelpText = "The transport to use to communicate with the IoT hub. Possible values include Amqp and Amqp_WebSocket_Only.")]
         
         public TransportType TransportType { get; set; }
 

@@ -13,13 +13,13 @@ namespace ImportExportDevicesWithManagedIdentitySample
         [Option(
             "sourceHubConnectionString",
             Required = true,
-            HelpText = "The connection string of the source IoT Hub.")]
+            HelpText = "The connection string of the source IoT hub.")]
         public string SourceHubConnectionString { get; set; }
 
         [Option(
            "destinationHubConnectionString",
            Required = true,
-           HelpText = "The connection string of the destination IoT Hub.")]
+           HelpText = "The connection string of the destination IoT hub.")]
         public string DestinationHubConnectionString { get; set; }
 
         [Option(
