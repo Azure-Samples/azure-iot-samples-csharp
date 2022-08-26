@@ -27,13 +27,14 @@ namespace Microsoft.Azure.Devices.Samples
             Console.WriteLine("Create configurations");
 
             // save unique config names to be used for deletion
-            var configs = new List<string>(5);
+            const int configsToAdd = 5;
+            var configs = new List<string>(configsToAdd);
 
             try
             {
                 for (int i = 0; i < 5; i++)
                 {
-                    configs.Add($"config00{i + 1}_{Guid.NewGuid()}");
+                    configs.Add($"config00{i}_{Guid.NewGuid()}");
                     await AddDeviceConfigurationAsync(configs[i]).ConfigureAwait(false);
                 }
 
