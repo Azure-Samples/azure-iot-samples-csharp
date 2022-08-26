@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Devices.Samples.JobsSample
     /// <summary>
     /// Parameters for the application.
     /// </summary>
-    ///     /// <remarks>
+    /// <remarks>
     /// To get these connection strings, log into https://portal.azure.com, go to Resources, open the IoT hub, open Shared Access Policies, open iothubowner, and copy a connection string.
     /// </remarks>
     internal class Parameters
