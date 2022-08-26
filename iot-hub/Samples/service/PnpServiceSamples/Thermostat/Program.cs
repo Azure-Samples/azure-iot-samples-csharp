@@ -35,7 +35,8 @@ namespace Microsoft.Azure.Devices.Samples
             ILogger logger = InitializeConsoleDebugLogger();
             if (!parameters.Validate())
             {
-                throw new ArgumentException("Required parameters are not set. Please recheck required variables by using \"--help\"");
+                Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null));
+                Environment.Exit(1);
             }
 
             logger.LogDebug("Set up the IoT hub service client and registry manager.");

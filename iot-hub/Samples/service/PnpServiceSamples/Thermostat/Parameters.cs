@@ -10,12 +10,15 @@ namespace Microsoft.Azure.Devices.Samples
     /// Parameters for the application supplied via command line arguments.
     /// If the parameter is not supplied via command line args, it will look for it in environment variables.
     /// </summary>
+    /// /// <remarks>
+    /// To get the connection string, log into https://azure.portal.com, go to Resources, open the IoT hub, open Shared Access Policies, open iothubowner, and copy a connection string.
+    /// </remarks>
     internal class Parameters
     {
         [Option(
             'c',
             "HubConnectionString",
-            HelpText = "The IoT hub connection string. This is available under the 'Shared access policies' in the Azure portal." +
+            HelpText = "The IoT hub connection string." +
             "\nDefaults to environment variable 'IOTHUB_CONNECTION_STRING'.")]
         public string HubConnectionString { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_CONNECTION_STRING");
 
@@ -28,21 +31,8 @@ namespace Microsoft.Azure.Devices.Samples
 
         public bool Validate()
         {
-            if (string.IsNullOrWhiteSpace(HubConnectionString))
-            {
-                throw new ArgumentNullException(nameof(HubConnectionString), "An IoT hub connection string needs to be specified, " +
-                    "please set the environment variable 'IOTHUB_CONNECTION_STRING' " +
-                    "or pass in '-c | --HubConnectionString' through command line.");
-            }
-
-            if (string.IsNullOrWhiteSpace(DeviceId))
-            {
-                throw new ArgumentNullException(nameof(DeviceId), "The Id of the plug and play device needs to be specified, " +
-                    "please set the environment variable 'IOTHUB_DEVICE_ID' " +
-                    "or pass in '-d | --DeviceId' through command line.");
-            }
-
-            return true;
+            return !string.IsNullOrWhiteSpace(HubConnectionString)
+                && !string.IsNullOrWhiteSpace(DeviceId);
         }
     }
 }
