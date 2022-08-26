@@ -32,9 +32,8 @@ namespace Microsoft.Azure.Devices.Samples
 
             if (!parameters.Validate())
             {
-                throw new ArgumentException("Required parameters are not set. Please recheck required variables by using \"--help\"");
+                throw new ArgumentException("Required parameters are not set. Please recheck required variables by using '--help'.");
             }
-
 
             ILogger logger = InitializeConsoleDebugLogger();
             logger.LogDebug("Set up the digital twin client.");
