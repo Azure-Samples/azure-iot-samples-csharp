@@ -55,7 +55,7 @@ namespace AzureSasCredentialAuthenticationSample
             using var serviceClient = ServiceClient.Create(hostName, sasCredential, parameters.TransportType);
 
             var sample = new AzureSasCredentialAuthenticationSample();
-            await sample.RunSampleAsync(serviceClient, parameters.DeviceId);
+            await AzureSasCredentialAuthenticationSample.RunSampleAsync(serviceClient, parameters.DeviceId);
         }
 
         private static string GenerateSasToken(string resourceUri, string sharedAccessKey, string policyName, DateTime expiresOn)
