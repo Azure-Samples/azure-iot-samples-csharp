@@ -48,14 +48,14 @@ namespace Microsoft.Azure.Devices.Samples
                     twin,
                     DateTime.UtcNow,
                     (long)TimeSpan.FromMinutes(2).TotalSeconds)
-                .ConfigureAwait(false);
+                ;
 
             Console.WriteLine("Schedule response");
             Console.WriteLine(JsonSerializer.Serialize(createJobResponse, new JsonSerializerOptions { WriteIndented = true }));
             Console.WriteLine();
 
             // *************************************** Get all Jobs ***************************************
-            IEnumerable<JobResponse> queryResults = await _jobClient.CreateQuery().GetNextAsJobResponseAsync().ConfigureAwait(false);
+            IEnumerable<JobResponse> queryResults = await _jobClient.CreateQuery().GetNextAsJobResponseAsync();
 
             List<JobResponse> getJobs = queryResults.ToList();
             Console.WriteLine($"getJobs return {getJobs.Count} result(s)");
@@ -69,7 +69,7 @@ namespace Microsoft.Azure.Devices.Samples
 
             // *************************************** Check completion ***************************************
             Console.WriteLine("Monitoring jobClient for job completion...");
-            JobResponse jobResponse = await _jobClient.GetJobAsync(jobId).ConfigureAwait(false);
+            JobResponse jobResponse = await _jobClient.GetJobAsync(jobId);
 
             Console.WriteLine("First result");
             Console.WriteLine(JsonSerializer.Serialize(jobResponse, new JsonSerializerOptions { WriteIndented = true }));
@@ -79,7 +79,7 @@ namespace Microsoft.Azure.Devices.Samples
             {
                 Console.Write(". ");
                 await Task.Delay(TimeSpan.FromMilliseconds(500));
-                jobResponse = await _jobClient.GetJobAsync(jobId).ConfigureAwait(false);
+                jobResponse = await _jobClient.GetJobAsync(jobId);
             }
 
             Console.WriteLine("DONE");

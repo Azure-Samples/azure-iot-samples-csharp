@@ -74,7 +74,7 @@ namespace Microsoft.Azure.Devices.Samples
                         parameters.CopyDevices,
                         parameters.DeleteSourceDevices,
                         parameters.DeleteDestDevices)
-                    .ConfigureAwait(false);
+                    ;
             }
             catch (Exception ex)
             {

@@ -26,7 +26,7 @@ namespace Microsoft.Azure.Devices.Samples
             using JobClient jobClient = JobClient.CreateFromConnectionString(s_connectionString);
 
             var sample = new JobsSample(jobClient);
-            await sample.RunSampleAsync().ConfigureAwait(false);
+            await sample.RunSampleAsync();
 
             Console.WriteLine("Done.");
             return 0;

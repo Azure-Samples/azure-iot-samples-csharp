@@ -32,7 +32,7 @@ namespace Microsoft.Azure.Devices.Samples
 
             var sample = new AutomaticDeviceManagementSample(registryManager);
 
-            await sample.RunSampleAsync().ConfigureAwait(false);
+            await sample.RunSampleAsync();
 
             Console.WriteLine("Done.\n");
         }
