@@ -32,7 +32,7 @@ namespace Microsoft.Azure.Devices.Samples
                 var targetCondition = $"tags.{conditionPropertyName}='{conditionPropertyValue}'";
 
                 var edgeDevices = devices.ToList();
-                BulkRegistryOperationResult createResult = await CreateEdgeDevicesAsync(edgeDevices).ConfigureAwait(false);
+                BulkRegistryOperationResult createResult = await CreateEdgeDevicesAsync(edgeDevices);
                 if (createResult.Errors.Length > 0)
                 {
                     foreach (var err in createResult.Errors)
@@ -44,11 +44,11 @@ namespace Microsoft.Azure.Devices.Samples
                 foreach (var device in edgeDevices)
                 {
                     Console.WriteLine($"Created edge device {device.Id}");
-                    var twin = await _registryManager.GetTwinAsync(device.Id).ConfigureAwait(false);
+                    var twin = await _registryManager.GetTwinAsync(device.Id);
                     Console.WriteLine($"\tTwin is {twin.ToJson()}");
 
                     twin.Tags[conditionPropertyName] = conditionPropertyValue;
-                    await _registryManager.UpdateTwinAsync(device.Id, twin, twin.ETag).ConfigureAwait(false);
+                    await _registryManager.UpdateTwinAsync(device.Id, twin, twin.ETag);
                     Console.WriteLine($"\tUpdated twin to {twin.ToJson()}");
 
                     Console.WriteLine();
@@ -82,10 +82,10 @@ namespace Microsoft.Azure.Devices.Samples
 
                 var baseConfigTask = _registryManager.AddConfigurationAsync(baseConfiguration);
                 var addOnConfigTask = _registryManager.AddConfigurationAsync(addOnConfiguration);
-                await Task.WhenAll(baseConfigTask, addOnConfigTask).ConfigureAwait(false);
+                await Task.WhenAll(baseConfigTask, addOnConfigTask);
 
                 Console.WriteLine($"Cleaning up configuration created...");
-                await CleanUpConfigurationsAsync().ConfigureAwait(false);
+                await CleanUpConfigurationsAsync();
 
                 Console.WriteLine("Finished.");
             }
@@ -97,7 +97,7 @@ namespace Microsoft.Azure.Devices.Samples
 
         private async Task CleanUpConfigurationsAsync()
         {
-            var configurations = await _registryManager.GetConfigurationsAsync(100).ConfigureAwait(false);
+            var configurations = await _registryManager.GetConfigurationsAsync(100);
             {
                 foreach (var configuration in configurations)
                 {
@@ -117,7 +117,7 @@ namespace Microsoft.Azure.Devices.Samples
                     removeConfigTasks.Add(_registryManager.RemoveConfigurationAsync(configuration.Id));
                 });
 
-            await Task.WhenAll(removeConfigTasks).ConfigureAwait(false);
+            await Task.WhenAll(removeConfigTasks);
             Console.WriteLine($"-- Total # of configurations deleted: {_configurationsToDelete.Count}");
         }
 

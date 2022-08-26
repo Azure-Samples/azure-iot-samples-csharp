@@ -25,44 +25,54 @@ namespace Microsoft.Azure.Devices.Samples
         public async Task RunSampleAsync()
         {
             Console.WriteLine("Create configurations");
-            await AddDeviceConfiguration("config001").ConfigureAwait(false);
-            await AddDeviceConfiguration("config002").ConfigureAwait(false);
-            await AddDeviceConfiguration("config003").ConfigureAwait(false);
-            await AddDeviceConfiguration("config004").ConfigureAwait(false);
-            await AddDeviceConfiguration("config005").ConfigureAwait(false);
 
-            Console.WriteLine("List existing configurations");
-            await GetConfigurations(5).ConfigureAwait(false);
+            // save unique config names to be used for deletion
+            const int configsToAdd = 5;
+            var configs = new List<string>(configsToAdd);
 
-            Console.WriteLine("Remove some connfigurations");
-            await DeleteConfiguration("config004").ConfigureAwait(false);
-            await DeleteConfiguration("config002").ConfigureAwait(false);
+            try
+            {
+                for (int i = 0; i < 5; i++)
+                {
+                    configs.Add($"config00{i}_{Guid.NewGuid()}");
+                    await AddDeviceConfigurationAsync(configs[i]);
+                }
 
-            Console.WriteLine("List existing configurations");
-            await GetConfigurations(5).ConfigureAwait(false);
+                Console.WriteLine("List existing configurations");
+                await GetConfigurationsAsync(5);
 
-            Console.WriteLine("Remove remaining connfigurations");
-            await DeleteConfiguration("config001").ConfigureAwait(false);
-            await DeleteConfiguration("config003").ConfigureAwait(false);
-            await DeleteConfiguration("config005").ConfigureAwait(false);
+                Console.WriteLine("Remove some connfigurations");
+                await DeleteConfigurationAsync(configs[3]);
+                await DeleteConfigurationAsync(configs[1]);
 
-            Console.WriteLine("List existing configurations (should be empty)");
-            await GetConfigurations(5).ConfigureAwait(false);
+                Console.WriteLine("List existing configurations");
+                await GetConfigurationsAsync(5);
+            }
+            finally
+            {
+                Console.WriteLine("Remove remaining connfigurations");
+                await DeleteConfigurationAsync(configs[0]);
+                await DeleteConfigurationAsync(configs[2]);
+                await DeleteConfigurationAsync(configs[4]);
+
+                Console.WriteLine("List existing configurations (should be empty)");
+                await GetConfigurationsAsync(5);
+            }
         }
 
-        private async Task AddDeviceConfiguration(string configurationId)
+        private async Task AddDeviceConfigurationAsync(string configurationId)
         {
-            Configuration configuration = new Configuration(configurationId);
+            var configuration = new Configuration(configurationId);
 
             CreateDeviceContent(configuration, configurationId);
-            CreateMetricsAndTargetCondition(configuration, configurationId);
+            CreateMetricsAndTargetCondition(configuration);
 
-            await _registryManager.AddConfigurationAsync(configuration).ConfigureAwait(false);
+            await _registryManager.AddConfigurationAsync(configuration);
 
             Console.WriteLine($"Configuration added, id: {configurationId}");
         }
 
-        private void CreateDeviceContent(Configuration configuration, string configurationId)
+        private static void CreateDeviceContent(Configuration configuration, string configurationId)
         {
             configuration.Content = new ConfigurationContent
             {
@@ -71,26 +81,26 @@ namespace Microsoft.Azure.Devices.Samples
             configuration.Content.DeviceContent["properties.desired.deviceContent_key"] = "deviceContent_value-" + configurationId;
         }
 
-        private void CreateMetricsAndTargetCondition(Configuration configuration, string configurationId)
+        private static void CreateMetricsAndTargetCondition(Configuration configuration)
         {
             configuration.Metrics.Queries.Add("waterSettingsPending", "SELECT deviceId FROM devices WHERE properties.reported.chillerWaterSettings.status=\'pending\'");
             configuration.TargetCondition = "properties.reported.chillerProperties.model=\'4000x\'";
             configuration.Priority = 20;
         }
 
-        private async Task DeleteConfiguration(string configurationId)
+        private async Task DeleteConfigurationAsync(string configurationId)
         {
-            await _registryManager.RemoveConfigurationAsync(configurationId).ConfigureAwait(false);
+            await _registryManager.RemoveConfigurationAsync(configurationId);
 
             Console.WriteLine($"Configuration deleted, id: {configurationId}");
         }
 
-        private async Task GetConfigurations(int count)
+        private async Task GetConfigurationsAsync(int count)
         {
-            IEnumerable<Configuration> configurations = await _registryManager.GetConfigurationsAsync(count).ConfigureAwait(false);
+            IEnumerable<Configuration> configurations = await _registryManager.GetConfigurationsAsync(count);
 
             // Check configuration's metrics for expected conditions
-            foreach (var configuration in configurations)
+            foreach (Configuration configuration in configurations)
             {
                 string configurationString = JsonConvert.SerializeObject(configuration, Formatting.Indented);
                 Console.WriteLine(configurationString);

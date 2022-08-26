@@ -14,7 +14,7 @@ namespace AzureSasCredentialAuthenticationSample
     /// </summary>
     public class AzureSasCredentialAuthenticationSample
     {
-        public async Task RunSampleAsync(ServiceClient client, string deviceId)
+        public static async Task RunSampleAsync(ServiceClient client, string deviceId)
         {
             Console.WriteLine("Connecting using SAS credential.");
             await client.OpenAsync();
