@@ -57,6 +57,12 @@ namespace Microsoft.Azure.Devices.Samples
                         Environment.Exit(1);
                     });
 
+            if (!parameters.Validate())
+            {
+                Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null));
+                Environment.Exit(1);
+            }
+
             try
             {
                 // Instantiate the class and run the sample.
