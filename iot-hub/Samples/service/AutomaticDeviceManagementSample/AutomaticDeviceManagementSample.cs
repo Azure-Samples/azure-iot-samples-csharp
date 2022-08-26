@@ -25,26 +25,29 @@ namespace Microsoft.Azure.Devices.Samples
         public async Task RunSampleAsync()
         {
             Console.WriteLine("Create configurations");
-            await AddDeviceConfigurationAsync("config001").ConfigureAwait(false);
-            await AddDeviceConfigurationAsync("config002").ConfigureAwait(false);
-            await AddDeviceConfigurationAsync("config003").ConfigureAwait(false);
-            await AddDeviceConfigurationAsync("config004").ConfigureAwait(false);
-            await AddDeviceConfigurationAsync("config005").ConfigureAwait(false);
+
+            // save unique config names to be used for deletion
+            var configs = new List<string>(5);
+            for (int i = 0; i < 5; i++)
+            {
+                configs.Add($"config00{i+1}_{Guid.NewGuid()}");
+                await AddDeviceConfigurationAsync(configs[i]).ConfigureAwait(false);
+            }
 
             Console.WriteLine("List existing configurations");
             await GetConfigurationsAsync(5).ConfigureAwait(false);
 
             Console.WriteLine("Remove some connfigurations");
-            await DeleteConfigurationAsync("config004").ConfigureAwait(false);
-            await DeleteConfigurationAsync("config002").ConfigureAwait(false);
+            await DeleteConfigurationAsync(configs[3]).ConfigureAwait(false);
+            await DeleteConfigurationAsync(configs[1]).ConfigureAwait(false);
 
             Console.WriteLine("List existing configurations");
             await GetConfigurationsAsync(5).ConfigureAwait(false);
 
             Console.WriteLine("Remove remaining connfigurations");
-            await DeleteConfigurationAsync("config001").ConfigureAwait(false);
-            await DeleteConfigurationAsync("config003").ConfigureAwait(false);
-            await DeleteConfigurationAsync("config005").ConfigureAwait(false);
+            await DeleteConfigurationAsync(configs[0]).ConfigureAwait(false);
+            await DeleteConfigurationAsync(configs[2]).ConfigureAwait(false);
+            await DeleteConfigurationAsync(configs[4]).ConfigureAwait(false);
 
             Console.WriteLine("List existing configurations (should be empty)");
             await GetConfigurationsAsync(5).ConfigureAwait(false);
