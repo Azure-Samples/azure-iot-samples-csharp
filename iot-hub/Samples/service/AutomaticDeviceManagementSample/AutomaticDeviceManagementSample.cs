@@ -28,29 +28,35 @@ namespace Microsoft.Azure.Devices.Samples
 
             // save unique config names to be used for deletion
             var configs = new List<string>(5);
-            for (int i = 0; i < 5; i++)
+
+            try
             {
-                configs.Add($"config00{i+1}_{Guid.NewGuid()}");
-                await AddDeviceConfigurationAsync(configs[i]).ConfigureAwait(false);
+                for (int i = 0; i < 5; i++)
+                {
+                    configs.Add($"config00{i + 1}_{Guid.NewGuid()}");
+                    await AddDeviceConfigurationAsync(configs[i]).ConfigureAwait(false);
+                }
+
+                Console.WriteLine("List existing configurations");
+                await GetConfigurationsAsync(5).ConfigureAwait(false);
+
+                Console.WriteLine("Remove some connfigurations");
+                await DeleteConfigurationAsync(configs[3]).ConfigureAwait(false);
+                await DeleteConfigurationAsync(configs[1]).ConfigureAwait(false);
+
+                Console.WriteLine("List existing configurations");
+                await GetConfigurationsAsync(5).ConfigureAwait(false);
             }
+            finally
+            {
+                Console.WriteLine("Remove remaining connfigurations");
+                await DeleteConfigurationAsync(configs[0]).ConfigureAwait(false);
+                await DeleteConfigurationAsync(configs[2]).ConfigureAwait(false);
+                await DeleteConfigurationAsync(configs[4]).ConfigureAwait(false);
 
-            Console.WriteLine("List existing configurations");
-            await GetConfigurationsAsync(5).ConfigureAwait(false);
-
-            Console.WriteLine("Remove some connfigurations");
-            await DeleteConfigurationAsync(configs[3]).ConfigureAwait(false);
-            await DeleteConfigurationAsync(configs[1]).ConfigureAwait(false);
-
-            Console.WriteLine("List existing configurations");
-            await GetConfigurationsAsync(5).ConfigureAwait(false);
-
-            Console.WriteLine("Remove remaining connfigurations");
-            await DeleteConfigurationAsync(configs[0]).ConfigureAwait(false);
-            await DeleteConfigurationAsync(configs[2]).ConfigureAwait(false);
-            await DeleteConfigurationAsync(configs[4]).ConfigureAwait(false);
-
-            Console.WriteLine("List existing configurations (should be empty)");
-            await GetConfigurationsAsync(5).ConfigureAwait(false);
+                Console.WriteLine("List existing configurations (should be empty)");
+                await GetConfigurationsAsync(5).ConfigureAwait(false);
+            }
         }
 
         private async Task AddDeviceConfigurationAsync(string configurationId)
