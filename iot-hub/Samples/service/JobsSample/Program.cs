@@ -23,6 +23,12 @@ namespace Microsoft.Azure.Devices.Samples.JobsSample
                     Environment.Exit(1);
                 });
 
+            if (!parameters.Validate())
+            {
+                Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null));
+                Environment.Exit(1);
+            }
+
             using var jobClient = JobClient.CreateFromConnectionString(parameters.HubConnectionString);
 
             var sample = new JobsSample(jobClient);

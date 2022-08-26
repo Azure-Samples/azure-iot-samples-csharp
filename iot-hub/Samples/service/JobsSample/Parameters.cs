@@ -12,7 +12,12 @@ namespace Microsoft.Azure.Devices.Samples.JobsSample
             'p',
             "HubConnectionString",
             Required = false,
-            HelpText = "The connection string of the IoT hub instance to connect to. This can be located under \"Shared Access Policies\" in the Iot hub.")]
+            HelpText = "The connection string of the IoT hub instance to connect to. Defaults to the IOTHUB_CONNECTION_STRING Environment Variable.")]
         public string HubConnectionString { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_CONNECTION_STRING");
+
+        public bool Validate()
+        {
+            return !string.IsNullOrWhiteSpace(HubConnectionString);
+        }
     }
 }
