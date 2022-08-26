@@ -8,7 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Azure.Devices.Shared;
 
-namespace Microsoft.Azure.Devices.Samples
+namespace Microsoft.Azure.Devices.Samples.JobsSample
 {
     public class JobsSample
     {
