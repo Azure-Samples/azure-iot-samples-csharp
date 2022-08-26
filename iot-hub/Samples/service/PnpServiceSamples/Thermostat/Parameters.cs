@@ -15,15 +15,15 @@ namespace Microsoft.Azure.Devices.Samples
         [Option(
             'c',
             "HubConnectionString",
-            HelpText = "The IoT hub connection string. This is available under the \"Shared access policies\" in the Azure portal." +
-            "\nDefaults to environment variable \"IOTHUB_CONNECTION_STRING\".")]
+            HelpText = "The IoT hub connection string. This is available under the 'Shared access policies' in the Azure portal." +
+            "\nDefaults to environment variable 'IOTHUB_CONNECTION_STRING'.")]
         public string HubConnectionString { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_CONNECTION_STRING");
 
         [Option(
             'd',
             "DeviceId",
             HelpText = "The Id of the plug and play compatible device to be used in the sample." +
-            "\nDefaults to environment variable \"IOTHUB_DEVICE_ID\"")]
+            "\nDefaults to environment variable 'IOTHUB_DEVICE_ID'")]
         public string DeviceId { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_DEVICE_ID");
 
         public bool Validate()
@@ -31,15 +31,15 @@ namespace Microsoft.Azure.Devices.Samples
             if (string.IsNullOrWhiteSpace(HubConnectionString))
             {
                 throw new ArgumentNullException(nameof(HubConnectionString), "An IoT hub connection string needs to be specified, " +
-                    "please set the environment variable \"IOTHUB_CONNECTION_STRING\" " +
-                    "or pass in \"-c | --HubConnectionString\" through command line.");
+                    "please set the environment variable 'IOTHUB_CONNECTION_STRING' " +
+                    "or pass in '-c | --HubConnectionString' through command line.");
             }
 
             if (string.IsNullOrWhiteSpace(DeviceId))
             {
                 throw new ArgumentNullException(nameof(DeviceId), "The Id of the plug and play device needs to be specified, " +
-                    "please set the environment variable \"IOTHUB_DEVICE_ID\" " +
-                    "or pass in \"-d | --DeviceId\" through command line.");
+                    "please set the environment variable 'IOTHUB_DEVICE_ID' " +
+                    "or pass in '-d | --DeviceId' through command line.");
             }
 
             return true;
