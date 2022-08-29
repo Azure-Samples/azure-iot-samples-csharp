@@ -25,7 +25,7 @@ using System.Threading.Tasks;
 
 namespace SimulatedDevice
 {
-    class Program
+    internal class Program
     {
         private static DeviceClient s_deviceClient;
         private readonly static string s_myDeviceId = "Contoso-Test-Device";
@@ -36,11 +36,11 @@ namespace SimulatedDevice
 
         // If this is false, it will submit messages to the iot hub. 
         // If this is true, it will read one of the output files and convert it to ASCII.
-        private static bool readTheFile = false;
+        private static bool s_readTheFile = false;
 
         private static async Task Main()
         {
-            if (readTheFile)
+            if (s_readTheFile)
             {
                 // If you want to decode an output file, put the path in ReadOneRowFromFile(), 
                 //   uncomment the call here and the return command, then run this application.
