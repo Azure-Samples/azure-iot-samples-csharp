@@ -25,8 +25,8 @@ namespace Microsoft.Azure.Devices.Samples
         [Option(
             'd',
             "DeviceId",
-            HelpText = "The Id of the plug and play compatible device to be used in the sample." +
-                "\nDefaults to environment variable 'IOTHUB_DEVICE_ID'")]
+            HelpText = "The Id of the plug and play compatible device to be used in the sample." 
+                + "\nDefaults to environment variable 'IOTHUB_DEVICE_ID'")]
         public string DeviceId { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_DEVICE_ID");
 
         public bool Validate()
