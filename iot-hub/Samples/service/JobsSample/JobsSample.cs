@@ -47,8 +47,7 @@ namespace Microsoft.Azure.Devices.Samples.JobsSample
                     query,
                     twin,
                     DateTime.UtcNow,
-                    (long)TimeSpan.FromMinutes(2).TotalSeconds)
-                ;
+                    (long)TimeSpan.FromMinutes(2).TotalSeconds);
 
             Console.WriteLine("Schedule response");
             Console.WriteLine(JsonSerializer.Serialize(createJobResponse, new JsonSerializerOptions { WriteIndented = true }));
