@@ -25,29 +25,39 @@ namespace Microsoft.Azure.Devices.Samples
         public async Task RunSampleAsync()
         {
             Console.WriteLine("Create configurations");
-            await AddDeviceConfigurationAsync("config001");
-            await AddDeviceConfigurationAsync("config002");
-            await AddDeviceConfigurationAsync("config003");
-            await AddDeviceConfigurationAsync("config004");
-            await AddDeviceConfigurationAsync("config005");
 
-            Console.WriteLine("List existing configurations");
-            await GetConfigurationsAsync(5);
+            // save unique config names to be used for deletion
+            const int configsToAdd = 5;
+            var configs = new List<string>(configsToAdd);
 
-            Console.WriteLine("Remove some connfigurations");
-            await DeleteConfigurationAsync("config004");
-            await DeleteConfigurationAsync("config002");
+            try
+            {
+                for (int i = 0; i < 5; i++)
+                {
+                    configs.Add($"config00{i}_{Guid.NewGuid()}");
+                    await AddDeviceConfigurationAsync(configs[i]);
+                }
 
-            Console.WriteLine("List existing configurations");
-            await GetConfigurationsAsync(5);
+                Console.WriteLine("List existing configurations");
+                await GetConfigurationsAsync(5);
 
-            Console.WriteLine("Remove remaining connfigurations");
-            await DeleteConfigurationAsync("config001");
-            await DeleteConfigurationAsync("config003");
-            await DeleteConfigurationAsync("config005");
+                Console.WriteLine("Remove some connfigurations");
+                await DeleteConfigurationAsync(configs[3]);
+                await DeleteConfigurationAsync(configs[1]);
 
-            Console.WriteLine("List existing configurations (should be empty)");
-            await GetConfigurationsAsync(5);
+                Console.WriteLine("List existing configurations");
+                await GetConfigurationsAsync(5);
+            }
+            finally
+            {
+                Console.WriteLine("Remove remaining connfigurations");
+                await DeleteConfigurationAsync(configs[0]);
+                await DeleteConfigurationAsync(configs[2]);
+                await DeleteConfigurationAsync(configs[4]);
+
+                Console.WriteLine("List existing configurations (should be empty)");
+                await GetConfigurationsAsync(5);
+            }
         }
 
         private async Task AddDeviceConfigurationAsync(string configurationId)
@@ -55,7 +65,7 @@ namespace Microsoft.Azure.Devices.Samples
             var configuration = new Configuration(configurationId);
 
             CreateDeviceContent(configuration, configurationId);
-            CreateMetricsAndTargetCondition(configuration, configurationId);
+            CreateMetricsAndTargetCondition(configuration);
 
             await _registryManager.AddConfigurationAsync(configuration);
 
@@ -71,7 +81,7 @@ namespace Microsoft.Azure.Devices.Samples
             configuration.Content.DeviceContent["properties.desired.deviceContent_key"] = "deviceContent_value-" + configurationId;
         }
 
-        private static void CreateMetricsAndTargetCondition(Configuration configuration, string configurationId)
+        private static void CreateMetricsAndTargetCondition(Configuration configuration)
         {
             configuration.Metrics.Queries.Add("waterSettingsPending", "SELECT deviceId FROM devices WHERE properties.reported.chillerWaterSettings.status=\'pending\'");
             configuration.TargetCondition = "properties.reported.chillerProperties.model=\'4000x\'";
