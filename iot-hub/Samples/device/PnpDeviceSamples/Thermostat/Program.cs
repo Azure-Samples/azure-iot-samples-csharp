@@ -41,7 +41,8 @@ namespace Microsoft.Azure.Devices.Client.Samples
 
             if (!parameters.Validate(logger))
             {
-                throw new ArgumentException("Required parameters are not set. Please recheck required variables by using \"--help\"");
+                Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null));
+                Environment.Exit(1);
             }
 
             logger.LogInformation("Press Control+C to quit the sample.");
