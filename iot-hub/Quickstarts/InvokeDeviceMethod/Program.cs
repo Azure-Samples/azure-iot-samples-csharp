@@ -54,7 +54,7 @@ namespace InvokeDeviceMethod
             Console.WriteLine($"Invoking direct method for device: {deviceId}");
 
             // Invoke the direct method asynchronously and get the response from the simulated device.
-            var response = await s_serviceClient.InvokeDeviceMethodAsync(deviceId, methodInvocation);
+            CloudToDeviceMethodResult response = await s_serviceClient.InvokeDeviceMethodAsync(deviceId, methodInvocation);
 
             Console.WriteLine($"Response status: {response.Status}, payload:\n\t{response.GetPayloadAsJson()}");
 
