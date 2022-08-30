@@ -15,13 +15,13 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         private readonly ProvisioningServiceClient _provisioningServiceClient;
         private static int s_individualEnrollmentsDeleted;
         private static int s_enrollmentGroupsDeleted;
-        private readonly List<string> _individualEnrollmentsToBeRetained = new List<string>
-            {
+        private readonly List<string> _individualEnrollmentsToBeRetained = new()
+        {
                 "iothubx509device1",
                 "SymmetricKeySampleIndividualEnrollment"
             };
-        private readonly List<string> _groupEnrollmentsToBeRetained = new List<string>
-            {
+        private readonly List<string> _groupEnrollmentsToBeRetained = new()
+        {
                 "group-certificate-x509",
                 "group1"
             };
@@ -50,7 +50,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
             {
                 Console.WriteLine("\nQuerying the next enrollments...");
                 QueryResult queryResult = await query.NextAsync().ConfigureAwait(false);
-                var items = queryResult.Items;
+                IEnumerable<object> items = queryResult.Items;
                 var individualEnrollments = new List<IndividualEnrollment>();
                 foreach (IndividualEnrollment enrollment in items.Cast<IndividualEnrollment>())
                 {
@@ -79,7 +79,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
             {
                 Console.WriteLine("\nQuerying the next enrollment groups...");
                 QueryResult queryResult = await query.NextAsync().ConfigureAwait(false);
-                var items = queryResult.Items;
+                IEnumerable<object> items = queryResult.Items;
                 foreach (EnrollmentGroup enrollment in items.Cast<EnrollmentGroup>())
                 {
                     if (!_groupEnrollmentsToBeRetained.Contains(enrollment.EnrollmentGroupId, StringComparer.OrdinalIgnoreCase))

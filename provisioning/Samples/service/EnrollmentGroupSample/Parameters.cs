@@ -9,14 +9,14 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
     internal class Parameters
     {
         [Option(
-            'c',
+            'p',
             "CertificatePath",
             Required = true,
             HelpText = "The path to X509 certificate.")]
         public string CertificatePath { get; set; }
 
         [Option(
-            'p',
+            'c',
             "ProvisioningConnectionString",
             Required = false,
             HelpText = "The primary connection string of device provisioning service. Not required when the PROVISIONING_CONNECTION_STRING environment variable is set.")]

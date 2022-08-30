@@ -20,8 +20,8 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         // Optional parameters
         private const string OptionalDeviceId = "myCSharpDevice";
         private const ProvisioningStatus OptionalProvisioningStatus = ProvisioningStatus.Enabled;
-        private readonly DeviceCapabilities _optionalEdgeCapabilityEnabled = new DeviceCapabilities {IotEdge = true };
-        private readonly DeviceCapabilities _optionalEdgeCapabilityDisabled = new DeviceCapabilities { IotEdge = false };
+        private readonly DeviceCapabilities _optionalEdgeCapabilityEnabled = new() { IotEdge = true };
+        private readonly DeviceCapabilities _optionalEdgeCapabilityDisabled = new() { IotEdge = false };
 
         private readonly ProvisioningServiceClient _provisioningServiceClient;
 
@@ -92,7 +92,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
 
         public async Task UpdateIndividualEnrollmentAsync()
         {
-            var individualEnrollment = await GetIndividualEnrollmentInfoAsync().ConfigureAwait(false);
+            IndividualEnrollment individualEnrollment = await GetIndividualEnrollmentInfoAsync().ConfigureAwait(false);
             individualEnrollment.InitialTwinState.DesiredProperties["Color"] = "Yellow";
             individualEnrollment.Capabilities = _optionalEdgeCapabilityDisabled;
 
