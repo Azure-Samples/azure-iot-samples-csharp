@@ -33,7 +33,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
 
             Console.WriteLine($"Initializing the device provisioning client...");
 
-            using var transport = GetTransportHandler();
+            using ProvisioningTransportHandler transport = GetTransportHandler();
             var provClient = ProvisioningDeviceClient.Create(
                 _parameters.GlobalDeviceEndpoint,
                 _parameters.IdScope,

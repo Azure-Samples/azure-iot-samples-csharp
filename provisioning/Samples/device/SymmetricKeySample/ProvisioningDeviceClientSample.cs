@@ -36,7 +36,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
                 _parameters.PrimaryKey,
                 null);
 
-            using var transportHandler = GetTransportHandler();
+            using ProvisioningTransportHandler transportHandler = GetTransportHandler();
 
             var provClient = ProvisioningDeviceClient.Create(
                 _parameters.GlobalDeviceEndpoint,
