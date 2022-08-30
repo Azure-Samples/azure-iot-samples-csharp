@@ -32,7 +32,7 @@ namespace Microsoft.Azure.Devices.Samples.JobsSample
             using var jobClient = JobClient.CreateFromConnectionString(parameters.HubConnectionString);
 
             var sample = new JobsSample(jobClient);
-            await sample.RunSampleAsync().ConfigureAwait(false);
+            await sample.RunSampleAsync();
 
             Console.WriteLine("Done.");
             return 0;

@@ -19,7 +19,6 @@ namespace Microsoft.Azure.Devices.Samples
         public string PrimaryThumbprint { get; set; }
 
         [Option(
-            's',
             "X509SelfSignedCertificateSecondaryThumbprint",
             Required = false,
             HelpText = "Secondary X509 thumbprint of the self-signed certificate used for device authentication.")]

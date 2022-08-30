@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Devices.Samples.JobsSample
     internal class Parameters
     {
         [Option(
-            'p',
+            'c',
             "HubConnectionString",
             Required = false,
             HelpText = "The connection string of the IoT hub instance to connect to. Defaults to the IOTHUB_CONNECTION_STRING Environment Variable.")]
