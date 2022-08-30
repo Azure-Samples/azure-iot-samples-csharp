@@ -13,10 +13,10 @@ namespace SimulatedDevice
     internal class Parameters
     {
         [Option(
-            'p',
+            'c',
             "DeviceConnectionString",
             Required = true,   
-            HelpText = "The IoT hub device connection string. This is available by clicking any existing device under the \"Devices\" blade in the Azure portal." +
+            HelpText = "The IoT hub device connection string. This is available by clicking any existing device under the 'Devices' blade in the Azure portal." +
             "\nDefaults to value of environment variable IOTHUB_DEVICE_CONNECTION_STRING.")]
         public string DeviceConnectionString { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_DEVICE_CONNECTION_STRING");
 
