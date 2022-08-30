@@ -37,9 +37,9 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         {
             await QueryIndividualEnrollmentsAsync().ConfigureAwait(false);
 
-            List<IndividualEnrollment> enrollments = await CreateBulkIndividualEnrollmentsAsync().ConfigureAwait(false);
-            await GetIndividualEnrollmentInfoAsync(enrollments).ConfigureAwait(false);
-            await DeleteIndividualEnrollmentsAsync(enrollments).ConfigureAwait(false);
+            List<IndividualEnrollment> enrollments = await CreateBulkIndividualEnrollmentsAsync();
+            await GetIndividualEnrollmentInfoAsync(enrollments);
+            await DeleteIndividualEnrollmentsAsync(enrollments);
         }
 
         public async Task<List<IndividualEnrollment>> CreateBulkIndividualEnrollmentsAsync()
@@ -54,7 +54,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
 
             Console.WriteLine("\nRunning the bulk operation to create the individualEnrollments...");
             BulkEnrollmentOperationResult bulkEnrollmentOperationResult =
-                await _provisioningServiceClient.RunBulkEnrollmentOperationAsync(BulkOperationMode.Create, individualEnrollments).ConfigureAwait(false);
+                await _provisioningServiceClient.RunBulkEnrollmentOperationAsync(BulkOperationMode.Create, individualEnrollments);
             Console.WriteLine("\nResult of the Create bulk enrollment.");
             Console.WriteLine(bulkEnrollmentOperationResult);
 
@@ -68,8 +68,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
                 string registrationId = individualEnrollment.RegistrationId;
                 Console.WriteLine($"\nGetting the {nameof(individualEnrollment)} information for {registrationId}...");
                 IndividualEnrollment getResult = await _provisioningServiceClient
-                    .GetIndividualEnrollmentAsync(registrationId)
-                    .ConfigureAwait(false);
+                    .GetIndividualEnrollmentAsync(registrationId);
                 Console.WriteLine(getResult);
             }
         }
@@ -78,8 +77,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         {
             Console.WriteLine("\nDeleting the set of individualEnrollments...");
             BulkEnrollmentOperationResult bulkEnrollmentOperationResult = await _provisioningServiceClient
-                .RunBulkEnrollmentOperationAsync(BulkOperationMode.Delete, individualEnrollments)
-                .ConfigureAwait(false);
+                .RunBulkEnrollmentOperationAsync(BulkOperationMode.Delete, individualEnrollments);
             Console.WriteLine(bulkEnrollmentOperationResult);
         }
 
@@ -92,7 +90,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
             while (query.HasNext())
             {
                 Console.WriteLine("\nQuerying the next enrollments...");
-                QueryResult queryResult = await query.NextAsync().ConfigureAwait(false);
+                QueryResult queryResult = await query.NextAsync();
                 Console.WriteLine(queryResult);
             }
         }

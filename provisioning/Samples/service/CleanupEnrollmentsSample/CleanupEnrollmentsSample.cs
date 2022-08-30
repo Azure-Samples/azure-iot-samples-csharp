@@ -17,14 +17,14 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         private static int s_enrollmentGroupsDeleted;
         private readonly List<string> _individualEnrollmentsToBeRetained = new()
         {
-                "iothubx509device1",
-                "SymmetricKeySampleIndividualEnrollment"
-            };
+            "iothubx509device1",
+            "SymmetricKeySampleIndividualEnrollment"
+        };
         private readonly List<string> _groupEnrollmentsToBeRetained = new()
         {
-                "group-certificate-x509",
-                "group1"
-            };
+            "group-certificate-x509",
+            "group1"
+        };
 
         public CleanupEnrollmentsSample(ProvisioningServiceClient provisioningServiceClient)
         {
@@ -35,9 +35,9 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
 
         public async Task RunSampleAsync()
         {
-            await QueryAndDeleteIndividualEnrollmentsAsync().ConfigureAwait(false);
+            await QueryAndDeleteIndividualEnrollmentsAsync();
             Console.WriteLine($"Individual enrollments deleted: {s_individualEnrollmentsDeleted}");
-            await QueryAndDeleteEnrollmentGroupsAsync().ConfigureAwait(false);
+            await QueryAndDeleteEnrollmentGroupsAsync();
             Console.WriteLine($"Enrollment groups deleted: {s_enrollmentGroupsDeleted}");
         }
 
@@ -49,7 +49,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
             while (query.HasNext())
             {
                 Console.WriteLine("\nQuerying the next enrollments...");
-                QueryResult queryResult = await query.NextAsync().ConfigureAwait(false);
+                QueryResult queryResult = await query.NextAsync();
                 IEnumerable<object> items = queryResult.Items;
                 var individualEnrollments = new List<IndividualEnrollment>();
                 foreach (IndividualEnrollment enrollment in items.Cast<IndividualEnrollment>())
@@ -63,10 +63,10 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
                 }
                 if (individualEnrollments.Count > 0)
                 {
-                    await DeleteBulkIndividualEnrollmentsAsync(individualEnrollments).ConfigureAwait(false);
+                    await DeleteBulkIndividualEnrollmentsAsync(individualEnrollments);
                 }
 
-                await Task.Delay(1000).ConfigureAwait(false);
+                await Task.Delay(1000);
             }
         }
 
@@ -78,7 +78,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
             while (query.HasNext())
             {
                 Console.WriteLine("\nQuerying the next enrollment groups...");
-                QueryResult queryResult = await query.NextAsync().ConfigureAwait(false);
+                QueryResult queryResult = await query.NextAsync();
                 IEnumerable<object> items = queryResult.Items;
                 foreach (EnrollmentGroup enrollment in items.Cast<EnrollmentGroup>())
                 {
@@ -86,7 +86,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
                     {
                         Console.WriteLine($"Enrollment group to be deleted: {enrollment.EnrollmentGroupId}");
                         s_enrollmentGroupsDeleted++;
-                        await _provisioningServiceClient.DeleteEnrollmentGroupAsync(enrollment.EnrollmentGroupId).ConfigureAwait(false);
+                        await _provisioningServiceClient.DeleteEnrollmentGroupAsync(enrollment.EnrollmentGroupId);
                     }
                 }
             }
@@ -96,8 +96,7 @@ namespace Microsoft.Azure.Devices.Provisioning.Service.Samples
         {
             Console.WriteLine("\nDeleting the set of individualEnrollments...");
             BulkEnrollmentOperationResult bulkEnrollmentOperationResult = await _provisioningServiceClient
-                .RunBulkEnrollmentOperationAsync(BulkOperationMode.Delete, individualEnrollments)
-                .ConfigureAwait(false);
+                .RunBulkEnrollmentOperationAsync(BulkOperationMode.Delete, individualEnrollments);
             Console.WriteLine(bulkEnrollmentOperationResult);
         }
     }
