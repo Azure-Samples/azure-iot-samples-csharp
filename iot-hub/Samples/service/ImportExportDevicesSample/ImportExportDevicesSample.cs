@@ -297,7 +297,7 @@ namespace Microsoft.Azure.Devices.Samples
             Console.WriteLine($"Copied devices: time elapsed = {stopwatch.Elapsed}");
         }
 
-        /// Get the list of devices registered to the IoT Hub
+        /// Get the list of devices registered to the IoT hub
         ///   and export it to a blob as deserialized objects.
         private async Task ExportDevicesAsync(RegistryManager registryManager, string devicesBlobName, string configsBlobName, bool includeConfigurations)
         {

@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Devices.Samples
     public class Program
     {
         /// <summary>
-        /// This sample performs root-level operations on a plug and play compatible device using the IoT Hub service client
+        /// This sample performs root-level operations on a plug and play compatible device using the IoT hub service client
         /// </summary>
         /// <param name="args">
         /// Run with `--help` to see a list of required and optional parameters.
@@ -35,10 +35,11 @@ namespace Microsoft.Azure.Devices.Samples
             ILogger logger = InitializeConsoleDebugLogger();
             if (!parameters.Validate())
             {
-                throw new ArgumentException("Required parameters are not set. Please recheck required variables by using \"--help\"");
+                Console.WriteLine(CommandLine.Text.HelpText.AutoBuild(result, null, null));
+                Environment.Exit(1);
             }
 
-            logger.LogDebug("Set up the IoT Hub service client and registry manager.");
+            logger.LogDebug("Set up the IoT hub service client and registry manager.");
             using var serviceClient = ServiceClient.CreateFromConnectionString(parameters.HubConnectionString);
             using var registryManager = RegistryManager.CreateFromConnectionString(parameters.HubConnectionString);
 
