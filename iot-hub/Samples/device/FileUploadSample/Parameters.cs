@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
     internal class Parameters
     {
         [Option(
-            'p',
+            'c',
             "PrimaryConnectionString",
             Required = true,
             HelpText = "The primary connection string for the device to simulate.")]

@@ -16,42 +16,42 @@ namespace Microsoft.Azure.Devices.Client.Samples
         [Option(
             "DeviceSecurityType",
             HelpText = "(Required) The flow that will be used for connecting the device for the sample. Possible case-insensitive values include: dps, connectionString." +
-            "\nDefaults to environment variable \"IOTHUB_DEVICE_SECURITY_TYPE\".")]
+            "\nDefaults to environment variable 'IOTHUB_DEVICE_SECURITY_TYPE'.")]
         public string DeviceSecurityType { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_DEVICE_SECURITY_TYPE");
 
         [Option(
-            'p',
+            'c',
             "PrimaryConnectionString",
-            HelpText = "(Required if DeviceSecurityType is \"connectionString\"). \nThe primary connection string for the device to simulate." +
-            "\nDefaults to environment variable \"IOTHUB_DEVICE_CONNECTION_STRING\".")]
+            HelpText = "(Required if DeviceSecurityType is 'connectionString'). \nThe primary connection string for the device to simulate." +
+            "\nDefaults to environment variable 'IOTHUB_DEVICE_CONNECTION_STRING'.")]
         public string PrimaryConnectionString { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_DEVICE_CONNECTION_STRING");
 
         [Option(
             'e',
             "DpsEndpoint",
-            HelpText = "(Required if DeviceSecurityType is \"dps\"). \nThe DPS endpoint to use during device provisioning." +
-            "\nDefaults to environment variable \"IOTHUB_DEVICE_DPS_ENDPOINT\".")]
+            HelpText = "(Required if DeviceSecurityType is 'dps'). \nThe DPS endpoint to use during device provisioning." +
+            "\nDefaults to environment variable 'IOTHUB_DEVICE_DPS_ENDPOINT'.")]
         public string DpsEndpoint { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_DEVICE_DPS_ENDPOINT");
 
         [Option(
             'i',
             "DpsIdScope",
-            HelpText = "(Required if DeviceSecurityType is \"dps\"). \nThe DPS ID Scope to use during device provisioning." +
-            "\nDefaults to environment variable \"IOTHUB_DEVICE_DPS_ID_SCOPE\".")]
+            HelpText = "(Required if DeviceSecurityType is 'dps'). \nThe DPS ID Scope to use during device provisioning." +
+            "\nDefaults to environment variable 'IOTHUB_DEVICE_DPS_ID_SCOPE'.")]
         public string DpsIdScope { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_DEVICE_DPS_ID_SCOPE");
 
         [Option(
             'd',
             "DeviceId",
-            HelpText = "(Required if DeviceSecurityType is \"dps\"). \nThe device registration Id to use during device provisioning." +
-            "\nDefaults to environment variable \"IOTHUB_DEVICE_DPS_DEVICE_ID\".")]
+            HelpText = "(Required if DeviceSecurityType is 'dps'). \nThe device registration Id to use during device provisioning." +
+            "\nDefaults to environment variable 'IOTHUB_DEVICE_DPS_DEVICE_ID'.")]
         public string DeviceId { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_DEVICE_DPS_DEVICE_ID");
 
         [Option(
             'k',
             "DeviceSymmetricKey",
-            HelpText = "(Required if DeviceSecurityType is \"dps\"). \nThe device symmetric key to use during device provisioning." +
-            "\nDefaults to environment variable \"IOTHUB_DEVICE_DPS_DEVICE_KEY\".")]
+            HelpText = "(Required if DeviceSecurityType is 'dps'). \nThe device symmetric key to use during device provisioning." +
+            "\nDefaults to environment variable 'IOTHUB_DEVICE_DPS_DEVICE_KEY'.")]
         public string DeviceSymmetricKey { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_DEVICE_DPS_DEVICE_KEY");
 
         [Option(
@@ -65,21 +65,20 @@ namespace Microsoft.Azure.Devices.Client.Samples
         {
             if (string.IsNullOrWhiteSpace(DeviceSecurityType))
             {
-                logger.LogWarning("Device provisioning type not set, please set the environment variable \"IOTHUB_DEVICE_SECURITY_TYPE\"" +
-                    "or pass in \"-s | --DeviceSecurityType\" through command line. \nWill default to using \"dps\" flow.");
+                logger.LogWarning("Device provisioning type not set, please set the environment variable 'IOTHUB_DEVICE_SECURITY_TYPE'" +
+                    "or pass in '-s | --DeviceSecurityType' through command line. \nWill default to using 'dps' flow.");
 
                 DeviceSecurityType = "dps";
             }
 
-            return (DeviceSecurityType.ToLowerInvariant()) switch
+            return DeviceSecurityType.ToLowerInvariant() switch
             {
                 "dps" => !string.IsNullOrWhiteSpace(DpsEndpoint)
                         && !string.IsNullOrWhiteSpace(DpsIdScope)
                         && !string.IsNullOrWhiteSpace(DeviceId)
                         && !string.IsNullOrWhiteSpace(DeviceSymmetricKey),
                 "connectionstring" => !string.IsNullOrWhiteSpace(PrimaryConnectionString),
-                _ => throw new ArgumentException($"Unrecognized value for device provisioning received: {DeviceSecurityType}." +
-                        $" It should be either \"dps\" or \"connectionString\" (case-insensitive)."),
+                _ => false,
             };
         }
     }
