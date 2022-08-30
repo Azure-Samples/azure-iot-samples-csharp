@@ -20,7 +20,7 @@ namespace Microsoft.Azure.Devices.Client.Samples
         public string DeviceSecurityType { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_DEVICE_SECURITY_TYPE");
 
         [Option(
-            'p',
+            'c',
             "PrimaryConnectionString",
             HelpText = "(Required if DeviceSecurityType is 'connectionString'). \nThe primary connection string for the device to simulate." +
             "\nDefaults to environment variable 'IOTHUB_DEVICE_CONNECTION_STRING'.")]
