@@ -68,7 +68,7 @@ namespace SimulatedDeviceWithCommand
         // Handle the direct method call.
         private static Task<MethodResponse> SetTelemetryInterval(MethodRequest methodRequest, object userContext)
         {
-            var data = Encoding.UTF8.GetString(methodRequest.Data);
+            string data = Encoding.UTF8.GetString(methodRequest.Data);
 
             // Check the payload is a single integer value.
             if (int.TryParse(data, out int telemetryIntervalInSeconds))

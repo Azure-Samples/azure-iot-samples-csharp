@@ -14,7 +14,8 @@ namespace InvokeDeviceMethod
         [Option(
             'c',
             "HubConnectionString",
-            HelpText = "The IoT hub connection string. This is available under the \"Shared access policies\" in the Azure portal." +
+            Required = false,
+            HelpText = "The IoT hub connection string. This is available under the 'Shared access policies' in the Azure portal." +
             "\nDefaults to value of environment variable IOTHUB_CONNECTION_STRING.")]
         public string HubConnectionString { get; set; } = Environment.GetEnvironmentVariable("IOTHUB_CONNECTION_STRING");
 
@@ -23,7 +24,7 @@ namespace InvokeDeviceMethod
             "DeviceId",
             Required = false,
             HelpText = "The Id of the device to receive the direct method." +
-            "\nDefaults to \"MyDotnetDevice\".")]
+            "\nDefaults to 'MyDotnetDevice'.")]
         public string DeviceId { get; set; } = "MyDotnetDevice";
     }
 }
