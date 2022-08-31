@@ -41,6 +41,8 @@ namespace Microsoft.Azure.Devices.Samples.JobsSample
 
 
             // *************************************** Schedule twin job ***************************************
+            // Prepare to catch Throttling exception if more than 1 job is already running.
+            // https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-quotas-throttling#other-limits
             try
             {
                 Console.WriteLine($"Schedule twin job {jobId} for {DeviceId}...");
