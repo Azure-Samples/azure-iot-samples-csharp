@@ -68,15 +68,7 @@ namespace Microsoft.Azure.Devices.Samples
             CreateDeviceContent(configuration, configurationId);
             CreateMetricsAndTargetCondition(configuration);
 
-            try
-            {
-                await _registryManager.AddConfigurationAsync(configuration);
-            }
-            catch (ThrottlingException)
-            {
-                Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
-                return;
-            }
+            await _registryManager.AddConfigurationAsync(configuration);
 
             Console.WriteLine($"Configuration added, id: {configurationId}");
         }
@@ -99,40 +91,23 @@ namespace Microsoft.Azure.Devices.Samples
 
         private async Task DeleteConfigurationAsync(string configurationId)
         {
-            try
-            {
-                await _registryManager.RemoveConfigurationAsync(configurationId);
-            }
-            catch (ThrottlingException)
-            {
-                Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
-                return;
-            }
-
+            await _registryManager.RemoveConfigurationAsync(configurationId);
             Console.WriteLine($"Configuration deleted, id: {configurationId}");
         }
 
         private async Task GetConfigurationsAsync(int count)
         {
-            try
-            {
-                IEnumerable<Configuration> configurations = await _registryManager.GetConfigurationsAsync(count);
+            IEnumerable<Configuration> configurations = await _registryManager.GetConfigurationsAsync(count);
 
-                // Check configuration's metrics for expected conditions
-                foreach (Configuration configuration in configurations)
-                {
-                    string configurationString = JsonConvert.SerializeObject(configuration, Formatting.Indented);
-                    Console.WriteLine(configurationString);
-                    Thread.Sleep(1000);
-                }
-
-                Console.WriteLine("Configurations received");
-            }
-            catch (ThrottlingException)
+            // Check configuration's metrics for expected conditions
+            foreach (Configuration configuration in configurations)
             {
-                Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
-                return;
+                string configurationString = JsonConvert.SerializeObject(configuration, Formatting.Indented);
+                Console.WriteLine(configurationString);
+                Thread.Sleep(1000);
             }
+
+            Console.WriteLine("Configurations received");
         }
     }
 }
