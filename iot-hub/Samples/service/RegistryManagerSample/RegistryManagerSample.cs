@@ -99,6 +99,7 @@ namespace Microsoft.Azure.Devices.Samples
             catch (ThrottlingException)
             {
                 Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
+                return;
             }
 
             // Create a device with default (shared key) authentication
@@ -119,6 +120,7 @@ namespace Microsoft.Azure.Devices.Samples
             catch (ThrottlingException)
             {
                 Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
+                return;
             }
         }
 
@@ -149,6 +151,7 @@ namespace Microsoft.Azure.Devices.Samples
             catch (ThrottlingException)
             {
                 Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
+                return;
             }
         }
 
@@ -176,6 +179,7 @@ namespace Microsoft.Azure.Devices.Samples
             catch (ThrottlingException)
             {
                 Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
+                return;
             }
         }
 

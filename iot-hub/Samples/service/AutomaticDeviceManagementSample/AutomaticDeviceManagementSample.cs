@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Azure.Devices.Common.Exceptions;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -67,7 +68,15 @@ namespace Microsoft.Azure.Devices.Samples
             CreateDeviceContent(configuration, configurationId);
             CreateMetricsAndTargetCondition(configuration);
 
-            await _registryManager.AddConfigurationAsync(configuration);
+            try
+            {
+                await _registryManager.AddConfigurationAsync(configuration);
+            }
+            catch (ThrottlingException)
+            {
+                Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
+                return;
+            }
 
             Console.WriteLine($"Configuration added, id: {configurationId}");
         }
@@ -90,24 +99,40 @@ namespace Microsoft.Azure.Devices.Samples
 
         private async Task DeleteConfigurationAsync(string configurationId)
         {
-            await _registryManager.RemoveConfigurationAsync(configurationId);
+            try
+            {
+                await _registryManager.RemoveConfigurationAsync(configurationId);
+            }
+            catch (ThrottlingException)
+            {
+                Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
+                return;
+            }
 
             Console.WriteLine($"Configuration deleted, id: {configurationId}");
         }
 
         private async Task GetConfigurationsAsync(int count)
         {
-            IEnumerable<Configuration> configurations = await _registryManager.GetConfigurationsAsync(count);
-
-            // Check configuration's metrics for expected conditions
-            foreach (Configuration configuration in configurations)
+            try
             {
-                string configurationString = JsonConvert.SerializeObject(configuration, Formatting.Indented);
-                Console.WriteLine(configurationString);
-                Thread.Sleep(1000);
-            }
+                IEnumerable<Configuration> configurations = await _registryManager.GetConfigurationsAsync(count);
 
-            Console.WriteLine("Configurations received");
+                // Check configuration's metrics for expected conditions
+                foreach (Configuration configuration in configurations)
+                {
+                    string configurationString = JsonConvert.SerializeObject(configuration, Formatting.Indented);
+                    Console.WriteLine(configurationString);
+                    Thread.Sleep(1000);
+                }
+
+                Console.WriteLine("Configurations received");
+            }
+            catch (ThrottlingException)
+            {
+                Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
+                return;
+            }
         }
     }
 }

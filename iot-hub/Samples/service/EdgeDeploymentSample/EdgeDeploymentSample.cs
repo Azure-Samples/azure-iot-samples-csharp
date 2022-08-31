@@ -97,28 +97,35 @@ namespace Microsoft.Azure.Devices.Samples
 
         private async Task CleanUpConfigurationsAsync()
         {
-            IEnumerable<Configuration> configurations = await _registryManager.GetConfigurationsAsync(100);
+            try
             {
-                foreach (Configuration configuration in configurations)
+                IEnumerable<Configuration> configurations = await _registryManager.GetConfigurationsAsync(100);
                 {
-                    string configurationId = configuration.Id;
-                    if (configurationId.StartsWith(ConfigurationIdPrefix))
+                    foreach (Configuration configuration in configurations)
                     {
-                        _configurationsToDelete.Add(new Configuration(configurationId));
+                        string configurationId = configuration.Id;
+                        if (configurationId.StartsWith(ConfigurationIdPrefix))
+                        {
+                            _configurationsToDelete.Add(new Configuration(configurationId));
+                        }
                     }
                 }
+
+                var removeConfigTasks = new List<Task>();
+                _configurationsToDelete.ForEach(
+                    configuration =>
+                    {
+                        Console.WriteLine($"Remove: {configuration.Id}");
+                        removeConfigTasks.Add(_registryManager.RemoveConfigurationAsync(configuration.Id));
+                    });
+
+                await Task.WhenAll(removeConfigTasks);
+                Console.WriteLine($"-- Total # of configurations deleted: {_configurationsToDelete.Count}");
             }
-
-            var removeConfigTasks = new List<Task>();
-            _configurationsToDelete.ForEach(
-                configuration =>
-                {
-                    Console.WriteLine($"Remove: {configuration.Id}");
-                    removeConfigTasks.Add(_registryManager.RemoveConfigurationAsync(configuration.Id));
-                });
-
-            await Task.WhenAll(removeConfigTasks);
-            Console.WriteLine($"-- Total # of configurations deleted: {_configurationsToDelete.Count}");
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Cleanup failed. {ex.Message}");
+            }
         }
 
         private static IEnumerable<Device> GenerateEdgeDevices(string deviceIdPrefix, int numToAdd)
