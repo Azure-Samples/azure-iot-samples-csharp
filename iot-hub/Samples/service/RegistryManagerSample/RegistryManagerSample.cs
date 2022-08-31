@@ -91,6 +91,7 @@ namespace Microsoft.Azure.Devices.Samples
                 // The parent scopes property can be set to the same value, or left alone and the service will set it for you.
                 Scope = nestedEdge.Scope,
             };
+
             basicDevice = await registryManager.AddDeviceAsync(basicDevice);
             Console.WriteLine($"Added device '{basicDevice.Id}' with device scope of {basicDevice.Scope} and parent scope of {basicDevice.ParentScopes.First()}.");
         }
@@ -138,7 +139,7 @@ namespace Microsoft.Azure.Devices.Samples
             await UpdateDesiredPropertiesAsync(registryManager, caCertDeviceId);
         }
 
-        private async Task RemoveDeviceAsync(RegistryManager registryManager, string deviceId)
+        private static async Task RemoveDeviceAsync(RegistryManager registryManager, string deviceId)
         {
             try
             {
@@ -159,7 +160,7 @@ namespace Microsoft.Azure.Devices.Samples
             string queryText = $"SELECT * FROM devices WHERE STARTSWITH(id, '{_parameters.DevicePrefix}')";
             Console.WriteLine($"Using query text of: {queryText}");
 
-            var query = registryManager.CreateQuery(queryText);
+            IQuery query = registryManager.CreateQuery(queryText);
 
             while (query.HasMoreResults)
             {
@@ -181,15 +182,15 @@ namespace Microsoft.Azure.Devices.Samples
             }
         }
 
-        private async Task UpdateDesiredPropertiesAsync(RegistryManager registryManager, string deviceId)
+        private static async Task UpdateDesiredPropertiesAsync(RegistryManager registryManager, string deviceId)
         {
             Console.WriteLine("\n=== Updating a desired property value ===\n");
 
-            var twin = await registryManager.GetTwinAsync(deviceId);
+            Twin twin = await registryManager.GetTwinAsync(deviceId);
 
             // Set a desired value for a property the device supports, with the corresponding data type
-            var patch =
-            @"{
+            string patch =
+                @"{
                 ""properties"": {
                 ""desired"": {
                     ""customKey"": ""customValue""
