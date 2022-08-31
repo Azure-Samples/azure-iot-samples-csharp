@@ -55,44 +55,44 @@ namespace Microsoft.Azure.Devices.Samples.JobsSample
                 Console.WriteLine("Schedule response");
                 Console.WriteLine(JsonSerializer.Serialize(createJobResponse, new JsonSerializerOptions { WriteIndented = true }));
                 Console.WriteLine();
-
-                // *************************************** Get all Jobs ***************************************
-                IEnumerable<JobResponse> queryResults = await _jobClient.CreateQuery().GetNextAsJobResponseAsync();
-
-                List<JobResponse> getJobs = queryResults.ToList();
-                Console.WriteLine($"getJobs return {getJobs.Count} result(s)");
-
-                foreach (JobResponse job in getJobs)
-                {
-                    Console.WriteLine(JsonSerializer.Serialize(job, new JsonSerializerOptions { WriteIndented = true }));
-                }
-
-                Console.WriteLine();
-
-                // *************************************** Check completion ***************************************
-                Console.WriteLine("Monitoring jobClient for job completion...");
-                JobResponse jobResponse = await _jobClient.GetJobAsync(jobId);
-
-                Console.WriteLine("First result");
-                Console.WriteLine(JsonSerializer.Serialize(jobResponse, new JsonSerializerOptions { WriteIndented = true }));
-
-                Console.Write("Waiting for completion ");
-                while (jobResponse.Status != JobStatus.Completed)
-                {
-                    Console.Write(". ");
-                    await Task.Delay(TimeSpan.FromMilliseconds(500));
-                    jobResponse = await _jobClient.GetJobAsync(jobId);
-                }
-
-                Console.WriteLine("DONE");
-
-                Console.WriteLine($"Job ends with status {jobResponse.Status}");
             }
             catch (ThrottlingException)
             {
                 Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
-
+                return;
             }
+
+            // *************************************** Get all Jobs ***************************************
+            IEnumerable<JobResponse> queryResults = await _jobClient.CreateQuery().GetNextAsJobResponseAsync();
+
+            List<JobResponse> getJobs = queryResults.ToList();
+            Console.WriteLine($"getJobs return {getJobs.Count} result(s)");
+
+            foreach (JobResponse job in getJobs)
+            {
+                Console.WriteLine(JsonSerializer.Serialize(job, new JsonSerializerOptions { WriteIndented = true }));
+            }
+
+            Console.WriteLine();
+
+            // *************************************** Check completion ***************************************
+            Console.WriteLine("Monitoring jobClient for job completion...");
+            JobResponse jobResponse = await _jobClient.GetJobAsync(jobId);
+
+            Console.WriteLine("First result");
+            Console.WriteLine(JsonSerializer.Serialize(jobResponse, new JsonSerializerOptions { WriteIndented = true }));
+
+            Console.Write("Waiting for completion ");
+            while (jobResponse.Status != JobStatus.Completed)
+            {
+                Console.Write(". ");
+                await Task.Delay(TimeSpan.FromMilliseconds(500));
+                jobResponse = await _jobClient.GetJobAsync(jobId);
+            }
+
+            Console.WriteLine("DONE");
+
+            Console.WriteLine($"Job ends with status {jobResponse.Status}");
         }
     }
 }

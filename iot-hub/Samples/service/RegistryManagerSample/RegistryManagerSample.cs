@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Azure.Devices.Common.Exceptions;
 using Microsoft.Azure.Devices.Shared;
 using System;
 using System.Collections.Generic;
@@ -33,6 +34,10 @@ namespace Microsoft.Azure.Devices.Samples
                 await AddDeviceWithCertificateAuthorityAuthenticationAsync(registryManager);
 
                 await EnumerateTwinsAsync(registryManager);
+            }
+            catch (ThrottlingException)
+            {
+                Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
             }
             finally
             {
@@ -138,7 +143,7 @@ namespace Microsoft.Azure.Devices.Samples
             await UpdateDesiredPropertiesAsync(registryManager, caCertDeviceId);
         }
 
-        private async Task RemoveDeviceAsync(RegistryManager registryManager, string deviceId)
+        private static async Task RemoveDeviceAsync(RegistryManager registryManager, string deviceId)
         {
             try
             {
@@ -159,7 +164,7 @@ namespace Microsoft.Azure.Devices.Samples
             string queryText = $"SELECT * FROM devices WHERE STARTSWITH(id, '{_parameters.DevicePrefix}')";
             Console.WriteLine($"Using query text of: {queryText}");
 
-            var query = registryManager.CreateQuery(queryText);
+            IQuery query = registryManager.CreateQuery(queryText);
 
             while (query.HasMoreResults)
             {
@@ -181,14 +186,14 @@ namespace Microsoft.Azure.Devices.Samples
             }
         }
 
-        private async Task UpdateDesiredPropertiesAsync(RegistryManager registryManager, string deviceId)
+        private static async Task UpdateDesiredPropertiesAsync(RegistryManager registryManager, string deviceId)
         {
             Console.WriteLine("\n=== Updating a desired property value ===\n");
 
-            var twin = await registryManager.GetTwinAsync(deviceId);
+            Twin twin = await registryManager.GetTwinAsync(deviceId);
 
             // Set a desired value for a property the device supports, with the corresponding data type
-            var patch =
+            string patch =
             @"{
                 ""properties"": {
                 ""desired"": {
