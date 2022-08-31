@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Azure.Devices.Common.Exceptions;
 using Microsoft.Azure.Devices.Shared;
 
 namespace Microsoft.Azure.Devices.Samples.JobsSample
@@ -40,18 +41,28 @@ namespace Microsoft.Azure.Devices.Samples.JobsSample
 
 
             // *************************************** Schedule twin job ***************************************
-            Console.WriteLine($"Schedule twin job {jobId} for {DeviceId}...");
-            JobResponse createJobResponse = await _jobClient
-                .ScheduleTwinUpdateAsync(
-                    jobId,
-                    query,
-                    twin,
-                    DateTime.UtcNow,
-                    (long)TimeSpan.FromMinutes(2).TotalSeconds);
+            // Prepare to catch Throttling exception if more than 1 job is already running.
+            // https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-quotas-throttling#other-limits
+            try
+            {
+                Console.WriteLine($"Schedule twin job {jobId} for {DeviceId}...");
+                JobResponse createJobResponse = await _jobClient
+                    .ScheduleTwinUpdateAsync(
+                        jobId,
+                        query,
+                        twin,
+                        DateTime.UtcNow,
+                        (long)TimeSpan.FromMinutes(2).TotalSeconds);
 
-            Console.WriteLine("Schedule response");
-            Console.WriteLine(JsonSerializer.Serialize(createJobResponse, new JsonSerializerOptions { WriteIndented = true }));
-            Console.WriteLine();
+                Console.WriteLine("Schedule response");
+                Console.WriteLine(JsonSerializer.Serialize(createJobResponse, new JsonSerializerOptions { WriteIndented = true }));
+                Console.WriteLine();
+            }
+            catch (ThrottlingException)
+            {
+                Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
+                return;
+            }
 
             // *************************************** Get all Jobs ***************************************
             IEnumerable<JobResponse> queryResults = await _jobClient.CreateQuery().GetNextAsJobResponseAsync();

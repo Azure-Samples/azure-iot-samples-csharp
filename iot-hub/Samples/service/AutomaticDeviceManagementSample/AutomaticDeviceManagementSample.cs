@@ -91,7 +91,6 @@ namespace Microsoft.Azure.Devices.Samples
         private async Task DeleteConfigurationAsync(string configurationId)
         {
             await _registryManager.RemoveConfigurationAsync(configurationId);
-
             Console.WriteLine($"Configuration deleted, id: {configurationId}");
         }
 
