@@ -68,9 +68,16 @@ namespace Microsoft.Azure.Devices.Samples
                 },
             };
 
-            // Add the device and capture the output which includes system-assigned properties like ETag and Scope.
-            edgeParent = await registryManager.AddDeviceAsync(edgeParent);
-            Console.WriteLine($"Added edge {edgeParent.Id} with device scope {edgeParent.Scope}.");
+            try
+            {
+                // Add the device and capture the output which includes system-assigned properties like ETag and Scope.
+                edgeParent = await registryManager.AddDeviceAsync(edgeParent);
+                Console.WriteLine($"Added edge {edgeParent.Id} with device scope {edgeParent.Scope}.");
+            }
+            catch (ThrottlingException)
+            {
+                Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
+            }
 
             string nestedEdgeId = GenerateDeviceId();
             var nestedEdge = new Device(nestedEdgeId)
@@ -84,8 +91,15 @@ namespace Microsoft.Azure.Devices.Samples
                 ParentScopes = { edgeParent.Scope },
             };
 
-            nestedEdge = await registryManager.AddDeviceAsync(nestedEdge);
-            Console.WriteLine($"Added edge {nestedEdge.Id} with device scope {nestedEdge.Scope} and parent scope {nestedEdge.ParentScopes.First()}.");
+            try
+            {
+                nestedEdge = await registryManager.AddDeviceAsync(nestedEdge);
+                Console.WriteLine($"Added edge {nestedEdge.Id} with device scope {nestedEdge.Scope} and parent scope {nestedEdge.ParentScopes.First()}.");
+            }
+            catch (ThrottlingException)
+            {
+                Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
+            }
 
             // Create a device with default (shared key) authentication
             string basicDeviceId = GenerateDeviceId();
@@ -96,8 +110,16 @@ namespace Microsoft.Azure.Devices.Samples
                 // The parent scopes property can be set to the same value, or left alone and the service will set it for you.
                 Scope = nestedEdge.Scope,
             };
-            basicDevice = await registryManager.AddDeviceAsync(basicDevice);
-            Console.WriteLine($"Added device '{basicDevice.Id}' with device scope of {basicDevice.Scope} and parent scope of {basicDevice.ParentScopes.First()}.");
+
+            try
+            {
+                basicDevice = await registryManager.AddDeviceAsync(basicDevice);
+                Console.WriteLine($"Added device '{basicDevice.Id}' with device scope of {basicDevice.Scope} and parent scope of {basicDevice.ParentScopes.First()}.");
+            }
+            catch (ThrottlingException)
+            {
+                Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
+            }
         }
 
         private async Task AddDeviceWithSelfSignedCertificateAsync(RegistryManager registryManager)
@@ -119,8 +141,15 @@ namespace Microsoft.Azure.Devices.Samples
                 },
             };
 
-            await registryManager.AddDeviceAsync(device);
-            Console.WriteLine($"Added device {selfSignedCertDeviceId} with self-signed certificate auth. ");
+            try
+            {
+                await registryManager.AddDeviceAsync(device);
+                Console.WriteLine($"Added device {selfSignedCertDeviceId} with self-signed certificate auth. ");
+            }
+            catch (ThrottlingException)
+            {
+                Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
+            }
         }
 
         private async Task AddDeviceWithCertificateAuthorityAuthenticationAsync(RegistryManager registryManager)
@@ -136,11 +165,18 @@ namespace Microsoft.Azure.Devices.Samples
                 },
             };
 
-            await registryManager.AddDeviceAsync(device);
-            Console.WriteLine($"Added device {caCertDeviceId} with CA authentication.");
+            try
+            {
+                await registryManager.AddDeviceAsync(device);
+                Console.WriteLine($"Added device {caCertDeviceId} with CA authentication.");
 
-            // Demonstrate updating a twin's desired property
-            await UpdateDesiredPropertiesAsync(registryManager, caCertDeviceId);
+                // Demonstrate updating a twin's desired property
+                await UpdateDesiredPropertiesAsync(registryManager, caCertDeviceId);
+            }
+            catch (ThrottlingException)
+            {
+                Console.WriteLine("Too many jobs scheduled at this given time. Please try again later.");
+            }
         }
 
         private static async Task RemoveDeviceAsync(RegistryManager registryManager, string deviceId)
@@ -190,20 +226,27 @@ namespace Microsoft.Azure.Devices.Samples
         {
             Console.WriteLine("\n=== Updating a desired property value ===\n");
 
-            Twin twin = await registryManager.GetTwinAsync(deviceId);
+            try
+            {
+                Twin twin = await registryManager.GetTwinAsync(deviceId);
 
-            // Set a desired value for a property the device supports, with the corresponding data type
-            string patch =
-            @"{
+                // Set a desired value for a property the device supports, with the corresponding data type
+                string patch =
+                @"{
                 ""properties"": {
                 ""desired"": {
                     ""customKey"": ""customValue""
                 }
                 }
             }";
-            Console.WriteLine($"Using property patch of:\n{patch}");
+                Console.WriteLine($"Using property patch of:\n{patch}");
 
-            await registryManager.UpdateTwinAsync(twin.DeviceId, patch, twin.ETag);
+                await registryManager.UpdateTwinAsync(twin.DeviceId, patch, twin.ETag);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to remove device {deviceId} due to {ex.Message}.");
+            }
         }
 
         private string GenerateDeviceId()
