@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Azure.Devices.Common.Exceptions;
 using Microsoft.Azure.Devices.Shared;
 using System;
 using System.Collections.Generic;
@@ -95,7 +94,6 @@ namespace Microsoft.Azure.Devices.Samples
 
             basicDevice = await registryManager.AddDeviceAsync(basicDevice);
             Console.WriteLine($"Added device '{basicDevice.Id}' with device scope of {basicDevice.Scope} and parent scope of {basicDevice.ParentScopes.First()}.");
-
         }
 
         private async Task AddDeviceWithSelfSignedCertificateAsync(RegistryManager registryManager)
