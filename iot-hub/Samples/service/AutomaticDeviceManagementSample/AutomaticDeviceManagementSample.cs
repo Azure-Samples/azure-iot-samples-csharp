@@ -41,7 +41,7 @@ namespace Microsoft.Azure.Devices.Samples
                 Console.WriteLine("List existing configurations");
                 await GetConfigurationsAsync(5);
 
-                Console.WriteLine("Remove some connfigurations");
+                Console.WriteLine("Remove some configurations");
                 await DeleteConfigurationAsync(configs[3]);
                 await DeleteConfigurationAsync(configs[1]);
 
