@@ -37,6 +37,13 @@ jobs:
           version: 2.1.x
           performMultiLevelLookup: true
           installationPath: $(Agent.ToolsDirectory)/dotnet
+      - task: ComponentGovernanceComponentDetection@0
+        displayName: Component Governance Detection
+        inputs:
+          scanType: 'Register'
+          verbosity: 'Verbose'
+          alertWarningLevel: 'Low' # The task will present a warning, but will not cause the build to fail
+        condition: always()
       - powershell: ./build.ps1 -clean -configuration Release -build $(RUN-CONFIG)
         displayName: build and run
         env:
@@ -106,6 +113,13 @@ jobs:
           version: 2.1.x
           performMultiLevelLookup: true
           installationPath: $(Agent.ToolsDirectory)/dotnet
+      - task: ComponentGovernanceComponentDetection@0
+        displayName: Component Governance Detection
+        inputs:
+          scanType: 'Register'
+          verbosity: 'Verbose'
+          alertWarningLevel: 'Low' # The task will present a warning, but will not cause the build to fail
+        condition: always()
       - powershell: ./build.ps1 -clean -configuration Release -build $(RUN-CONFIG)
         displayName: build and run
         env:
