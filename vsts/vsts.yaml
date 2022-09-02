@@ -1,5 +1,22 @@
 name: $(BuildID)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
+# https://docs.microsoft.com/azure/devops/pipelines/process/runtime-parameters
+parameters:
+- name: jobTimeoutInMinutes
+  displayName: Timeout for each job
+  type: number
+  default: 75
+- name: tests
+  displayName: Run all tests, include cleaning at the end (otherwise, clean service resources only).
+  type: boolean
+  default: true
+  
+variables:
+  ${{ if parameters.tests }}:
+    testConfig: "-run"
+  ${{ else }}:
+    testConfig: "-clean"
+
 resources:
   - repo: self
     clean: true
@@ -11,7 +28,7 @@ jobs:
     condition: succeeded()
     pool:
       vmImage: 'ubuntu-latest'
-    timeoutInMinutes: 60
+    timeoutInMinutes: ${{ parameters.jobTimeoutInMinutes }}
     steps:
       - task: UseDotNet@2
         displayName: 'Use .NET 6.0 SDK'
@@ -44,7 +61,7 @@ jobs:
           verbosity: 'Verbose'
           alertWarningLevel: 'Low' # The task will present a warning, but will not cause the build to fail
         condition: always()
-      - powershell: ./build.ps1 -clean -configuration Release -build $(RUN-CONFIG)
+      - powershell: ./build.ps1 -clean -configuration Release -build $(testConfig)
         displayName: build and run
         env:
           # Environment variables for IoT hub device samples
@@ -120,7 +137,7 @@ jobs:
           verbosity: 'Verbose'
           alertWarningLevel: 'Low' # The task will present a warning, but will not cause the build to fail
         condition: always()
-      - powershell: ./build.ps1 -clean -configuration Release -build $(RUN-CONFIG)
+      - powershell: ./build.ps1 -clean -configuration Release -build $(testConfig)
         displayName: build and run
         env:
           # Environment variables for IoT hub device samples
