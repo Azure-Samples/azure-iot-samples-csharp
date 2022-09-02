@@ -24,7 +24,7 @@ resources:
 jobs:
   ### Linux build ###
   - job: LINUX
-    displayName: Linux (runs ~${{ parameters.jobTimeoutInMinutes }}mins)
+    displayName: Linux (timeout=${{ parameters.jobTimeoutInMinutes }}mins)
     condition: succeeded()
     pool:
       vmImage: 'ubuntu-latest'
@@ -99,7 +99,7 @@ jobs:
 
     ### Windows build ###
   - job: WINDOWS
-    displayName: Windows
+    displayName: Windows (timeout=${{ parameters.jobTimeoutInMinutes }}mins)
     # Since the samples run against the same Azure resources, CRUD operations will fight for the same resources.
     # So, the builds have been serialized. Comment out the line below to run them in parallel.
     dependsOn: LINUX
