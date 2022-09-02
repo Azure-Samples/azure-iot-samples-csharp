@@ -28,7 +28,7 @@ jobs:
     condition: succeeded()
     pool:
       vmImage: 'ubuntu-latest'
-    timeoutInMinutes: $$ {{ parameters.jotTimeoutinMinutes}}
+    timeoutInMinutes: $${{ parameters.jotTimeoutinMinutes}}
     steps:
       - task: UseDotNet@2
         displayName: 'Use .NET 6.0 SDK'
@@ -104,7 +104,7 @@ jobs:
     condition: succeeded()
     pool:
       vmImage: 'windows-latest'
-    timeoutInMinutes: $$ {{ parameters.jotTimeoutinMinutes}}
+    timeoutInMinutes: $${{ parameters.jotTimeoutinMinutes}}
     steps:
       - task: UseDotNet@2
         displayName: 'Use .NET 6.0 SDK'
