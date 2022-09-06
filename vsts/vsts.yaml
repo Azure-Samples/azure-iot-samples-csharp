@@ -1,5 +1,22 @@
 name: $(BuildID)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
+# https://docs.microsoft.com/azure/devops/pipelines/process/runtime-parameters
+parameters:
+- name: jobTimeoutInMinutes
+  displayName: Timeout for each job
+  type: number
+  default: 75
+- name: tests
+  displayName: Run all tests, include clearing (if unchecked, clear service resources only).
+  type: boolean
+  default: true
+  
+variables:
+  ${{ if parameters.tests }}:
+    testConfig: "-run"
+  ${{ else }}:
+    testConfig: "-clear"
+
 resources:
   - repo: self
     clean: true
@@ -7,11 +24,11 @@ resources:
 jobs:
   ### Linux build ###
   - job: LINUX
-    displayName: Linux
+    displayName: Linux (timeout=${{ parameters.jobTimeoutInMinutes }}mins)
     condition: succeeded()
     pool:
       vmImage: 'ubuntu-latest'
-    timeoutInMinutes: 60
+    timeoutInMinutes: ${{ parameters.jobTimeoutInMinutes }}
     steps:
       - task: UseDotNet@2
         displayName: 'Use .NET 6.0 SDK'
@@ -37,14 +54,8 @@ jobs:
           version: 2.1.x
           performMultiLevelLookup: true
           installationPath: $(Agent.ToolsDirectory)/dotnet
-      - task: ComponentGovernanceComponentDetection@0
-        displayName: Component Governance Detection
-        inputs:
-          scanType: 'Register'
-          verbosity: 'Verbose'
-          alertWarningLevel: 'Low' # The task will present a warning, but will not cause the build to fail
-        condition: always()
-      - powershell: ./build.ps1 -clean -configuration Release -build $(RUN-CONFIG)
+
+      - powershell: ./build.ps1 -clean -configuration Release -build $(testConfig)
         displayName: build and run
         env:
           # Environment variables for IoT hub device samples
@@ -78,16 +89,24 @@ jobs:
           # Environment variables for DPS service samples
           PROVISIONING_CONNECTION_STRING: $(PROVISIONING-CONNECTION-STRING)
 
+      - task: ComponentGovernanceComponentDetection@0
+        displayName: Component Governance Detection
+        inputs:
+          scanType: 'Register'
+          verbosity: 'Verbose'
+          alertWarningLevel: 'Low' # The task will present a warning, but will not cause the build to fail
+        condition: always()
+
     ### Windows build ###
   - job: WINDOWS
-    displayName: Windows
+    displayName: Windows (timeout=${{ parameters.jobTimeoutInMinutes }}mins)
     # Since the samples run against the same Azure resources, CRUD operations will fight for the same resources.
     # So, the builds have been serialized. Comment out the line below to run them in parallel.
     dependsOn: LINUX
     condition: succeeded()
     pool:
       vmImage: 'windows-latest'
-    timeoutInMinutes: 60
+    timeoutInMinutes: ${{ parameters.jobTimeoutInMinutes }}
     steps:
       - task: UseDotNet@2
         displayName: 'Use .NET 6.0 SDK'
@@ -113,14 +132,8 @@ jobs:
           version: 2.1.x
           performMultiLevelLookup: true
           installationPath: $(Agent.ToolsDirectory)/dotnet
-      - task: ComponentGovernanceComponentDetection@0
-        displayName: Component Governance Detection
-        inputs:
-          scanType: 'Register'
-          verbosity: 'Verbose'
-          alertWarningLevel: 'Low' # The task will present a warning, but will not cause the build to fail
-        condition: always()
-      - powershell: ./build.ps1 -clean -configuration Release -build $(RUN-CONFIG)
+
+      - powershell: ./build.ps1 -clean -configuration Release -build $(testConfig)
         displayName: build and run
         env:
           # Environment variables for IoT hub device samples
@@ -153,3 +166,11 @@ jobs:
 
           # Environment variables for DPS service samples
           PROVISIONING_CONNECTION_STRING: $(PROVISIONING-CONNECTION-STRING)
+
+      - task: ComponentGovernanceComponentDetection@0
+        displayName: Component Governance Detection
+        inputs:
+          scanType: 'Register'
+          verbosity: 'Verbose'
+          alertWarningLevel: 'Low' # The task will present a warning, but will not cause the build to fail
+        condition: always()
