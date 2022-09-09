@@ -15,6 +15,7 @@
 //   * It will read the file, decode the first row in the file, and write it out to a new file 
 //       in ASCII so you can view it.
 
+using CommandLine;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -28,19 +29,28 @@ namespace SimulatedDevice
     internal class Program
     {
         private static DeviceClient s_deviceClient;
-        private readonly static string s_myDeviceId = "Contoso-Test-Device";
-        private readonly static string s_iotHubUri = "<iot-hub-name-goes-here>.azure-devices.net";
+        private static string s_myDeviceId = "Contoso-Test-Device";
         // This is the primary key for the device. This is in the portal. 
         // Find your IoT hub in the portal > IoT devices > select your device > copy the key. 
-        private readonly static string s_deviceKey = "device-id-goes-here";
+        private static string s_deviceKey = "device-id-goes-here";
 
-        // If this is false, it will submit messages to the iot hub. 
-        // If this is true, it will read one of the output files and convert it to ASCII.
-        private static bool s_readTheFile = false;
-
-        private static async Task Main()
+        private static async Task Main(string[] args)
         {
-            if (s_readTheFile)
+            // Parse application parameters
+            Parameters parameters = null;
+            ParserResult<Parameters> result = Parser.Default.ParseArguments<Parameters>(args)
+                .WithParsed(parsedParams =>
+                {
+                    parameters = parsedParams;
+                })
+                .WithNotParsed(errors =>
+                {
+                    Environment.Exit(1);
+                });
+
+            // If this is false, it will submit messages to the iot hub. 
+            // If this is true, it will read one of the output files and convert it to ASCII.
+            if (parameters.ReadTheFile)
             {
                 // If you want to decode an output file, put the path in ReadOneRowFromFile(), 
                 //   uncomment the call here and the return command, then run this application.
@@ -56,7 +66,11 @@ namespace SimulatedDevice
                 //  http://docs.microsoft.com/azure/iot-hub/tutorial-routing
 
                 Console.WriteLine("Routing Tutorial: Simulated device\n");
-                s_deviceClient = DeviceClient.Create(s_iotHubUri,
+
+                s_myDeviceId = parameters.DeviceId;
+                s_deviceKey = parameters.DeviceKey;
+
+                s_deviceClient = DeviceClient.Create(parameters.IoTHubUri,
                   new DeviceAuthenticationWithRegistrySymmetricKey(s_myDeviceId, s_deviceKey), TransportType.Mqtt);
 
                 using var cts = new CancellationTokenSource();
