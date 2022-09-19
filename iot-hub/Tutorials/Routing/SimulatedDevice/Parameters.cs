@@ -19,7 +19,7 @@ namespace SimulatedDevice
             'd',
             "DeviceId",
             Required = true,
-            HelpText = "The device ID that you assigned when registering the device.")]
+            HelpText = "The device Id that you assigned when registering the device.")]
         public string DeviceId { get; set; }
 
         // This is the primary key for the device. This is in the portal. 
