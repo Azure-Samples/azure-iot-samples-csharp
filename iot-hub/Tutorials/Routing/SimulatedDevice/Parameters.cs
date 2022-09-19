@@ -13,7 +13,7 @@ namespace SimulatedDevice
             "IoTHubUri",
             Required = true,
             HelpText = "The URI for the IoT hub.")]
-        public string IoTHubUri { get; set; }
+        public string IotHubUri { get; set; }
 
         [Option(
             'd',
