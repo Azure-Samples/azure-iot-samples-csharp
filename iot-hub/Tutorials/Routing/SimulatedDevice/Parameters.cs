@@ -34,7 +34,7 @@ namespace SimulatedDevice
         [Option(
             "ReadTheFile",
             Required = false,
-            HelpText = "If this is false, it will submit messages to the iot hub. If this is true, it will read one of the output files and convert it to ASCII.")]
+            HelpText = "If this is false, it will submit messages to the IoT hub. If this is true, it will read one of the output files and convert it to ASCII.")]
         public bool ReadTheFile { get; set; } = false;
     }
 }
