@@ -70,8 +70,10 @@ namespace SimulatedDevice
                 s_myDeviceId = parameters.DeviceId;
                 s_deviceKey = parameters.DeviceKey;
 
-                s_deviceClient = DeviceClient.Create(parameters.IoTHubUri,
-                  new DeviceAuthenticationWithRegistrySymmetricKey(s_myDeviceId, s_deviceKey), TransportType.Mqtt);
+                s_deviceClient = DeviceClient.Create(
+                    parameters.IoTHubUri,
+                    new DeviceAuthenticationWithRegistrySymmetricKey(s_myDeviceId, s_deviceKey),
+                    TransportType.Mqtt);
 
                 using var cts = new CancellationTokenSource();
                 Task messages = SendDeviceToCloudMessagesAsync(cts.Token);
