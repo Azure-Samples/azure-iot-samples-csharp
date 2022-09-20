@@ -15,6 +15,7 @@
 //   * It will read the file, decode the first row in the file, and write it out to a new file 
 //       in ASCII so you can view it.
 
+using CommandLine;
 using Microsoft.Azure.Devices.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -25,22 +26,27 @@ using System.Threading.Tasks;
 
 namespace SimulatedDevice
 {
-    class Program
+    internal class Program
     {
         private static DeviceClient s_deviceClient;
-        private readonly static string s_myDeviceId = "Contoso-Test-Device";
-        private readonly static string s_iotHubUri = "<iot-hub-name-goes-here>.azure-devices.net";
-        // This is the primary key for the device. This is in the portal. 
-        // Find your IoT hub in the portal > IoT devices > select your device > copy the key. 
-        private readonly static string s_deviceKey = "device-id-goes-here";
 
-        // If this is false, it will submit messages to the iot hub. 
-        // If this is true, it will read one of the output files and convert it to ASCII.
-        private static bool readTheFile = false;
-
-        private static async Task Main()
+        private static async Task Main(string[] args)
         {
-            if (readTheFile)
+            // Parse application parameters
+            Parameters parameters = null;
+            ParserResult<Parameters> result = Parser.Default.ParseArguments<Parameters>(args)
+                .WithParsed(parsedParams =>
+                {
+                    parameters = parsedParams;
+                })
+                .WithNotParsed(errors =>
+                {
+                    Environment.Exit(1);
+                });
+
+            // If this is false, it will submit messages to the iot hub. 
+            // If this is true, it will read one of the output files and convert it to ASCII.
+            if (parameters.ReadTheFile)
             {
                 // If you want to decode an output file, put the path in ReadOneRowFromFile(), 
                 //   uncomment the call here and the return command, then run this application.
@@ -56,11 +62,15 @@ namespace SimulatedDevice
                 //  http://docs.microsoft.com/azure/iot-hub/tutorial-routing
 
                 Console.WriteLine("Routing Tutorial: Simulated device\n");
-                s_deviceClient = DeviceClient.Create(s_iotHubUri,
-                  new DeviceAuthenticationWithRegistrySymmetricKey(s_myDeviceId, s_deviceKey), TransportType.Mqtt);
+                string myDeviceId = parameters.DeviceId;
+                string deviceKey = parameters.DeviceKey;
+                s_deviceClient = DeviceClient.Create(
+                    parameters.IotHubUri,
+                    new DeviceAuthenticationWithRegistrySymmetricKey(myDeviceId, deviceKey),
+                    TransportType.Mqtt);
 
                 using var cts = new CancellationTokenSource();
-                var messages = SendDeviceToCloudMessagesAsync(cts.Token);
+                Task messages = SendDeviceToCloudMessagesAsync(myDeviceId, cts.Token);
                 Console.WriteLine("Press the Enter key to stop.");
                 Console.ReadLine();
                 await s_deviceClient.CloseAsync(cts.Token);
@@ -73,11 +83,11 @@ namespace SimulatedDevice
         /// <summary> 
         /// Send message to the Iot hub. This generates the object to be sent to the hub in the message.
         /// </summary>
-        private static async Task SendDeviceToCloudMessagesAsync(CancellationToken token)
+        private static async Task SendDeviceToCloudMessagesAsync(string myDeviceId, CancellationToken token)
         {
             double minTemperature = 20;
             double minHumidity = 60;
-            Random rand = new Random();
+            var rand = new Random();
 
             while (!token.IsCancellationRequested)
             {
@@ -108,13 +118,13 @@ namespace SimulatedDevice
 
                 var telemetryDataPoint = new
                 {
-                    deviceId = s_myDeviceId,
+                    deviceId = myDeviceId,
                     temperature = currentTemperature,
                     humidity = currentHumidity,
                     pointInfo = infoString
                 };
                 // serialize the telemetry data and convert it to JSON.
-                var telemetryDataString = JsonConvert.SerializeObject(telemetryDataPoint);
+                string telemetryDataString = JsonConvert.SerializeObject(telemetryDataPoint);
 
                 // Encode the serialized object using UTF-8 so it can be parsed by IoT Hub when
                 // processing messaging rules.
@@ -128,12 +138,20 @@ namespace SimulatedDevice
                 message.Properties.Add("level", levelValue);
 
                 // Submit the message to the hub.
-                await s_deviceClient.SendEventAsync(message);
+                try
+                {
+                    await s_deviceClient.SendEventAsync(message, token);
+                }
+                catch (OperationCanceledException) { }
 
                 // Print out the message.
                 Console.WriteLine("{0} > Sent message: {1}", DateTime.UtcNow, telemetryDataString);
 
-                await Task.Delay(1000);
+                try
+                {
+                    await Task.Delay(1000, token);
+                }
+                catch (OperationCanceledException) { }
             }
         }
 
@@ -162,7 +180,7 @@ namespace SimulatedDevice
             // Parse the first line into a message object. Retrieve the body as a string.
             //   This string was encoded as Base64 when it was written.
             var messageObject = JObject.Parse(fileLines[0]);
-            var body = messageObject.Value<string>("Body");
+            string body = messageObject.Value<string>("Body");
 
             // Convert the body from Base64, then from UTF-32 to text, and write it out to the new file
             //   so you can view the result.
