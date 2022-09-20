@@ -29,10 +29,6 @@ namespace SimulatedDevice
     internal class Program
     {
         private static DeviceClient s_deviceClient;
-        private static string s_myDeviceId = "Contoso-Test-Device";
-        // This is the primary key for the device. This is in the portal. 
-        // Find your IoT hub in the portal > IoT devices > select your device > copy the key. 
-        private static string s_deviceKey = "device-id-goes-here";
 
         private static async Task Main(string[] args)
         {
@@ -66,17 +62,15 @@ namespace SimulatedDevice
                 //  http://docs.microsoft.com/azure/iot-hub/tutorial-routing
 
                 Console.WriteLine("Routing Tutorial: Simulated device\n");
-
-                s_myDeviceId = parameters.DeviceId;
-                s_deviceKey = parameters.DeviceKey;
-
+                string myDeviceId = parameters.DeviceId;
+                string deviceKey = parameters.DeviceKey;
                 s_deviceClient = DeviceClient.Create(
-                    parameters.IoTHubUri,
-                    new DeviceAuthenticationWithRegistrySymmetricKey(s_myDeviceId, s_deviceKey),
+                    parameters.IotHubUri,
+                    new DeviceAuthenticationWithRegistrySymmetricKey(myDeviceId, deviceKey),
                     TransportType.Mqtt);
 
                 using var cts = new CancellationTokenSource();
-                Task messages = SendDeviceToCloudMessagesAsync(cts.Token);
+                Task messages = SendDeviceToCloudMessagesAsync(myDeviceId, cts.Token);
                 Console.WriteLine("Press the Enter key to stop.");
                 Console.ReadLine();
                 await s_deviceClient.CloseAsync(cts.Token);
@@ -89,11 +83,11 @@ namespace SimulatedDevice
         /// <summary> 
         /// Send message to the Iot hub. This generates the object to be sent to the hub in the message.
         /// </summary>
-        private static async Task SendDeviceToCloudMessagesAsync(CancellationToken token)
+        private static async Task SendDeviceToCloudMessagesAsync(string myDeviceId, CancellationToken token)
         {
             double minTemperature = 20;
             double minHumidity = 60;
-            Random rand = new Random();
+            var rand = new Random();
 
             while (!token.IsCancellationRequested)
             {
@@ -124,13 +118,13 @@ namespace SimulatedDevice
 
                 var telemetryDataPoint = new
                 {
-                    deviceId = s_myDeviceId,
+                    deviceId = myDeviceId,
                     temperature = currentTemperature,
                     humidity = currentHumidity,
                     pointInfo = infoString
                 };
                 // serialize the telemetry data and convert it to JSON.
-                var telemetryDataString = JsonConvert.SerializeObject(telemetryDataPoint);
+                string telemetryDataString = JsonConvert.SerializeObject(telemetryDataPoint);
 
                 // Encode the serialized object using UTF-8 so it can be parsed by IoT Hub when
                 // processing messaging rules.
@@ -186,7 +180,7 @@ namespace SimulatedDevice
             // Parse the first line into a message object. Retrieve the body as a string.
             //   This string was encoded as Base64 when it was written.
             var messageObject = JObject.Parse(fileLines[0]);
-            var body = messageObject.Value<string>("Body");
+            string body = messageObject.Value<string>("Body");
 
             // Convert the body from Base64, then from UTF-32 to text, and write it out to the new file
             //   so you can view the result.
