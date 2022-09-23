@@ -1,5 +1,9 @@
 # Provisioning Device Client Sample - Microsoft Azure IoT SDK for .NET
 
+The DPS samples that previously existed here have been removed since this sample repository will be retired and archived.
+
+Please see here for the up to date [ProvisioningSamples](https://github.com/Azure/azure-iot-sdk-csharp/tree/main/provisioning).
+
 ## Overview
 
 This folder contains samples demonstrating the steps required to dynamically associate devices with IoT hubs using the Microsoft Azure IoT Device Provisioning Service.
