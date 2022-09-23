@@ -12,6 +12,9 @@ urlFragment: azure-iot-pnp-service-samples-for-csharp-net
 ---
 
 # IoT Plug And Play service samples
+The samples that previously existed here have been removed since this sample repository will be retired and archived.
+
+Please see here for the up to date [PnpServiceSample](https://github.com/Azure/azure-iot-sdk-csharp/tree/main/iothub/service/samples/solutions/PnpServiceSamples).
 
 These samples demonstrate how to manage a device that follows the [IoT Plug and Play conventions][pnp-convention] from IoT Hub. The samples show how to:
 

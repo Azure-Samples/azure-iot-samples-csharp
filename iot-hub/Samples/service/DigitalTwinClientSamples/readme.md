@@ -1,6 +1,7 @@
 # Digital Twin Client Samples for the Azure IoT Service SDK
-This folder contains samples to illustrate how to use the DigitalTwinClient to perform server-side operations on plug-and-play compatible devices.
+The samples that previously existed here have been removed since this sample repository will be retired and archived.
 
+Please see here for the up to date [DigialTwinsClientSample](https://github.com/Azure/azure-iot-sdk-csharp/tree/main/iothub/service/samples/solutions/DigitalTwinClientSamples).
 ## List of Samples
 * [Thermostat Sample][lnk-thermostat-sample]: Perform root-level operations on a plug and play compatible device.
 * [Temperature Controller Sample][lnk-temperatureController-sample]: Perform component-level operations on a plug and play compatible device.

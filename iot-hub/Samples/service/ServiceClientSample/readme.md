@@ -1,4 +1,7 @@
 # Service Client Sample
+The sample that previously existed here has been removed since this sample repository will be retired and archived.
+
+Please see here for the up to date [ServiceClientSample](https://github.com/Azure/azure-iot-sdk-csharp/tree/main/iothub/service/samples/getting%20started/ServiceClientSample).
 
 This sample illustrates how to send cloud-to-device messages using an IoT hub service client instance. This sample also demonstrates how to handle recoverable and non-recoverable exceptions.
 
