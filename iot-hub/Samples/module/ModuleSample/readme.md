@@ -1,6 +1,8 @@
 # Module Sample
 
-This sample illustrates how a module client handles its connection status updates, while sending telemetry to IoT Hub, and sending and receiving twin property updates.
+The sample that previously existed here has been removed since this sample repository will be retired and archived.
+
+Please see here for the up to date [ModuleSample](https://github.com/Azure/azure-iot-sdk-csharp/tree/main/iothub/device/samples).
 
 ### Initialize the client:
 
