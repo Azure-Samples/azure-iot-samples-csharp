@@ -1,1 +1,1 @@
-#### All samples have been moved to the main [Azure IoT SDK for C#](https://github.com/Azure/azure-iot-sdk-csharp) Repository
+#### All samples have been [moved](https://github.com/Azure/azure-iot-sdk-csharp#samples) to the main [Azure IoT SDK for C#](https://github.com/Azure/azure-iot-sdk-csharp) Repository
